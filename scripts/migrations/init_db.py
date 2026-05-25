@@ -1,3 +1,11 @@
+import sys
+import os
+
+# Agregar el directorio raíz del proyecto al sys.path
+# Esto permite importar el módulo app desde cualquier ubicación
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, BASE_DIR)
+
 from app.database import create_db_and_tables, engine
 from app.models import SQLModel
 
