@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Cotizaciones - Cotizador Pro{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: var(--space-8);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-4);">
+        <div>
+            <h2 style="font-weight: 800; color: var(--gray-800); margin: 0; font-size: 2rem;">Historial de Cotizaciones</h2>
+            <p style="color: var(--gray-500); margin: 4px 0 0 0; font-size: 1.1rem;">Supervisa tus folios activos, montos aprobados, utilidades estimadas y estados de negociación.</p>
+        </div>
+        <a href="/new-quote" class="btn btn-indigo" style="width: auto; padding: 0.65rem 1.5rem; border-radius: var(--radius-lg); font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: var(--space-2);">
+            <i class="bi bi-file-earmark-plus"></i> Crear Nueva Cotización
+        </a>
+    </div>
+</div>
+
+<!-- Summary Row -->
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-bottom: var(--space-8);">
+    <div class="card" style="border-left: 4px solid var(--primary); border-radius: var(--radius-lg); padding: var(--space-4); display: flex; align-items: center; gap: var(--space-4); margin: 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+            <i class="bi bi-file-earmark-text"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.8rem; color: var(--gray-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Total Cotizaciones</div>
+            <div id="summary-total-quotes" style="font-size: 1.5rem; font-weight: 700; color: var(--gray-800); line-height: 1.2;">0</div>
+        </div>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--success); border-radius: var(--radius-lg); padding: var(--space-4); display: flex; align-items: center; gap: var(--space-4); margin: 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--success-light); color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+            <i class="bi bi-check-circle"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.8rem; color: var(--gray-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Monto Aprobado</div>
+            <div id="summary-approved-amount" style="font-size: 1.5rem; font-weight: 700; color: var(--gray-800); line-height: 1.2;">$0.00</div>
+        </div>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--indigo); border-radius: var(--radius-lg); padding: var(--space-4); display: flex; align-items: center; gap: var(--space-4); margin: 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--indigo-light); color: var(--indigo); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+            <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <div>
+            <div style="font-size: 0.8rem; color: var(--gray-500); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Utilidad Aprobada</div>
+            <div id="summary-approved-utility" style="font-size: 1.5rem; font-weight: 700; color: var(--gray-800); line-height: 1.2;">$0.00</div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar Row -->
+<div class="card" style="border-radius: var(--radius-xl); padding: var(--space-5); margin-bottom: var(--space-6); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap;">
+    <!-- Búsqueda y Filtros con Iconos -->
+    <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; width: 100%; justify-content: space-between; align-items: center;">
+        <div style="position: relative; flex: 1; min-width: 280px; max-width: 500px;">
+            <i class="bi bi-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 1rem;"></i>
+            <input type="text" id="search-input" placeholder="Buscar por Cliente, Folio o Agente..." style="border-radius: var(--radius-lg); border: 1px solid var(--gray-300); padding: 0.65rem 1rem 0.65rem 2.5rem; width: 100%; font-size: 0.95rem; background: var(--gray-50); outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)'; this.style.background='white';" onblur="this.style.borderColor='var(--gray-300)'; this.style.background='var(--gray-50)';">
+        </div>
+        <div style="display: flex; gap: var(--space-2); align-items: center;">
+            <label for="status-filter" style="font-size: 0.85rem; font-weight: 700; color: var(--gray-500); text-transform: uppercase;">Estado:</label>
+            <select id="status-filter" style="border-radius: var(--radius-lg); border: 1px solid var(--gray-300); padding: 0.65rem 2rem 0.65rem 1rem; font-size: 0.95rem; background: white; outline: none; cursor: pointer; font-weight: 600; color: var(--gray-700); transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)';" onblur="this.style.borderColor='var(--gray-300)';" onchange="applyFilters()">
+                <option value="Todos">Todos</option>
+                <option value="Borrador">Borrador</option>
+                <option value="Enviada">Enviada</option>
+                <option value="Aprobada">Aprobada</option>
+                <option value="Rechazada">Rechazada</option>
+                <option value="Sustituida">Sustituida</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Table Card -->
+<div class="card padding-0 overflow-hidden" style="border-radius: var(--radius-xl); border: 1px solid var(--border-color); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);">
+    <div style="overflow-x: auto;">
+        <table id="quotes-table" style="width: 100%; border-collapse: collapse; margin: 0;">
+            <thead>
+                <tr style="background: var(--gray-50); border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: var(--space-4) var(--space-6); text-align: left; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Folio / Fecha</th>
+                    <th style="padding: var(--space-4); text-align: left; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Agente / Filial</th>
+                    <th style="padding: var(--space-4); text-align: left; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Cliente</th>
+                    <th style="padding: var(--space-4); text-align: right; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Anticipo</th>
+                    <th style="padding: var(--space-4); text-align: right; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Total</th>
+                    <th style="padding: var(--space-4); text-align: right; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Utilidad Est.</th>
+                    <th style="padding: var(--space-4); text-align: center; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Estado</th>
+                    <th style="padding: var(--space-4) var(--space-6); text-align: right; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+    <div id="loading" style="padding: var(--space-8); text-align: center; color: var(--gray-400);" class="text-muted">Cargando cotizaciones...</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const searchInput = document.getElementById('search-input');
+    const statusFilter = document.getElementById('status-filter');
+    const tableBody = document.getElementById('table-body');
+    const loading = document.getElementById('loading');
+
+    let allQuotes = [];
+
+    function debounce(func, timeout = 300) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        };
+    }
+
+    async function fetchQuotes() {
+        loading.style.display = 'block';
+        tableBody.innerHTML = '';
+
+        try {
+            let url = '/api/v1/quotes/?_t=' + new Date().getTime();
+            const response = await fetch(url);
+            allQuotes = await response.json();
+
+            loading.style.display = 'none';
+            applyFilters();
+        } catch (error) {
+            console.error('Error fetching quotes:', error);
+            loading.textContent = 'Error al cargar datos.';
+        }
+    }
+
+    window.applyFilters = function() {
+        const query = searchInput.value.toLowerCase().trim();
+        const selectedStatus = statusFilter.value;
+
+        const filtered = allQuotes.filter(q => {
+            // Filtro por Estado
+            if (selectedStatus !== 'Todos' && q.estado !== selectedStatus) {
+                return false;
+            }
+
+            // Filtro por texto (Búsqueda)
+            if (query) {
+                const folio = (q.folio_cotizacion || `#${q.id}`).toLowerCase();
+                const client = (q.cliente ? q.cliente.nombre : (q.cliente_id ? `cliente #${q.cliente_id}` : 'cliente general')).toLowerCase();
+                const agent = (q.agente || 'agente sin asignar').toLowerCase();
+                const filial = (q.filial || 'filial principal').toLowerCase();
+
+                if (!folio.includes(query) && !client.includes(query) && !agent.includes(query) && !filial.includes(query)) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        renderTable(filtered);
+    }
+
+    function renderTable(quotes) {
+        // Actualizar métricas de resumen basadas en la selección activa
+        document.getElementById('summary-total-quotes').textContent = quotes.length;
+        
+        const approvedQuotes = quotes.filter(q => q.estado === 'Aprobada');
+        const approvedAmount = approvedQuotes.reduce((sum, q) => sum + parseFloat(q.total || 0), 0);
+        document.getElementById('summary-approved-amount').textContent = `$${approvedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        
+        const approvedUtility = approvedQuotes.reduce((sum, q) => sum + parseFloat(q.utilidad_total || 0), 0);
+        document.getElementById('summary-approved-utility').textContent = `$${approvedUtility.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        if (quotes.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 4rem; color: var(--gray-400);">
+                        <i class="bi bi-file-earmark-text" style="font-size: 2.5rem; display: block; margin-bottom: 1rem; color: var(--gray-300);"></i>
+                        No se encontraron cotizaciones coincidentes.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        tableBody.innerHTML = quotes.map(q => {
+            const date = new Date(q.fecha_creacion).toLocaleDateString();
+            const clientName = q.cliente ? q.cliente.nombre : (q.cliente_id ? `Cliente #${q.cliente_id}` : 'Cliente General');
+            const clientEmail = q.cliente ? q.cliente.email : '';
+            const folioText = q.folio_cotizacion || `#${q.id}`;
+            const isSustituida = q.estado === 'Sustituida';
+
+            // Iniciales y color para el avatar del cliente
+            const initials = clientName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+            const colors = [
+                'background: #e0e7ff; color: #4f46e5;',
+                'background: #d1fae5; color: #059669;',
+                'background: #fef3c7; color: #d97706;',
+                'background: #e0f7fa; color: #00acc1;',
+                'background: #fce7f3; color: #db2777;'
+            ];
+            const colorIdx = clientName.charCodeAt(0) % colors.length;
+            const avatarStyle = colors[colorIdx];
+
+            return `
+                <tr style="border-bottom: 1px solid var(--border-color); transition: background-color 0.2s; ${isSustituida ? 'opacity: 0.6; background: var(--gray-50);' : ''}" onmouseover="if(!${isSustituida}) this.style.backgroundColor='var(--gray-50)'" onmouseout="if(!${isSustituida}) this.style.backgroundColor='transparent'">
+                    <td style="padding: 0.55rem 0.75rem;">
+                        <div>
+                            <div style="font-weight: 700; color: var(--indigo-dark); font-size: 0.9rem; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                                <i class="bi bi-hash text-muted"></i>${folioText}
+                            </div>
+                            <div style="color: var(--gray-500); font-size: 0.75rem; margin-top: 1px; white-space: nowrap;">
+                                <i class="bi bi-calendar-event me-1"></i>${date}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 0.55rem 0.5rem;">
+                        <div>
+                            <div style="font-weight: 600; color: var(--gray-800); font-size: 0.85rem; white-space: nowrap;">${q.agente || 'Agente Sin Asignar'}</div>
+                            <div style="color: var(--gray-500); font-size: 0.75rem; display: flex; align-items: center; gap: 4px; margin-top: 1px; white-space: nowrap;">
+                                <i class="bi bi-building"></i> ${q.filial || 'Filial Principal'}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 0.55rem 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: var(--space-2);">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; ${avatarStyle} box-shadow: 0 1px 3px rgba(0,0,0,0.05); flex-shrink: 0;">
+                                ${initials}
+                            </div>
+                            <div style="min-width: 0;">
+                                <div style="font-weight: 600; color: var(--text-main); font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;" title="${clientName}">${clientName}</div>
+                                ${clientEmail ? `<div style="color: var(--gray-500); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;" title="${clientEmail}">${clientEmail}</div>` : ''}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 0.55rem 0.5rem; text-align: right; font-weight: 500; color: var(--gray-600); font-size: 0.85rem; white-space: nowrap;">
+                        $${(q.anticipo || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td style="padding: 0.55rem 0.5rem; text-align: right; font-weight: 700; color: var(--text-main); font-size: 0.85rem; white-space: nowrap;">
+                        $${q.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td style="padding: 0.55rem 0.5rem; text-align: right; font-weight: 700; color: var(--success); font-size: 0.85rem; white-space: nowrap;">
+                        $${(q.utilidad_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td style="padding: 0.55rem 0.5rem; text-align: center;">
+                        <select onchange="updateStatus(${q.id}, this.value)" ${isSustituida ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; border: 1px solid transparent; background: ${getStatusColor(q.estado)}; color: var(--text-white); cursor: pointer; transition: all 0.2s; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 110px; text-align-last: center;">
+                            <option value="Borrador" ${q.estado === 'Borrador' ? 'selected' : ''}>Borrador</option>
+                            <option value="Enviada" ${q.estado === 'Enviada' ? 'selected' : ''}>Enviada</option>
+                            <option value="Aprobada" ${q.estado === 'Aprobada' ? 'selected' : ''}>Aprobada</option>
+                            <option value="Rechazada" ${q.estado === 'Rechazada' ? 'selected' : ''}>Rechazada</option>
+                            ${isSustituida ? `<option value="Sustituida" selected>Sustituida</option>` : ''}
+                        </select>
+                    </td>
+                    <td style="padding: 0.55rem 0.75rem; text-align: right; white-space: nowrap;">
+                        <div style="display: inline-flex; gap: var(--space-1);">
+                            <a href="/api/v1/quotes/${q.id}/pdf" target="_blank" class="btn btn-outline" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white;" title="Ver PDF">
+                                <i class="bi bi-file-pdf text-danger"></i> PDF
+                            </a>
+                            <a href="/new-quote?edit_id=${q.id}" class="btn btn-indigo" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; color: white;" title="Crear nueva versión basada en esta">
+                                <i class="bi bi-pencil-square"></i> Editar
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function getStatusColor(status) {
+        switch (status) {
+            case 'Aprobada': return 'var(--success)';
+            case 'Rechazada': return 'var(--danger)';
+            case 'Enviada': return 'var(--primary)';
+            case 'Sustituida': return 'var(--gray-500)';
+            default: return 'var(--gray-400)';
+        }
+    }
+
+    async function updateStatus(id, newStatus) {
+        try {
+            const response = await fetch(`/api/v1/quotes/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ estado: newStatus })
+            });
+
+            if (response.ok) {
+                // Actualizar localmente y aplicar filtros de nuevo
+                const qIdx = allQuotes.findIndex(q => q.id === id);
+                if (qIdx !== -1) {
+                    allQuotes[qIdx].estado = newStatus;
+                }
+                applyFilters();
+            } else {
+                alert("Error actualizando estatus");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error de conexión");
+        }
+    }
+
+    fetchQuotes();
+
+    searchInput.addEventListener('input', debounce(() => {
+        applyFilters();
+    }));
+</script>
+{% endblock %}

@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Proyectos Aprobados - Operación{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: var(--space-8);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-4);">
+        <div>
+            <h2 style="font-weight: 800; color: var(--gray-800); margin: 0; font-size: 2rem;">🚀 Seguimiento de Proyectos Aprobados</h2>
+            <p style="color: var(--gray-500); margin: 4px 0 0 0; font-size: 1.1rem;">Supervisa la ejecución de tus proyectos activos, costos reales, márgenes de ganancia y reportes operativos.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar Row -->
+<div class="card" style="border-radius: var(--radius-xl); padding: var(--space-5); margin-bottom: var(--space-6); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap;">
+    <!-- Búsqueda con Icono -->
+    <div style="position: relative; flex: 1; min-width: 280px; max-width: 500px;">
+        <i class="bi bi-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 1rem;"></i>
+        <input type="text" id="search-input" placeholder="Buscar por Cliente o Folio..." style="border-radius: var(--radius-lg); border: 1px solid var(--gray-300); padding: 0.65rem 1rem 0.65rem 2.5rem; width: 100%; font-size: 0.95rem; background: var(--gray-50); outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)'; this.style.background='white';" onblur="this.style.borderColor='var(--gray-300)'; this.style.background='var(--gray-50)';">
+    </div>
+</div>
+
+<!-- Table Card -->
+<div class="card padding-0 overflow-hidden" style="border-radius: var(--radius-xl); border: 1px solid var(--border-color); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); margin-bottom: var(--space-8);">
+    <div style="overflow-x: auto;">
+        <table id="projects-table" style="width: 100%; border-collapse: collapse; margin: 0;">
+            <thead>
+                <tr style="background: var(--gray-50); border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: var(--space-4) var(--space-5); text-align: left; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Folio</th>
+                    <th style="padding: var(--space-4); text-align: left; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Cliente</th>
+                    <th style="padding: var(--space-4); text-align: right; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Monto Venta</th>
+                    <th style="padding: var(--space-4); text-align: center; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Utilidad Real</th>
+                    <th style="padding: var(--space-4); text-align: center; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Fecha de Entrega/Inicio</th>
+                    <th style="padding: var(--space-4) var(--space-5); text-align: center; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Acciones Operativas</th>
+                </tr>
+            </thead>
+            <tbody id="table-body" style="font-size: 0.9rem;">
+                <!-- Data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+    <div id="loading" style="padding: var(--space-8); text-align: center; color: var(--gray-400);" class="text-muted">Cargando proyectos en curso...</div>
+</div>
+
+<!-- Modal Ajuste de Costos -->
+<div id="costModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.45); backdrop-filter: blur(6px); z-index:1000; align-items:center; justify-content:center; transition: all 0.2s;">
+    <div class="card" style="padding: var(--space-6); border-radius: var(--radius-xl); width: 420px; max-width: 90%; box-shadow: var(--shadow-2xl); border: 1px solid var(--border-color); animation: modalFadeIn 0.3s ease-out;">
+        <div style="display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3);">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--warning-light); color: var(--warning); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                <i class="bi bi-sliders"></i>
+            </div>
+            <h3 style="margin: 0; color: var(--gray-800); font-weight: 700; font-size: 1.25rem;">Ajuste de Costos</h3>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--gray-500); margin: 0 0 var(--space-5) 0; line-height: 1.4;">Modifica los valores si existió algún cambio en el margen esperado durante el desarrollo de este proyecto.</p>
+        
+        <input type="hidden" id="modal-quote-id">
+        <div class="form-group" style="margin-bottom: var(--space-4);">
+            <label style="display: block; margin-bottom: 0.4rem; font-weight: 700; color: var(--gray-700); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Costo Real de Materiales ($)</label>
+            <input type="number" step="0.01" id="modal-material-cost" style="width: 100%; padding: 0.65rem 1rem; border: 1px solid var(--gray-300); border-radius: var(--radius-lg); font-size: 0.95rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)';" onblur="this.style.borderColor='var(--gray-300)';">
+        </div>
+        <div class="form-group" style="margin-bottom: var(--space-6);">
+            <label style="display: block; margin-bottom: 0.4rem; font-weight: 700; color: var(--gray-700); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Costos Extra / Operativos ($)</label>
+            <input type="number" step="0.01" id="modal-op-cost" style="width: 100%; padding: 0.65rem 1rem; border: 1px solid var(--gray-300); border-radius: var(--radius-lg); font-size: 0.95rem; outline: none; transition: border-color 0.2s;" placeholder="0.00" onfocus="this.style.borderColor='var(--indigo)';" onblur="this.style.borderColor='var(--gray-300)';">
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; gap: var(--space-3);">
+            <button onclick="closeCostModal()" class="btn btn-outline" style="width: auto; padding: 0.6rem 1.25rem; font-weight: 600; border-radius: var(--radius-lg); border: 1px solid var(--border-color); background: white;">Cancelar</button>
+            <button onclick="saveCosts()" class="btn btn-indigo" style="width: auto; padding: 0.6rem 1.25rem; font-weight: 600; border-radius: var(--radius-lg); color: white;">Guardar Cambios</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const searchInput = document.getElementById('search-input');
+    const tableBody = document.getElementById('table-body');
+    const loading = document.getElementById('loading');
+
+    function debounce(func, timeout = 300) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        };
+    }
+
+    async function fetchProjects(query = '') {
+        loading.style.display = 'block';
+        tableBody.innerHTML = '';
+
+        try {
+            // Fetch SOLO aprobadas
+            let url = '/api/v1/quotes/?estado=Aprobada&_t=' + new Date().getTime();
+            if (query) {
+                url += `&search=${encodeURIComponent(query)}`;
+            }
+
+            const response = await fetch(url);
+            const projects = await response.json();
+
+            loading.style.display = 'none';
+            renderTable(projects);
+        } catch (error) {
+            console.error('Error fetching projects:', error);
+            loading.textContent = 'Error al cargar datos.';
+        }
+    }
+
+    function renderTable(projects) {
+        if (projects.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 4rem; color: var(--gray-400);">
+                <i class="bi bi-folder" style="font-size: 2.5rem; display: block; margin-bottom: 1rem; color: var(--gray-300);"></i>
+                No hay proyectos aprobados activos en este momento.
+            </td></tr>`;
+            return;
+        }
+
+        tableBody.innerHTML = projects.map(p => {
+            const clientName = p.cliente ? p.cliente.nombre : (p.cliente_id ? `Cliente #${p.cliente_id}` : 'N/A');
+            const folioText = p.folio_cotizacion || `#${p.id}`;
+
+            // Calculo de Métrica de Utilidad Real
+            const saleAmount = p.subtotal || p.total || 0;
+            const estimUtility = p.utilidad_total || 0;
+            const originalMaterialCost = saleAmount - estimUtility;
+            
+            const realMaterialCost = p.costo_compra_real !== null && p.costo_compra_real !== undefined ? p.costo_compra_real : originalMaterialCost;
+            const opCosts = p.costos_operativos || 0;
+            const netUtility = saleAmount - realMaterialCost - opCosts;
+
+            // Margin %
+            let marginPct = 0;
+            if (saleAmount > 0) {
+                marginPct = (netUtility / saleAmount) * 100;
+            }
+
+            let badgeStyle = '';
+            let iconClass = '';
+            if (netUtility < 0) {
+                badgeStyle = 'background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;';
+                iconClass = 'bi-graph-down-arrow';
+            } else if (marginPct < 15) {
+                badgeStyle = 'background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa;';
+                iconClass = 'bi-exclamation-triangle';
+            } else if (marginPct < 30) {
+                badgeStyle = 'background: #fef3c7; color: #b45309; border: 1px solid #fde68a;';
+                iconClass = 'bi-graph-up-arrow';
+            } else {
+                badgeStyle = 'background: #d1fae5; color: #047857; border: 1px solid #6ee7b7;';
+                iconClass = 'bi-graph-up-arrow';
+            }
+            
+            const tooltipTitle = `Venta Real (Subtotal): $${saleAmount.toFixed(2)}\nCosto de Materiales: -$${realMaterialCost.toFixed(2)}\nGastos Operativos: -$${opCosts.toFixed(2)}\nMargen %: ${marginPct.toFixed(1)}%\n-----------------------\nMargen Neto Limpio: $${netUtility.toFixed(2)}`;
+            
+            const utilityHtml = `
+                <div style="position: relative; display: inline-flex; align-items: center; gap: 6px; cursor: help; padding: 0.35rem 0.65rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem; ${badgeStyle}" title="${tooltipTitle}">
+                    <i class="bi ${iconClass}"></i>
+                    <span>$${netUtility.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span style="font-size: 0.75rem; opacity: 0.85; font-weight: 500;">(${marginPct.toFixed(1)}%)</span>
+                </div>
+            `;
+
+            const dateInput = `<input type="date" value="${p.fecha_entrega || ''}" onchange="updateDate(${p.id}, this.value)" style="padding: 0.35rem 0.65rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); font-family: inherit; font-size: 0.85rem; outline: none; background: white; color: var(--gray-700); transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)';" onblur="this.style.borderColor='var(--gray-300)';">`;
+            
+            let docsHtml = '';
+            if(p.reporte_operativo_path) {
+                docsHtml = `
+                    <div style="display: inline-flex; gap: 4px; align-items: center;">
+                        <a href="${p.reporte_operativo_path}" target="_blank" class="btn btn-outline" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.8rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white; color: var(--gray-700);" title="Ver Reporte">
+                            <i class="bi bi-file-earmark-pdf text-success"></i> Reporte
+                        </a>
+                        <button onclick="triggerUpload(${p.id})" id="btn-upload-${p.id}" style="background: none; border: none; cursor: pointer; color: var(--gray-400); font-size: 1rem; display: flex; align-items: center;" title="Reemplazar Archivo">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </button>
+                        <input type="file" id="upload-input-${p.id}" style="display:none" onchange="uploadReport(${p.id}, this)" accept="application/pdf">
+                    </div>`;
+            } else {
+                docsHtml = `
+                    <div style="display: inline-flex;">
+                        <button onclick="triggerUpload(${p.id})" id="btn-upload-${p.id}" class="btn btn-outline" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.8rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white; color: var(--gray-700);">
+                            <i class="bi bi-cloud-arrow-up text-primary"></i> Subir PDF
+                        </button>
+                        <input type="file" id="upload-input-${p.id}" style="display:none" onchange="uploadReport(${p.id}, this)" accept="application/pdf">
+                    </div>`;
+            }
+
+            // Operaciones / Acciones extra de fila
+            const actionButtons = `
+                <div style="display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                    ${docsHtml}
+                    <button onclick="openCostModal(${p.id}, ${realMaterialCost}, ${opCosts})" class="btn btn-outline" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.8rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white; color: var(--gray-700);" title="Ajustar Costos">
+                        <i class="bi bi-sliders text-warning"></i> Costos
+                    </button>
+                    <button onclick="finishProject(${p.id})" class="btn btn-indigo" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.8rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; color: white;" title="Finalizar Proyecto">
+                        <i class="bi bi-check2-circle"></i> Finalizar
+                    </button>
+                </div>
+            `;
+
+            return `
+            <tr style="border-bottom: 1px solid var(--border-color); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--gray-50)'" onmouseout="this.style.backgroundColor='transparent'">
+                <td style="padding: 0.65rem 0.75rem;">
+                    <div style="font-weight: 700; color: var(--indigo-dark); font-size: 0.9rem; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                        <i class="bi bi-hash text-muted"></i>${folioText}
+                    </div>
+                </td>
+                <td style="padding: 0.65rem 0.5rem;">
+                    <div style="font-weight: 600; color: var(--text-main); font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;" title="${clientName}">
+                        ${clientName}
+                    </div>
+                </td>
+                <td style="padding: 0.65rem 0.5rem; text-align: right; font-weight: 700; color: var(--text-main); font-size: 0.85rem; white-space: nowrap;">
+                    $${saleAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+                <td style="padding: 0.65rem 0.5rem; text-align: center; white-space: nowrap;">
+                    ${utilityHtml}
+                </td>
+                <td style="padding: 0.65rem 0.5rem; text-align: center; white-space: nowrap;">
+                    ${dateInput}
+                </td>
+                <td style="padding: 0.65rem 0.75rem; text-align: center; white-space: nowrap;">
+                    ${actionButtons}
+                </td>
+            </tr>
+            `;
+        }).join('');
+    }
+
+    async function updateDate(id, dateStr) {
+        if(!dateStr) return;
+        try {
+            const response = await fetch(`/api/v1/quotes/${id}`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({fecha_entrega: dateStr})
+            });
+            if(!response.ok) {
+                alert("Error al guardar la fecha.");
+            }
+        } catch(e) { 
+            console.error(e);
+            alert("Error de red al guardar fecha."); 
+        }
+    }
+
+    function triggerUpload(quoteId) {
+        document.getElementById('upload-input-' + quoteId).click();
+    }
+
+    async function uploadReport(quoteId, inputElement) {
+        const file = inputElement.files[0];
+        if(!file) return;
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const btn = document.getElementById('btn-upload-' + quoteId);
+        const originalText = btn.textContent;
+        btn.textContent = "⌛ Subiendo...";
+        btn.disabled = true;
+        
+        try {
+            const response = await fetch(`/api/v1/quotes/${quoteId}/report`, {
+                method: 'POST',
+                body: formData
+            });
+            if(response.ok) {
+                fetchProjects(); 
+            } else {
+                alert('Error al subir documento');
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        } catch (e) {
+            alert('Error de conexión');
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    // --- Modal Configs Costos ---
+    const costModal = document.getElementById('costModal');
+    
+    function openCostModal(id, realMaterial, opCost) {
+        document.getElementById('modal-quote-id').value = id;
+        document.getElementById('modal-material-cost').value = realMaterial !== null ? realMaterial.toFixed(2) : '';
+        document.getElementById('modal-op-cost').value = opCost !== null ? opCost.toFixed(2) : '0.00';
+        costModal.style.display = 'flex';
+    }
+
+    function closeCostModal() {
+        costModal.style.display = 'none';
+    }
+
+    async function saveCosts() {
+        const id = document.getElementById('modal-quote-id').value;
+        const realMaterial = document.getElementById('modal-material-cost').value;
+        const opCost = document.getElementById('modal-op-cost').value;
+
+        try {
+            const response = await fetch(`/api/v1/quotes/${id}`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    costo_compra_real: parseFloat(realMaterial) || 0,
+                    costos_operativos: parseFloat(opCost) || 0
+                })
+            });
+            if(response.ok) {
+                closeCostModal();
+                fetchProjects();
+            } else {
+                alert("Error al guardar costos.");
+            }
+        } catch(e) {
+            alert("Error de red");
+        }
+    }
+
+    async function finishProject(id) {
+        if(!confirm("¿Estás seguro de marcar este proyecto como FINALIZADO? Las utilidades actuales se sellarán contablemente y desaparecerá de esta vista en curso.")) return;
+        
+        try {
+            const response = await fetch(`/api/v1/quotes/${id}`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ estado: 'Finalizada' })
+            });
+            if(response.ok) {
+                fetchProjects(); // Will disappear from 'Aprobadas'
+            } else {
+                alert("Error comunicando cierre del proyecto");
+            }
+        } catch(e) {
+            alert("Error de red.");
+        }
+    }
+
+    fetchProjects();
+    searchInput.addEventListener('input', debounce((e) => {
+        fetchProjects(e.target.value);
+    }));
+</script>
+{% endblock %}

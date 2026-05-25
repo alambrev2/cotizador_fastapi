@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Cliente - Cotizador{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: var(--space-8);">
+        <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--primary-light) 0%, #e0e7ff 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4); border: 4px solid white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <i class="bi bi-person-plus-fill" style="font-size: 1.8rem; color: var(--primary);"></i>
+        </div>
+        <h2 style="font-weight: 800; color: var(--gray-800); margin-bottom: var(--space-2); font-size: 2rem;">Registrar Cliente</h2>
+        <p style="color: var(--gray-500); font-size: 1.1rem;">Agrega un nuevo contacto a tu cartera comercial.</p>
+    </div>
+
+    <div class="card" style="border-radius: var(--radius-xl); padding: var(--space-8); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01); border: 1px solid var(--border-color);">
+        <div id="alert-box" class="alert" style="border-radius: var(--radius-md);"></div>
+
+        <form id="customer-form">
+            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--gray-800); margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-2);">
+                <i class="bi bi-info-circle text-primary"></i> Información de Contacto
+            </h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="nombre" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Nombre Completo <span style="color: var(--danger);">*</span></label>
+                    <input type="text" id="nombre" name="nombre" required placeholder="Ej. Empresa SA de CV o Juan Pérez" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="email" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Correo Electrónico <span style="color: var(--danger);">*</span></label>
+                    <input type="email" id="email" name="email" required placeholder="contacto@empresa.com" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="telefono" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Teléfono</label>
+                    <input type="text" id="telefono" name="telefono" placeholder="+52 555 123 4567" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="direccion" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Dirección</label>
+                    <input type="text" id="direccion" name="direccion" placeholder="Calle, Número, Colonia, Ciudad" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+                </div>
+            </div>
+
+            <div style="height: 1px; background: var(--gray-200); margin: var(--space-6) 0;"></div>
+
+            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--gray-800); margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-2);">
+                <i class="bi bi-cash-stack text-success"></i> Estado Financiero
+            </h4>
+
+            <div style="background: var(--gray-50); padding: var(--space-6); border-radius: var(--radius-lg); border: 1px solid var(--gray-200); margin-bottom: var(--space-8);">
+                
+                <div class="form-group" style="margin-bottom: var(--space-6);">
+                    <label for="saldo_inicial" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Saldo Pendiente Actual (Deuda Inicial)</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--gray-500); font-weight: bold;">$</span>
+                        <input type="number" step="0.01" id="saldo_inicial" name="saldo_inicial" value="0.00" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem 0.75rem 2rem; font-size: 1.1rem; font-weight: 600; color: var(--danger);">
+                    </div>
+                    <small style="color: var(--gray-500); display: block; margin-top: 0.25rem;">Monto que el cliente debe a la fecha de registro.</small>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="consumo_2022" style="font-weight: 600; color: var(--gray-600); font-size: 0.85rem;">Consumo 2022</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--gray-400);">$</span>
+                            <input type="number" step="0.01" id="consumo_2022" name="consumo_2022" value="0.00" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.5rem 0.5rem 0.5rem 1.5rem; background: white;">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="consumo_2023" style="font-weight: 600; color: var(--gray-600); font-size: 0.85rem;">Consumo 2023</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--gray-400);">$</span>
+                            <input type="number" step="0.01" id="consumo_2023" name="consumo_2023" value="0.00" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.5rem 0.5rem 0.5rem 1.5rem; background: white;">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="consumo_2024" style="font-weight: 600; color: var(--gray-600); font-size: 0.85rem;">Consumo 2024</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--gray-400);">$</span>
+                            <input type="number" step="0.01" id="consumo_2024" name="consumo_2024" value="0.00" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.5rem 0.5rem 0.5rem 1.5rem; background: white;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: var(--space-4);">
+                <button type="button" onclick="window.history.back()" class="btn" style="background: white; border: 1px solid var(--border-color); color: var(--gray-700); padding: 0.75rem 1.5rem; border-radius: var(--radius-md); font-weight: 600;">Cancelar</button>
+                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);">
+                    <i class="bi bi-save me-2"></i> Guardar Cliente
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('customer-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {
+            nombre: formData.get('nombre'),
+            email: formData.get('email'),
+            telefono: formData.get('telefono'),
+            direccion: formData.get('direccion'),
+            saldo_inicial: parseFloat(formData.get('saldo_inicial') || 0),
+            consumo_2022: parseFloat(formData.get('consumo_2022') || 0),
+            consumo_2023: parseFloat(formData.get('consumo_2023') || 0),
+            consumo_2024: parseFloat(formData.get('consumo_2024') || 0)
+        };
+        const alertBox = document.getElementById('alert-box');
+
+        try {
+            const response = await fetch('/api/v1/customers/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alertBox.textContent = `¡Cliente ${result.nombre} creado con éxito!`;
+                alertBox.className = 'alert alert-success';
+                alertBox.style.display = 'block';
+                this.reset();
+            } else {
+                const error = await response.json();
+                alertBox.textContent = `Error: ${error.detail || 'No se pudo crear el cliente'}`;
+                alertBox.className = 'alert alert-error';
+                alertBox.style.display = 'block';
+            }
+        } catch (err) {
+            alertBox.textContent = 'Error de conexión';
+            alertBox.className = 'alert alert-error';
+            alertBox.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}
