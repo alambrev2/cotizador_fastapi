@@ -3,8 +3,11 @@ import os
 from datetime import datetime
 from decimal import Decimal
 
+# Obtener el directorio base del proyecto
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Add current dir to path to find app module
-sys.path.append(os.getcwd())
+sys.path.append(BASE_DIR)
 
 from app.core.pdf import generate_pdf_bytes
 from jinja2 import Environment, FileSystemLoader
@@ -41,7 +44,7 @@ def test_pdf():
     print("Iniciando prueba de PDF...")
     try:
         # Load template
-        env = Environment(loader=FileSystemLoader("app/templates"))
+        env = Environment(loader=FileSystemLoader(os.path.join(BASE_DIR, "app", "templates")))
         template = env.get_template("pdf/quote.html")
 
         # Render HTML

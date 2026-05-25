@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router
 from scalar_fastapi import get_scalar_api_reference
 import logging
+import os
 
 # Configurar logging
 logging.basicConfig(
@@ -31,6 +32,14 @@ app.add_middleware(
 
 logger.info("Iniciando aplicación Cotizador API")
 
+# Obtener el directorio base del proyecto
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Asegurar que los directorios necesarios existan
+os.makedirs(os.path.join(BASE_DIR, "app", "static", "reports"), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
+os.makedirs(os.path.join(BASE_DIR, "temp"), exist_ok=True)
+
 
 # Middleware de excepciones global
 @app.exception_handler(HTTPException)
@@ -51,9 +60,9 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "app", "static")), name="static")
 
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app", "templates"))
 
 app.include_router(api_router, prefix="/api/v1")
 

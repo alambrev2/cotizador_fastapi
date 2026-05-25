@@ -12,7 +12,10 @@ from sqlalchemy.orm import selectinload
 from decimal import Decimal
 from datetime import datetime
 
-templates = Jinja2Templates(directory="app/templates")
+# Obtener el directorio base del proyecto
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app", "templates"))
 
 router = APIRouter()
 
@@ -274,10 +277,11 @@ async def upload_operative_report(
     if not db_quote:
         raise HTTPException(status_code=404, detail="Cotización no encontrada")
 
-    os.makedirs("app/static/reports", exist_ok=True)
+    reports_dir = os.path.join(BASE_DIR, "app", "static", "reports")
+    os.makedirs(reports_dir, exist_ok=True)
     # Reemplazar espacios y sanitizar un poco
     safe_filename = file.filename.replace(" ", "_")
-    file_path = f"app/static/reports/quote_{quote_id}_{safe_filename}"
+    file_path = os.path.join(reports_dir, f"quote_{quote_id}_{safe_filename}")
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)

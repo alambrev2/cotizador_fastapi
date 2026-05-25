@@ -22,3 +22,6 @@ python-multipart>=0.0.6
 
 # Templates (FastAPI incluye Jinja2, pero por si acaso)
 jinja2>=3.1.0
+
+# PDF Generation
+xhtml2pdf>=0.2.5

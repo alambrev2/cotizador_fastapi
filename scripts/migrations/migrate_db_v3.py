@@ -1,8 +1,13 @@
 import sqlite3
+import os
+
+# Obtener el directorio base del proyecto
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+db_path = os.path.join(BASE_DIR, "data", "database.db")
 
 
 def migrate_v2():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     try:

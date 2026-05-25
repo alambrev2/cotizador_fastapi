@@ -46,11 +46,29 @@ Sigue estos pasos para levantar la aplicación en tu entorno local:
 *   **Python 3.10 o superior**
 *   **pip** (Administrador de paquetes de Python)
 
-### 2. Clonar el Repositorio e Instalar Dependencias
+### 2. Clonar el Repositorio
 ```bash
+# Descargar el proyecto desde GitHub
+# Descomprimir el archivo zip
 # Entrar a la carpeta del proyecto
 cd cotizador_fastapi-main
+```
 
+### 3. Inicializar el Proyecto (Nuevo paso)
+Ejecuta el script de inicialización para crear los directorios necesarios:
+```bash
+python setup.py
+```
+
+Este script creará automáticamente:
+- Directorio `data/` para la base de datos
+- Directorio `logs/` para los logs del sistema
+- Directorio `temp/` para archivos temporales
+- Directorio `app/static/reports/` para reportes PDF
+- Archivo `.env` con configuración básica (si no existe)
+
+### 4. Crear Entorno Virtual e Instalar Dependencias
+```bash
 # Crear el entorno virtual (Recomendado)
 python -m venv venv
 
@@ -64,13 +82,13 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Preparar la Base de Datos
+### 5. Preparar la Base de Datos
 Crea las tablas iniciales en la base de datos SQLite ejecutando:
 ```bash
 python scripts/migrations/init_db.py
 ```
 
-### 4. Iniciar el Servidor de Desarrollo
+### 6. Iniciar el Servidor de Desarrollo
 ```bash
 uvicorn app.main:app --reload
 ```

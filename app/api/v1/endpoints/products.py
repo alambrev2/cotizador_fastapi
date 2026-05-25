@@ -9,12 +9,18 @@ from openpyxl.styles import Font
 import logging
 import os
 
+# Obtener el directorio base del proyecto
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+# Asegurar que el directorio de logs exista
+os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
+
 # Configurar logging para errores de importación
 logging.basicConfig(
     level=logging.ERROR,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('logs/error.log'),
+        logging.FileHandler(os.path.join(BASE_DIR, 'logs', 'error.log')),
         logging.StreamHandler()
     ]
 )
