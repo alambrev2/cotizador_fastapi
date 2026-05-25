@@ -10,8 +10,12 @@ from fastapi import Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import selectinload
 from app.core.pdf import generate_pdf_bytes
+import os
 
-templates = Jinja2Templates(directory="app/templates")
+# Obtener el directorio base del proyecto
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app", "templates"))
 
 router = APIRouter()
 
