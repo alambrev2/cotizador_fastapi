@@ -2,6 +2,17 @@
 
 ## Fecha: 25 de Mayo de 2026
 
+## ℹ IMPORTANTE: Sincronización de Base de Datos
+
+**El proyecto usa SQLite (base de datos local)**:
+- La base de datos es un archivo local (`data/database.db`).
+- Se ha configurado para ser rastreada por Git, por lo que **los datos (clientes, productos, cotizaciones, etc.) se transfieren automáticamente** al clonar o descargar el proyecto desde GitHub.
+- Al ejecutar el programa en cualquier dispositivo, la base de datos se cargará con toda la información actual y estará lista para ser modificada.
+
+**Para guardar o sincronizar tus cambios**, sigue las instrucciones de la sección "Sincronizar Cambios entre Computadoras" al final de este documento.
+
+---
+
 ## Paso 1: Descargar el proyecto desde GitHub
 
 ### Opción A: Descargar como ZIP
@@ -247,3 +258,74 @@ Si encuentras errores no documentados aquí:
 2. Verificar que estás en el directorio correcto del proyecto
 3. Asegurarte de que el entorno virtual está activado
 4. Verificar que todas las dependencias están instaladas
+
+---
+
+## Sincronizar Cambios entre Computadoras
+
+### ¿Cómo se transfieren los datos ahora?
+
+El archivo de la base de datos local (`data/database.db`) ahora **está configurado en Git**. Esto significa que:
+1. Al clonar o descargar el repositorio por primera vez en otra computadora, se descargará con todos los clientes, productos y cotizaciones actuales.
+2. Al ejecutar la aplicación, cargará y modificará la base de datos local de inmediato.
+
+---
+
+### Método 1: Sincronizar usando Git (Recomendado)
+
+Si haces cambios en una computadora y quieres verlos en la otra:
+
+#### En la computadora donde hiciste los cambios:
+1. Asegúrate de detener el servidor de FastAPI (`Ctrl + C`).
+2. Guarda y sube los cambios de la base de datos a GitHub ejecutando en tu terminal:
+   ```bash
+   git add data/database.db
+   git commit -m "Actualizar base de datos con nuevos datos"
+   git push origin master
+   ```
+
+#### En la otra computadora:
+1. Asegúrate de detener el servidor de FastAPI (`Ctrl + C`).
+2. Descarga la base de datos actualizada desde GitHub ejecutando:
+   ```bash
+   git pull origin master
+   ```
+3. Vuelve a iniciar el servidor:
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+
+> [!WARNING]
+> **Evita modificar la base de datos en ambas computadoras al mismo tiempo sin antes hacer `git pull`**. Si lo haces, Git generará un conflicto en el archivo binario `database.db` que no se podrá resolver automáticamente. Siempre haz un `git pull` antes de comenzar a trabajar en otra PC y haz `git push` al terminar.
+
+---
+
+### Método 2: Usar el script de backup (Si prefieres no usar Git para los datos)
+
+#### En la computadora ORIGINAL (con los datos):
+```bash
+# 1. Ejecutar el script de backup
+python scripts/backup_db.py
+
+# 2. Seleccionar opción 1 (Exportar)
+# Esto creará un archivo en la carpeta backups/ con fecha
+# Ejemplo: backups/database_backup_20260525_143000.db
+
+# 3. Copiar ese archivo a un USB, email, o carpeta compartida
+```
+
+#### En la computadora DESTINO:
+```bash
+# 1. Copiar el archivo de backup a la carpeta data/
+# Por ejemplo: data/database_backup_20260525_143000.db
+
+# 2. Ejecutar el script de backup
+python scripts/backup_db.py
+
+# 3. Seleccionar opción 2 (Importar)
+# 4. Ingresar la ruta del archivo de backup
+# Ejemplo: data/database_backup_20260525_143000.db
+
+# 5. Reiniciar el servidor
+uvicorn app.main:app --reload
+```

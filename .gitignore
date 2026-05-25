@@ -33,10 +33,11 @@ ENV/
 *~
 
 # Database
-data/
-*.db
+data/*
+!data/database.db
 *.sqlite
 *.sqlite3
+
 
 # Reports operativos
 app/static/reports/
