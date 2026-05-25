@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router
 from scalar_fastapi import get_scalar_api_reference
+from app.database import create_db_and_tables
 import logging
 import os
 
@@ -39,6 +40,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.makedirs(os.path.join(BASE_DIR, "app", "static", "reports"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "temp"), exist_ok=True)
+
+
+# Evento de startup para inicializar la base de datos
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Inicializando base de datos...")
+    try:
+        create_db_and_tables()
+        logger.info("Base de datos inicializada correctamente")
+    except Exception as e:
+        logger.error(f"Error al inicializar la base de datos: {e}")
+        raise
 
 
 # Middleware de excepciones global
