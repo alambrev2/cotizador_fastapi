@@ -19,20 +19,18 @@ templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app", "templates")
 
 router = APIRouter()
 
+ESTADOS_COBRABLES = ['Pendiente', 'Cobranza Requerida']
+
 
 @router.get("/active")
 def read_active_statements(session: Session = Depends(get_session)):
-    # Obtener cotizaciones con total > 0 que NO estén rechazadas o en borrador (opcional, pero asumimos que solo 'Enviada'/'Aprobada' cuentan)
-    # Por lealtad al usuario, mostraremos todas las que tengan saldo, independientemente del estado,
-    # aunque logico seria solo Aprobada. Vamos filtrar solo Aprobada para ser más limpios, o todas.
-    # El usuario pidio "todos los estados activos". Asumiremos todas las cotizaciones con deuda.
-
+    # Obtener cotizaciones con total > 0 que estén en estados cobrables
     query = (
         select(Quote)
         .options(selectinload(Quote.pagos))
         .options(selectinload(Quote.cliente))
         .where(Quote.total > 0)
-        .where(Quote.estado == 'Aprobada')
+        .where(Quote.estado.in_(ESTADOS_COBRABLES))
         .order_by(Quote.id.desc())
     )
     quotes = session.exec(query).all()
@@ -78,7 +76,7 @@ def read_active_customers(session: Session = Depends(get_session)):
 
         # Deuda de cotizaciones activas (con saldo pendiente post-abonos directos)
         for q in c.cotizaciones:
-            if q.estado != 'Aprobada':
+            if q.estado not in ESTADOS_COBRABLES:
                 continue
             pagado_q = sum([float(p.monto) for p in q.pagos])
             saldo_q = float(q.total) - pagado_q
@@ -108,7 +106,7 @@ def read_active_customers(session: Session = Depends(get_session)):
 
         # Cálculos Económicos Exactos (Sin saldo_inicial estático)
         total_pagado_cliente = sum([float(p.monto) for p in c.pagos])
-        total_comprado_sistema = sum([float(q.total) for q in c.cotizaciones if q.estado == 'Aprobada'])
+        total_comprado_sistema = sum([float(q.total) for q in c.cotizaciones if q.estado in ESTADOS_COBRABLES])
         total_cargos_extra = sum([float(cg.monto) for cg in c.cargos])
 
         # Deuda Histórica = Suma de todo lo cobrable + saldo inicial
@@ -143,11 +141,11 @@ def get_customer_statement(
     if not customer:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
 
-    # 2. Obtener todas sus cotizaciones aprobadas
+    # 2. Obtener todas sus cotizaciones con estados cobrables
     query = (
         select(Quote)
         .where(Quote.cliente_id == customer_id)
-        .where(Quote.estado == 'Aprobada')
+        .where(Quote.estado.in_(ESTADOS_COBRABLES))
         .options(selectinload(Quote.pagos))
         .order_by(Quote.fecha_creacion.desc())
     )
@@ -252,10 +250,10 @@ def get_customer_statement_pdf(*, session: Session = Depends(get_session), custo
     if not customer:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
 
-    # Obtener cotizaciones aprobadas
+    # Obtener cotizaciones con estados cobrables
     quotes_query = select(Quote).where(
         Quote.cliente_id == customer_id,
-        Quote.estado == 'Aprobada'
+        Quote.estado.in_(ESTADOS_COBRABLES)
     ).options(selectinload(Quote.pagos))
     quotes = session.exec(quotes_query).all()
 

@@ -346,31 +346,44 @@
         const qtyInput = row.querySelector('.qty-input');
         const qty = parseInt(qtyInput.value || 0);
 
-        // Lógica de inyección de precio dinámico si el usuario acaba de cambiar producto
         const priceInput = row.querySelector('.price-input');
         
-        let priceLabel = 'Ajuste manual';
-        let suggestedPrice = priceMenudeo;
-        if (qty >= minMayoreo) {
-            suggestedPrice = priceMayoreo;
-            priceLabel = 'Tarifa Mayoreo';
-        }
+        let suggestedPrice = qty >= minMayoreo ? priceMayoreo : priceMenudeo;
 
+        // Si es un producto nuevo, inicializamos
         if (priceInput.dataset.lastProduct !== selectedOpt.value) {
-            // El usuario apenas cambió el dropdown, inyectamos sugerido
             priceInput.value = suggestedPrice.toFixed(2);
             priceInput.dataset.lastProduct = selectedOpt.value;
+            priceInput.dataset.isManual = "false";
+            priceInput.dataset.lastAutoPrice = suggestedPrice.toFixed(2);
+        } else {
+            // Verificar si el usuario ha ingresado un precio manualmente
+            const currentValueStr = parseFloat(priceInput.value || 0).toFixed(2);
+            const lastAutoPriceStr = parseFloat(priceInput.dataset.lastAutoPrice || 0).toFixed(2);
+            
+            if (currentValueStr !== lastAutoPriceStr) {
+                priceInput.dataset.isManual = "true";
+            }
+            
+            // Si no es manual y la cantidad cambió el precio sugerido, lo actualizamos automáticamente
+            if (priceInput.dataset.isManual !== "true") {
+                priceInput.value = suggestedPrice.toFixed(2);
+                priceInput.dataset.lastAutoPrice = suggestedPrice.toFixed(2);
+            }
         }
 
         const finalPrice = parseFloat(priceInput.value || 0);
+        let priceLabel = 'Ajuste manual';
 
         if (finalPrice <= cost && finalPrice > 0) {
             row.querySelector('.price-type-badge').style.color = '#ef4444';
             priceLabel = '¡ADVERTENCIA: Por debajo del costo!';
-        } else if (finalPrice == suggestedPrice) {
-            row.querySelector('.price-type-badge').style.color = '#166534'; 
+        } else if (priceInput.dataset.isManual === "true") {
+            row.querySelector('.price-type-badge').style.color = '#eab308';
+            priceLabel = 'Ajuste manual';
         } else {
-            row.querySelector('.price-type-badge').style.color = '#eab308'; 
+            row.querySelector('.price-type-badge').style.color = '#166534';
+            priceLabel = qty >= minMayoreo ? 'Tarifa Mayoreo' : 'Tarifa Menudeo';
         }
 
         row.querySelector('.price-type-badge').textContent = priceLabel;

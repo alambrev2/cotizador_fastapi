@@ -8,7 +8,7 @@ from app.models import CustomerBase, QuoteBase, PaymentBase, AccountChargeBase
 class QuoteItemCreate(SQLModel):
     producto_id: int
     cantidad: int = Field(gt=0, description="La cantidad debe ser mayor a 0")
-    precio_unitario: float = Field(ge=0, description="Precio ajustado manualmente")
+    precio_unitario: Decimal = Field(ge=0, description="Precio ajustado manualmente")
 
 
 class QuoteCreate(SQLModel):

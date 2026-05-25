@@ -32,7 +32,7 @@ class ProductBase(SQLModel):
     precio_menudeo: Decimal = Field(default=0, max_digits=10, decimal_places=2, ge=0)
     precio_mayoreo: Decimal = Field(default=0, max_digits=10, decimal_places=2, ge=0)
     cantidad_mayoreo: int = Field(
-        default=12, description="Cantidad mínima para aplicar precio mayoreo", gt=0
+        default=16, description="Cantidad mínima para aplicar precio mayoreo", gt=0
     )
     stock: int = Field(default=0, description="Inventario actual", ge=0)
     activo: bool = Field(default=True, nullable=False)
@@ -46,7 +46,7 @@ class ExpenseBase(SQLModel):
 
 
 class QuoteBase(SQLModel):
-    estado: str = "Borrador"  # Borrador, Enviada, Aceptada, Rechazada
+    estado: str = "Borrador"  # Borrador, Enviada, Aceptada, Rechazada, Pendiente, Cobranza Requerida (Solo 'Pendiente' y 'Cobranza Requerida' son cobrables para deuda activa)
     cliente_id: Optional[int] = Field(default=None, foreign_key="customer.id")
 
     # Contabilidad e Impuestos
