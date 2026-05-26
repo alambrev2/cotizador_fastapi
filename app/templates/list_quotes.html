@@ -291,12 +291,13 @@
                     allQuotes[qIdx].estado = newStatus;
                 }
                 applyFilters();
+                showToast("Estado actualizado correctamente", "success");
             } else {
-                alert("Error actualizando estatus");
+                showToast("Error actualizando estatus", "error");
             }
         } catch (e) {
             console.error(e);
-            alert("Error de conexión");
+            showToast("Error de conexión", "error");
         }
     }
 

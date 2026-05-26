@@ -3,6 +3,16 @@
 {% block title %}Nueva Cotización - Cotizador{% endblock %}
 
 {% block content %}
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.spin {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+</style>
 <div style="max-width: 1000px; margin: 0 auto;">
     <div style="text-align: center; margin-bottom: var(--space-8);">
         <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--indigo-light) 0%, #e0e7ff 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4); border: 4px solid white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
@@ -175,7 +185,7 @@
 
             <div style="display: flex; justify-content: flex-end; gap: var(--space-4);">
                 <a href="/quotes" class="btn" style="background: white; border: 1px solid var(--border-color); color: var(--gray-700); padding: 0.75rem 1.5rem; border-radius: var(--radius-md); font-weight: 600; text-decoration: none; display: flex; align-items: center;">Volver al Historial</a>
-                <button type="submit" class="btn btn-indigo" style="padding: 0.75rem 2.5rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.5); font-size: 1.05rem;">
+                <button type="submit" id="submit-btn" class="btn btn-indigo" style="padding: 0.75rem 2.5rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.5); font-size: 1.05rem;">
                     <i class="bi bi-file-earmark-check me-2"></i> Crear Cotización
                 </button>
             </div>
@@ -219,7 +229,7 @@
                     document.getElementById('folio-edit-display').textContent = quoteLoad.folio_cotizacion || ('#' + quoteLoad.id);
                     hydrateForm(quoteLoad);
                 } else {
-                    alert('Error cargando cotización original. Iniciando en blanco.');
+                    showToast('Error cargando cotización original. Iniciando en blanco.', 'error');
                     addItemRow();
                 }
             } else {
@@ -227,7 +237,7 @@
             }
         } catch (err) {
             console.error(err);
-            alert('Error cargando datos');
+            showToast('Error cargando datos', 'error');
         }
     }
 
@@ -505,9 +515,14 @@
         });
 
         if (items.length === 0) {
-            alert('Agrega al menos un producto');
+            showToast('Agrega al menos un producto', 'warning');
             return;
         }
+
+        const submitBtn = document.getElementById('submit-btn');
+        const originalBtnHTML = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="bi bi-arrow-repeat spin me-2"></i> Procesando...`;
 
         const payload = {
             cliente_id: parseInt(clienteId),
@@ -535,6 +550,7 @@
 
             if (response.ok) {
                 const result = await response.json();
+                showToast('¡Cotización creada con éxito!', 'success');
 
                 // Mensaje de éxito
                 const totalFormatted = parseFloat(result.total).toFixed(2);
@@ -565,15 +581,20 @@
 
             } else {
                 const error = await response.json();
+                showToast(`Error: ${error.detail}`, 'error');
                 alertBox.textContent = `Error: ${error.detail}`;
                 alertBox.className = 'alert alert-error';
                 alertBox.style.display = 'block';
             }
         } catch (err) {
             console.error(err);
+            showToast('Error inesperado al guardar cotización', 'error');
             alertBox.innerHTML = `<strong>Error inesperado:</strong><br>${err.message}`;
             alertBox.className = 'alert alert-error';
             alertBox.style.display = 'block';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnHTML;
         }
     });
 
