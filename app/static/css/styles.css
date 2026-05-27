@@ -1015,3 +1015,65 @@ tr:last-child td {
   overflow-x: auto !important;
   -webkit-overflow-scrolling: touch;
 }
+
+/* === Responsive Layout (Sidebar & Main Content) === */
+@media (max-width: 992px) {
+  #sidebar-mobile-toggle {
+    display: flex !important;
+  }
+  
+  .sidebar {
+    transform: translateX(-100%) !important;
+    transition: transform var(--transition-base) !important;
+  }
+  
+  .sidebar.show {
+    transform: translateX(0) !important;
+    box-shadow: 4px 0 30px rgba(0, 0, 0, 0.25) !important;
+  }
+  
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: var(--space-4) !important;
+    padding-top: calc(16px + 42px + var(--space-4)) !important; /* Dejar espacio para el botón toggle */
+  }
+
+  /* Ajustar la barra de encabezado de página en móvil */
+  .header-bar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: var(--space-3) !important;
+    margin-bottom: var(--space-6) !important;
+  }
+  
+  .page-title {
+    font-size: var(--font-size-2xl) !important;
+  }
+
+  /* Stack layout grids on mobile dynamically */
+  .grid-2-cols,
+  .grid-3-cols {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Target and stack inline multi-column layout grids on mobile */
+  div[style*="grid-template-columns: 1fr 1fr"],
+  div[style*="grid-template-columns: 1fr 1fr 1fr"],
+  div[style*="grid-template-columns: repeat(3, 1fr)"],
+  div[style*="grid-template-columns: 350px 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Stack flex layout wrappers on mobile */
+  .d-flex.gap-8,
+  .d-flex.gap-6 {
+    flex-direction: column !important;
+  }
+  
+  .d-flex.gap-8 > div,
+  .d-flex.gap-6 > div {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

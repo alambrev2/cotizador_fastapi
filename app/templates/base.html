@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Cotizador Pro{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}?v=1.0.3">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     {% block head %}{% endblock %}
@@ -54,6 +54,11 @@
 </head>
 
 <body>
+    <!-- Botón Toggle de Sidebar para Móvil -->
+    <button type="button" id="sidebar-mobile-toggle" style="position: fixed; left: 16px; top: 16px; z-index: 1100; width: 42px; height: 42px; border-radius: 50%; background-color: var(--primary); color: white; border: none; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); display: none; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;">
+        <i class="bi bi-list" style="font-size: 1.5rem;"></i>
+    </button>
+
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
@@ -190,6 +195,30 @@
                     localStorage.setItem('sidebar-scroll-pos', sidebarEl.scrollTop);
                 }
             });
+
+            // Sidebar Mobile Toggle
+            const toggleBtn = document.getElementById('sidebar-mobile-toggle');
+            const sidebarEl = document.querySelector('.sidebar');
+            
+            if (toggleBtn && sidebarEl) {
+                toggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sidebarEl.classList.toggle('show');
+                    const icon = toggleBtn.querySelector('i');
+                    if (sidebarEl.classList.contains('show')) {
+                        icon.className = 'bi bi-x-lg';
+                    } else {
+                        icon.className = 'bi bi-list';
+                    }
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (window.innerWidth < 992 && sidebarEl.classList.contains('show') && !sidebarEl.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+                        sidebarEl.classList.remove('show');
+                        toggleBtn.querySelector('i').className = 'bi bi-list';
+                    }
+                });
+            }
         });
     </script>
 

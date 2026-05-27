@@ -132,10 +132,10 @@ def get_dashboard_summary(*, session: Session = Depends(get_session), response: 
     
     saldo_neto = ingresos_mes - egresos_mes
 
-    # Egresos Programados Pendientes (Calendario)
-    scheduled_query = select(ScheduledExpense).where(ScheduledExpense.estatus == 'Pendiente')
+    # Egresos Programados (Calendario - Todos)
+    scheduled_query = select(ScheduledExpense)
     scheduled_expenses = session.exec(scheduled_query).all()
-    total_scheduled = sum([float(s.monto) for s in scheduled_expenses])
+    total_scheduled = sum([float(s.monto) for s in scheduled_expenses if s.estatus == 'Pendiente'])
     flujo_caja_real = saldo_por_cobrar - total_scheduled
 
     import datetime as dt
