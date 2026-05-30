@@ -18,10 +18,10 @@ def create_scheduled_expense(*, session: Session = Depends(get_session), expense
     base_obj = ScheduledExpense.from_orm(expense)
     session.add(base_obj)
     
-    # Manejar recurrencia hasta 2 años a partir de la fecha de inicio
+    # Manejar recurrencia hasta el limite establecido por el usuario (Dic 2026)
     if expense.frecuencia != 'Único':
         current_date = expense.fecha_vencimiento
-        limit_date = current_date + relativedelta(years=2)
+        limit_date = dt.date(2026, 12, 31)
         
         step_months = 1
         if expense.frecuencia == 'Bimestral': step_months = 2

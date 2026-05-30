@@ -274,30 +274,17 @@
             const data = await res.json();
             
             if (res.ok) {
-                showToast(`Importación exitosa: ${data.creados} productos creados, ${data.actualizados} actualizados.`, 'success');
+                const msg = `✅ Importación exitosa: ${data.creados} productos creados, ${data.actualizados} actualizados.`;
+                alert(msg);
                 fetchProducts(); // Recargar tabla
             } else {
-                let errorMsg = "Error al procesar el archivo.";
-                if (data && data.detail) {
-                    if (typeof data.detail === 'string') {
-                        errorMsg = data.detail;
-                    } else if (Array.isArray(data.detail)) {
-                        errorMsg = data.detail.map(err => {
-                            const field = err.loc ? err.loc.join('.') : '';
-                            return `${field ? field + ': ' : ''}${err.msg}`;
-                        }).join(', ');
-                    } else {
-                        errorMsg = JSON.stringify(data.detail);
-                    }
-                }
-                showToast(errorMsg, 'error');
+                alert("Error al procesar el archivo: " + JSON.stringify(data));
             }
         } catch (e) {
-            showToast("Error de conexión al cargar el archivo.", 'error');
+            alert("Error de conexión al cargar el archivo.");
             console.error(e);
         } finally {
             importInput.value = ''; // Limpiar input para permitir subir el mismo archivo de nuevo
-            loading.style.display = 'none';
         }
     });
 </script>

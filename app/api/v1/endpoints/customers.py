@@ -330,10 +330,13 @@ def update_customer(
 
     # Exclude unset fields from the update data
     customer_data = customer_update.model_dump(exclude_unset=True)
-    # Evitar que campos históricos de consumo y saldo inicial sean sobreescritos
-    for field in ["consumo_2022", "consumo_2023", "consumo_2024", "saldo_inicial"]:
-        customer_data.pop(field, None)
-        
+    
+    # Prevent historical fields from being updated via standard operations
+    customer_data.pop("consumo_2022", None)
+    customer_data.pop("consumo_2023", None)
+    customer_data.pop("consumo_2024", None)
+    customer_data.pop("saldo_inicial", None)
+
     db_customer.sqlmodel_update(customer_data)
 
     session.add(db_customer)

@@ -2,7 +2,19 @@ from typing import List, Optional
 from datetime import datetime, date
 from decimal import Decimal
 from sqlmodel import SQLModel, Field
-from app.models import CustomerBase, QuoteBase, PaymentBase, AccountChargeBase
+from app.models import CustomerBase, QuoteBase, PaymentBase, AccountChargeBase, UserBase, RoleEnum
+
+
+class Token(SQLModel):
+    access_token: str
+    token_type: str
+
+
+class UserCreate(UserBase):
+    password: str
+
+class UserRead(UserBase):
+    id: int
 
 
 class QuoteItemCreate(SQLModel):
@@ -34,14 +46,14 @@ class QuoteCreate(SQLModel):
 class QuoteUpdate(SQLModel):
     estado: Optional[str] = None
     fecha_entrega: Optional[date] = None
-    costo_compra_real: Optional[float] = None
-    costos_operativos: Optional[float] = None
+    costo_compra_real: Optional[Decimal] = None
+    costos_operativos: Optional[Decimal] = None
 
 
 class QuotePublic(SQLModel):
     id: int
     fecha_creacion: str
-    total: float
+    total: Decimal
     estado: str
     cliente_id: int
 
@@ -50,20 +62,20 @@ class QuoteItemRead(SQLModel):
     id: int
     producto_id: int
     cantidad: int
-    precio_unitario: float
+    precio_unitario: Decimal
 
 class QuoteRead(QuoteBase):
     id: int
     fecha_creacion: datetime
-    subtotal: float = 0
-    iva: float = 0
-    total: float
-    anticipo: float = 0
-    utilidad_total: float = 0
+    subtotal: Decimal = 0
+    iva: Decimal = 0
+    total: Decimal
+    anticipo: Decimal = 0
+    utilidad_total: Decimal = 0
     fecha_entrega: Optional[date] = None
     reporte_operativo_path: Optional[str] = None
-    costo_compra_real: Optional[float] = None
-    costos_operativos: float = 0
+    costo_compra_real: Optional[Decimal] = None
+    costos_operativos: Decimal = 0
     cliente: Optional[CustomerBase] = None
     items: List[QuoteItemRead] = []
 

@@ -4,193 +4,6 @@
 
 {% block head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-    /* Estilos responsivos premium para el dashboard y calendario */
-    @media (max-width: 768px) {
-        .dashboard-metrics {
-            grid-template-columns: 1fr !important;
-            gap: var(--space-4) !important;
-        }
-        .forms-row {
-            grid-template-columns: 1fr !important;
-            gap: var(--space-6) !important;
-            margin-bottom: var(--space-6) !important;
-        }
-        
-        /* Asegurar que las tarjetas de clientes y productos tengan excelente espaciado en móvil */
-        .card {
-            padding: var(--space-4) !important;
-        }
-
-        /* Hacer la tabla de vista de lista responsiva tipo tarjeta */
-        #calendar-list-view div {
-            border: none !important;
-            box-shadow: none !important;
-            background: transparent !important;
-        }
-        #calendar-list-view table, 
-        #calendar-list-view thead, 
-        #calendar-list-view tbody, 
-        #calendar-list-view th, 
-        #calendar-list-view td, 
-        #calendar-list-view tr {
-            display: block !important;
-            width: 100% !important;
-        }
-        #calendar-list-view thead {
-            display: none !important; /* Ocultar cabeceras en móviles */
-        }
-        #calendar-list-view tbody tr {
-            margin-bottom: var(--space-4) !important;
-            border: 1px solid var(--border-color) !important;
-            border-radius: var(--radius-lg) !important;
-            background-color: white !important;
-            padding: var(--space-4) !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03) !important;
-            position: relative !important;
-        }
-        #calendar-list-view tbody td {
-            padding: 8px 0 !important;
-            border: none !important;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
-            font-size: 0.88rem !important;
-            text-align: left !important;
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-        }
-        /* El concepto/descripción va destacado arriba */
-        #calendar-list-view tbody td:first-child {
-            font-size: 1.05rem !important;
-            font-weight: 700 !important;
-            color: var(--gray-800) !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            padding-bottom: var(--space-2) !important;
-            margin-bottom: var(--space-2) !important;
-            display: block !important;
-            word-break: break-word !important;
-        }
-        /* Prefijos CSS para indicar qué es cada dato en móvil */
-        #calendar-list-view tbody td:nth-child(2)::before {
-            content: "Vencimiento:";
-            font-weight: 700;
-            color: var(--gray-400);
-            font-size: 0.72rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        #calendar-list-view tbody td:nth-child(3)::before {
-            content: "Frecuencia:";
-            font-weight: 700;
-            color: var(--gray-400);
-            font-size: 0.72rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        #calendar-list-view tbody td:nth-child(4)::before {
-            content: "Monto:";
-            font-weight: 700;
-            color: var(--gray-400);
-            font-size: 0.72rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        #calendar-list-view tbody td:nth-child(5)::before {
-            content: "Estado:";
-            font-weight: 700;
-            color: var(--gray-400);
-            font-size: 0.72rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        /* Fila de acciones al final */
-        #calendar-list-view tbody td:last-child {
-            border-bottom: none !important;
-            padding-top: var(--space-3) !important;
-            margin-top: var(--space-2) !important;
-            justify-content: flex-end !important;
-            gap: var(--space-2) !important;
-        }
-    }
-
-    @media (max-width: 600px) {
-        /* Encabezado del calendario más compacto */
-        .calendar-header {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: var(--space-3) !important;
-        }
-        .calendar-header > div {
-            justify-content: space-between !important;
-            width: 100% !important;
-        }
-        .calendar-header .btn {
-            width: 100% !important;
-            justify-content: center !important;
-        }
-
-        /* 7-column grid ultra compacto en móvil */
-        #calendar-grid {
-            gap: 4px !important;
-        }
-        #calendar-grid > div {
-            padding: 4px !important;
-            min-height: 65px !important;
-        }
-        /* Convertir los textos de egresos en el grid en pequeños círculos tipo indicador */
-        #calendar-grid > div div[title] {
-            padding: 0 !important;
-            width: 8px !important;
-            height: 8px !important;
-            min-width: 8px !important;
-            border-radius: 50% !important;
-            border: none !important;
-            border-left: none !important;
-            margin-top: 4px !important;
-            display: inline-block !important;
-            font-size: 0 !important;
-            overflow: hidden !important;
-            text-indent: -9999px !important;
-        }
-        #calendar-grid > div div[title] i,
-        #calendar-grid > div div[title] span {
-            display: none !important;
-        }
-        #calendar-grid > div > div:last-child {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
-            gap: 4px !important;
-            justify-content: center !important;
-        }
-
-        /* Nombres de los días de 1 sola letra */
-        .calendar-day-label {
-            font-size: 0 !important;
-        }
-        .calendar-day-label::before {
-            content: attr(data-short);
-            font-size: 0.72rem;
-            font-weight: 800;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .modal-grid-row {
-            grid-template-columns: 1fr !important;
-            gap: var(--space-3) !important;
-        }
-        /* Hacer botones de modal responsivos */
-        .modal-grid-row + div {
-            flex-direction: column !important;
-            gap: var(--space-2) !important;
-        }
-        .modal-grid-row + div button {
-            width: 100% !important;
-            justify-content: center !important;
-        }
-    }
-</style>
 {% endblock %}
 
 {% block content %}
@@ -254,85 +67,23 @@
 
     <!-- Módulo Calendario -->
     <div class="card" style="margin-bottom: var(--space-10);">
-        <div class="calendar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-4);">
-            <div style="display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap;">
-                <h3 style="font-size: var(--font-size-xl); font-weight: 800; color: var(--text-main); margin: 0; letter-spacing: -0.01em;">📅 Calendario de Egresos</h3>
-                <div style="display: flex; align-items: center; gap: var(--space-1.5); background-color: var(--gray-100); padding: 4px 6px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-                    <button type="button" onclick="changeCalendarMonth(-1)" style="padding: 4px 8px; margin: 0; min-height: unset; line-height: 1; border: none; background: transparent; cursor: pointer; color: var(--gray-600); display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(0,0,0,0.05)'; this.style.color='var(--primary)';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--gray-600)';" title="Mes anterior"><i class="bi bi-chevron-left" style="font-size: 0.8rem; font-weight: bold;"></i></button>
-                    
-                    <select id="calendar-select-month" onchange="jumpToCalendarMonth()" style="width: auto; padding: 2px 20px 2px 6px; border: none; border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 700; background-color: transparent; color: var(--text-main); font-family: inherit; outline: none; cursor: pointer; box-shadow: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url(&quot;data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%2364748b' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>&quot;); background-repeat: no-repeat; background-position: right 6px center;">
-                        <option value="0">Enero</option>
-                        <option value="1">Febrero</option>
-                        <option value="2">Marzo</option>
-                        <option value="3">Abril</option>
-                        <option value="4">Mayo</option>
-                        <option value="5">Junio</option>
-                        <option value="6">Julio</option>
-                        <option value="7">Agosto</option>
-                        <option value="8">Septiembre</option>
-                        <option value="9">Octubre</option>
-                        <option value="10">Noviembre</option>
-                        <option value="11">Diciembre</option>
-                    </select>
-
-                    <select id="calendar-select-year" onchange="jumpToCalendarMonth()" style="width: auto; padding: 2px 20px 2px 6px; border: none; border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 700; background-color: transparent; color: var(--text-main); font-family: inherit; outline: none; cursor: pointer; box-shadow: none; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url(&quot;data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%2364748b' viewBox='0 0 16 16'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>&quot;); background-repeat: no-repeat; background-position: right 6px center;">
-                        <!-- Poblado por JS para ser dinámico -->
-                    </select>
-
-                    <button type="button" onclick="changeCalendarMonth(1)" style="padding: 4px 8px; margin: 0; min-height: unset; line-height: 1; border: none; background: transparent; cursor: pointer; color: var(--gray-600); display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); transition: all 0.2s;" onmouseover="this.style.backgroundColor='rgba(0,0,0,0.05)'; this.style.color='var(--primary)';" onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--gray-600)';" title="Mes siguiente"><i class="bi bi-chevron-right" style="font-size: 0.8rem; font-weight: bold;"></i></button>
-                </div>
-                <button type="button" onclick="resetCalendarMonth()" style="padding: 4px 12px; margin: 0; min-height: unset; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: white; color: var(--text-main); cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.03);" onmouseover="this.style.backgroundColor='var(--gray-50)'; this.style.borderColor='var(--gray-300)';" onmouseout="this.style.backgroundColor='white'; this.style.borderColor='var(--border-color)';" title="Ir al mes actual">Hoy</button>
-                
-                <!-- Toggle de Vista -->
-                <div style="display: flex; align-items: center; border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
-                    <button type="button" id="btn-view-grid" onclick="setCalendarView('grid')" style="padding: 4px 12px; margin: 0; min-height: unset; font-size: 0.8rem; font-weight: 600; border: none; border-radius: 0; background-color: var(--primary); color: white; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px;" title="Ver vista calendario"><i class="bi bi-calendar3"></i> Calendario</button>
-                    <button type="button" id="btn-view-list" onclick="setCalendarView('list')" style="padding: 4px 12px; margin: 0; min-height: unset; font-size: 0.8rem; font-weight: 600; border: none; border-radius: 0; background-color: transparent; color: var(--gray-600); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px;" title="Ver vista lista"><i class="bi bi-list-task"></i> Lista</button>
-                </div>
-            </div>
-            <button onclick="document.getElementById('modal-egreso').style.display = 'flex'" class="btn btn-primary" style="width: auto; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25); display: flex; align-items: center; gap: 6px;"><i class="bi bi-calendar-plus" style="font-size: 1rem;"></i> Añadir Egreso Programado</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-3);">
+            <h3 style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--gray-800);">📅 Calendario de Egresos</h3>
+            <button onclick="document.getElementById('modal-egreso').style.display = 'flex'" class="btn btn-primary" style="width: auto;">+ Añadir Egreso Programado</button>
         </div>
-
-        <!-- Vista Cuadrícula (Calendario Tradicional) -->
-        <div id="calendar-grid-view">
-            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2); margin-bottom: var(--space-3); background-color: var(--gray-50); padding: 8px 0; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-                <div class="calendar-day-label" data-short="D" style="text-align: center; font-weight: 700; color: var(--gray-500); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Dom</div>
-                <div class="calendar-day-label" data-short="L" style="text-align: center; font-weight: 700; color: var(--gray-500); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Lun</div>
-                <div class="calendar-day-label" data-short="M" style="text-align: center; font-weight: 700; color: var(--gray-500); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Mar</div>
-                <div class="calendar-day-label" data-short="M" style="text-align: center; font-weight: 700; color: var(--gray-500); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Mié</div>
-                <div class="calendar-day-label" data-short="J" style="text-align: center; font-weight: 700; color: var(--gray-500); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Jue</div>
-                <div class="calendar-day-label" data-short="V" style="text-align: center; font-weight: 700; color: var(--gray-500); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Vie</div>
-                <div class="calendar-day-label" data-short="S" style="text-align: center; font-weight: 700; color: var(--gray-500); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Sáb</div>
-            </div>
-            <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2);">
-                <!-- Bloques generados dinámicamente -->
-            </div>
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2); margin-bottom: var(--space-2);">
+            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Dom</div>
+            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Lun</div>
+            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Mar</div>
+            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Mié</div>
+            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Jue</div>
+            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Vie</div>
+            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Sáb</div>
         </div>
-
-        <!-- Vista Lista (Detalle de todos los egresos del mes activo) -->
-        <div id="calendar-list-view" style="display: none; padding: 0 var(--space-4) var(--space-4) var(--space-4);">
-            <div style="margin: 0; border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <table style="margin: 0; width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background-color: var(--gray-50); border-bottom: 1px solid var(--border-color);">
-                            <th style="padding: var(--space-3) var(--space-4); text-align: left; font-weight: 700; color: var(--gray-500); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">Concepto</th>
-                            <th style="padding: var(--space-3) var(--space-4); text-align: left; font-weight: 700; color: var(--gray-500); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">Vencimiento</th>
-                            <th style="padding: var(--space-3) var(--space-4); text-align: left; font-weight: 700; color: var(--gray-500); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">Frecuencia</th>
-                            <th style="padding: var(--space-3) var(--space-4); text-align: right; font-weight: 700; color: var(--gray-500); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">Monto</th>
-                            <th style="padding: var(--space-3) var(--space-4); text-align: center; font-weight: 700; color: var(--gray-500); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">Estado</th>
-                            <th style="padding: var(--space-3) var(--space-4); text-align: center; font-weight: 700; color: var(--gray-500); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="calendar-list-body">
-                        <!-- Generado dinámicamente -->
-                    </tbody>
-                </table>
-            </div>
-            <div id="calendar-list-empty" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: var(--space-10) 0; color: var(--gray-400); gap: var(--space-3);">
-                <div style="font-size: 2rem;">📋</div>
-                <div style="font-weight: 600; font-size: 0.9rem; color: var(--gray-500);">No hay egresos programados para este mes</div>
-                <div style="font-size: 0.8rem; color: var(--gray-400);">Haz clic en "Añadir Egreso Programado" para agregar uno nuevo</div>
-            </div>
+        <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2);">
+            <!-- Bloques generados dinámicamente -->
         </div>
+    </div>
 
     <!-- Modal -->
     <div id="modal-egreso" style="display: none; position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); overflow-y: auto; height: 100%; width: 100%; z-index: var(--z-modal); align-items: center; justify-content: center;">
@@ -382,121 +133,7 @@
         </div>
     </div>
 
-    <!-- Modal Detalle Egreso -->
-    <div id="modal-detalle-egreso" style="display: none; position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); overflow-y: auto; height: 100%; width: 100%; z-index: var(--z-modal); align-items: center; justify-content: center; opacity: 0; transition: opacity 0.25s ease;">
-        <div style="display: flex; align-items: center; justify-content: center; min-height: 100%; width: 100%;">
-            <div class="card" style="max-width: 450px; width: 90%; margin: 0; border-radius: var(--radius-xl); padding: var(--space-6); border: 1px solid var(--border-color); box-shadow: var(--shadow-2xl); transform: scale(0.95); transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); background: white;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-3);">
-                    <div style="display: flex; align-items: center; gap: var(--space-3);">
-                        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1rem;">
-                            <i class="bi bi-file-earmark-text"></i>
-                        </div>
-                        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--gray-800);">Detalle del Egreso</h3>
-                    </div>
-                    <button type="button" onclick="cerrarDetalleModal()" style="background: none; border: none; font-size: 1.2rem; color: var(--gray-400); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%; transition: all 0.15s;" onmouseover="this.style.color='var(--danger)'; this.style.backgroundColor='var(--danger-light)';" onmouseout="this.style.color='var(--gray-400)'; this.style.backgroundColor='transparent';"><i class="bi bi-x-lg" style="font-size: 0.95rem;"></i></button>
-                </div>
-                
-                <div style="display: flex; flex-direction: column; gap: var(--space-4); margin-bottom: var(--space-6);">
-                    <div>
-                        <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--gray-400); display: block; letter-spacing: 0.05em; margin-bottom: 2px;">Descripción</span>
-                        <span id="det-desc" style="font-size: 1.05rem; font-weight: 600; color: var(--gray-800); word-break: break-word; line-height: 1.4;">-</span>
-                    </div>
-                    
-                    <div class="modal-grid-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                        <div>
-                            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--gray-400); display: block; letter-spacing: 0.05em; margin-bottom: 2px;">Monto</span>
-                            <span id="det-monto" style="font-size: 1.2rem; font-weight: 800; color: var(--primary);">-</span>
-                        </div>
-                        <div>
-                            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--gray-400); display: block; letter-spacing: 0.05em; margin-bottom: 2px;">Vencimiento</span>
-                            <span id="det-fecha" style="font-size: 0.95rem; font-weight: 600; color: var(--gray-700);">-</span>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-grid-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                        <div>
-                            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--gray-400); display: block; letter-spacing: 0.05em; margin-bottom: 2px;">Frecuencia</span>
-                            <span id="det-freq" style="font-size: 0.9rem; font-weight: 600; color: var(--gray-700);">-</span>
-                        </div>
-                        <div>
-                            <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--gray-400); display: block; letter-spacing: 0.05em; margin-bottom: 4px;">Estado</span>
-                            <span id="det-estado" style="display: inline-flex; align-items: center; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.03em;">-</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: var(--space-3); justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
-                    <button type="button" id="det-btn-eliminar" class="btn btn-danger" style="width: auto; padding: 0.55rem 1.25rem; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; border-radius: var(--radius-md); box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);"><i class="bi bi-trash3-fill"></i> Eliminar</button>
-                    <button type="button" onclick="mostrarEditarModal(selectedExpenseId)" style="width: auto; padding: 0.55rem 1.25rem; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; border-radius: var(--radius-md); background-color: var(--primary); color: white; border: none; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.25); cursor: pointer;" onmouseover="this.style.backgroundColor='var(--primary-hover)';" onmouseout="this.style.backgroundColor='var(--primary)';"><i class="bi bi-pencil-fill"></i> Editar</button>
-                    <button type="button" id="det-btn-pagar" class="btn btn-success" style="width: auto; padding: 0.55rem 1.5rem; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; border-radius: var(--radius-md); box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);"><i class="bi bi-check-circle-fill"></i> Marcar Pagado</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Editar Egreso -->
-    <div id="modal-editar-egreso" style="display: none; position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); overflow-y: auto; height: 100%; width: 100%; z-index: var(--z-modal); align-items: center; justify-content: center; opacity: 0; transition: opacity 0.25s ease;">
-        <div style="display: flex; align-items: center; justify-content: center; min-height: 100%; width: 100%;">
-            <div class="card" style="max-width: 480px; width: 90%; margin: 0; border-radius: var(--radius-xl); padding: var(--space-6); border: 1px solid var(--border-color); box-shadow: var(--shadow-2xl); transform: scale(0.95); transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); background: white;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-3);">
-                    <div style="display: flex; align-items: center; gap: var(--space-3);">
-                        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1rem;">
-                            <i class="bi bi-pencil-square"></i>
-                        </div>
-                        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--gray-800);">Editar Egreso</h3>
-                    </div>
-                    <button type="button" onclick="cerrarEditarModal()" style="background: none; border: none; font-size: 1.2rem; color: var(--gray-400); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%; transition: all 0.15s;" onmouseover="this.style.color='var(--danger)'; this.style.backgroundColor='var(--danger-light)';" onmouseout="this.style.color='var(--gray-400)'; this.style.backgroundColor='transparent';"><i class="bi bi-x-lg" style="font-size: 0.95rem;"></i></button>
-                </div>
-                
-                <form id="edit-scheduled-form" style="display: flex; flex-direction: column; gap: var(--space-4);">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="edit-sch-desc" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Descripción / Concepto <span style="color: var(--danger);">*</span></label>
-                        <input type="text" id="edit-sch-desc" required placeholder="Ej. Pago de Luz" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.55rem 0.85rem; width: 100%;">
-                    </div>
-                    
-                    <div class="modal-grid-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="edit-sch-monto" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Monto (MXN) <span style="color: var(--danger);">*</span></label>
-                            <input type="number" id="edit-sch-monto" step="0.01" min="0" required placeholder="0.00" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.55rem 0.85rem; width: 100%;">
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="edit-sch-fecha" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Vencimiento <span style="color: var(--danger);">*</span></label>
-                            <input type="date" id="edit-sch-fecha" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.55rem 0.85rem; width: 100%;">
-                        </div>
-                    </div>
-                    
-                    <div class="modal-grid-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="edit-sch-freq" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Frecuencia <span style="color: var(--danger);">*</span></label>
-                            <select id="edit-sch-freq" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.55rem 0.85rem; width: 100%;">
-                                <option value="Único">Único</option>
-                                <option value="Mensual">Mensual</option>
-                                <option value="Bimestral">Bimestral</option>
-                                <option value="Semestral">Semestral</option>
-                                <option value="Anual">Anual</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="edit-sch-estado" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Estado <span style="color: var(--danger);">*</span></label>
-                            <select id="edit-sch-estado" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.55rem 0.85rem; width: 100%;">
-                                <option value="Pendiente">Pendiente</option>
-                                <option value="Pagado">Pagado</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-4); border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
-                        <button type="button" onclick="cerrarEditarModal()" class="btn btn-outline" style="width: auto; padding: 0.6rem 1.2rem; border-radius: var(--radius-md); font-weight: 600;">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" style="width: auto; padding: 0.6rem 1.5rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4);">✓ Guardar Cambios</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="forms-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); margin-bottom: var(--space-10);">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); margin-bottom: var(--space-10);">
 
         <!-- Columna Clientes -->
         <div class="card" style="border-top: 4px solid var(--primary); border-radius: var(--radius-lg); padding: var(--space-6); display: flex; flex-direction: column;">
@@ -627,11 +264,6 @@
 
 {% block scripts %}
 <script>
-    // --- Variables de Estado para el Calendario ---
-    let globalScheduledExpenses = [];
-    let currentCalendarDate = new Date();
-    let currentCalendarView = 'grid';
-
     // --- Lógica del Resumen Financiero ---
     async function loadDashboardMetrics() {
         try {
@@ -658,9 +290,7 @@
                     alertBox.classList.add('hidden');
                 }
 
-                // Guardar los egresos programados de forma global y renderizar para el mes activo
-                globalScheduledExpenses = data.scheduled_expenses || [];
-                renderCalendar(globalScheduledExpenses, currentCalendarDate);
+                renderCalendar(data.scheduled_expenses || []);
                 
                 // Configurar y renderizar la gráfica de barras
                 const ctx = document.getElementById('financeChart').getContext('2d');
@@ -716,519 +346,57 @@
         }
     }
     
-    function populateYearSelect() {
-        const yearSelect = document.getElementById('calendar-select-year');
-        if (!yearSelect) return;
-        yearSelect.innerHTML = '';
-        const currentYear = new Date().getFullYear();
-        // Generar rango de -3 a +3 años
-        for (let y = currentYear - 3; y <= currentYear + 3; y++) {
-            const opt = document.createElement('option');
-            opt.value = y;
-            opt.textContent = y;
-            yearSelect.appendChild(opt);
-        }
-    }
+    document.addEventListener("DOMContentLoaded", loadDashboardMetrics);
 
-    function jumpToCalendarMonth() {
-        const m = parseInt(document.getElementById('calendar-select-month').value, 10);
-        const y = parseInt(document.getElementById('calendar-select-year').value, 10);
-        currentCalendarDate.setFullYear(y);
-        currentCalendarDate.setMonth(m);
-        currentCalendarDate.setDate(1); // Evitar saltos de mes debido al día actual
-        renderCalendar(globalScheduledExpenses, currentCalendarDate);
-    }
+    function renderCalendar(expenses) {
+        const grid = document.getElementById('calendar-grid');
+        grid.innerHTML = '';
 
-    document.addEventListener("DOMContentLoaded", () => {
-        populateYearSelect();
-        loadDashboardMetrics();
-    });
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay();
 
-    // --- Variables para el Modal de Detalle ---
-    let selectedExpenseId = null;
-
-    function mostrarDetalleModal(id) {
-        const exp = globalScheduledExpenses.find(e => e.id === id);
-        if (!exp) return;
-
-        selectedExpenseId = id;
-        document.getElementById('det-desc').textContent = exp.descripcion;
-        
-        const formatter = new Intl.NumberFormat('es-MX', {
-            style: 'currency',
-            currency: 'MXN'
-        });
-        document.getElementById('det-monto').textContent = formatter.format(exp.monto);
-        
-        // Formatear fecha
-        const dateParts = exp.fecha_vencimiento.split('-');
-        const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-        document.getElementById('det-fecha').textContent = dateObj.toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
-        
-        document.getElementById('det-freq').textContent = exp.frecuencia;
-
-        const estadoEl = document.getElementById('det-estado');
-        estadoEl.textContent = exp.estatus;
-        
-        const btnPagar = document.getElementById('det-btn-pagar');
-        
-        if (exp.estatus === 'Pagado') {
-            estadoEl.style.backgroundColor = 'var(--success-light)';
-            estadoEl.style.color = 'var(--success-dark)';
-            btnPagar.style.display = 'none';
-        } else {
-            estadoEl.style.backgroundColor = 'var(--danger-light)';
-            estadoEl.style.color = 'var(--danger-dark)';
-            btnPagar.style.display = 'flex';
+        // Celdas vacías
+        for(let i=0; i<firstDay; i++) {
+            grid.innerHTML += `<div style="padding: var(--space-3); background-color: transparent; border-radius: var(--radius-md);"></div>`;
         }
 
-        const modal = document.getElementById('modal-detalle-egreso');
-        modal.style.display = 'flex';
-        setTimeout(() => {
-            modal.style.opacity = '1';
-            modal.querySelector('.card').style.transform = 'scale(1)';
-        }, 10);
-    }
+        // Días
+        for(let day=1; day<=daysInMonth; day++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const dayExpenses = expenses.filter(e => e.fecha_vencimiento === dateStr);
 
-    function cerrarDetalleModal() {
-        const modal = document.getElementById('modal-detalle-egreso');
-        modal.style.opacity = '0';
-        modal.querySelector('.card').style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 250);
-    }
+            let badges = '';
+            dayExpenses.forEach(exp => {
+                const expDate = new Date(exp.fecha_vencimiento + 'T12:00:00');
+                const diffHours = (expDate - now) / (1000 * 60 * 60);
 
-    // Cerrar haciendo click afuera del contenido del modal
-    document.getElementById('modal-detalle-egreso').addEventListener('click', function(e) {
-        if (e.target === this) {
-            cerrarDetalleModal();
-        }
-    });
-
-    // Acción de Pagar
-    document.getElementById('det-btn-pagar').addEventListener('click', async function() {
-        if (!selectedExpenseId) return;
-        
-        const confirmed = await window.showConfirm({
-            title: 'Confirmar Pago',
-            message: '¿Estás seguro de que deseas marcar este egreso como Pagado?',
-            confirmText: 'Sí, pagar',
-            cancelText: 'Cancelar'
-        });
-        
-        if (!confirmed) return;
-        
-        try {
-            const exp = globalScheduledExpenses.find(e => e.id === selectedExpenseId);
-            if (!exp) return;
-            
-            const res = await fetch(`/api/v1/scheduled-expenses/${selectedExpenseId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    descripcion: exp.descripcion,
-                    monto: parseFloat(exp.monto),
-                    fecha_vencimiento: exp.fecha_vencimiento,
-                    frecuencia: exp.frecuencia,
-                    categoria: exp.categoria,
-                    estatus: 'Pagado'
-                })
-            });
-            
-            if (res.ok) {
-                window.showToast('Egreso marcado como Pagado', 'success');
-                cerrarDetalleModal();
-                loadDashboardMetrics();
-            } else {
-                window.showToast('Error al actualizar el egreso', 'error');
-            }
-        } catch (e) {
-            console.error(e);
-            window.showToast('Error de conexión', 'error');
-        }
-    });
-
-    // Acción de Eliminar
-    document.getElementById('det-btn-eliminar').addEventListener('click', async function() {
-        if (!selectedExpenseId) return;
-        
-        const confirmed = await window.showConfirm({
-            title: 'Confirmar Eliminación',
-            message: '¿Estás seguro de que deseas eliminar este egreso programado?\nEsta acción no se puede deshacer.',
-            confirmText: 'Eliminar',
-            cancelText: 'Cancelar',
-            type: 'danger'
-        });
-        
-        if (!confirmed) return;
-        
-        try {
-            const res = await fetch(`/api/v1/scheduled-expenses/${selectedExpenseId}`, {
-                method: 'DELETE'
-            });
-            
-            if (res.ok) {
-                window.showToast('Egreso programado eliminado', 'success');
-                cerrarDetalleModal();
-                loadDashboardMetrics();
-            } else {
-                window.showToast('Error al eliminar el egreso', 'error');
-            }
-        } catch (e) {
-            console.error(e);
-            window.showToast('Error de conexión', 'error');
-        }
-    });
-
-    // --- Cambiar de Vista (Calendario / Lista) ---
-    function setCalendarView(view) {
-        currentCalendarView = view;
-        const btnGrid = document.getElementById('btn-view-grid');
-        const btnList = document.getElementById('btn-view-list');
-        
-        if (view === 'grid') {
-            btnGrid.style.backgroundColor = 'var(--primary)';
-            btnGrid.style.color = 'white';
-            btnList.style.backgroundColor = 'transparent';
-            btnList.style.color = 'var(--gray-600)';
-        } else {
-            btnList.style.backgroundColor = 'var(--primary)';
-            btnList.style.color = 'white';
-            btnGrid.style.backgroundColor = 'transparent';
-            btnGrid.style.color = 'var(--gray-600)';
-        }
-        
-        renderCalendar(globalScheduledExpenses, currentCalendarDate);
-    }
-
-    // --- Variables para el Modal de Edición ---
-    function mostrarEditarModal(id) {
-        const exp = globalScheduledExpenses.find(e => e.id === id);
-        if (!exp) return;
-
-        selectedExpenseId = id;
-        document.getElementById('edit-sch-desc').value = exp.descripcion;
-        document.getElementById('edit-sch-monto').value = exp.monto;
-        document.getElementById('edit-sch-fecha').value = exp.fecha_vencimiento;
-        document.getElementById('edit-sch-freq').value = exp.frecuencia;
-        document.getElementById('edit-sch-estado').value = exp.estatus;
-
-        // Cerrar modal detalle por si estaba abierto
-        const detailModal = document.getElementById('modal-detalle-egreso');
-        if (detailModal.style.display === 'flex') {
-            cerrarDetalleModal();
-        }
-
-        const modal = document.getElementById('modal-editar-egreso');
-        modal.style.display = 'flex';
-        setTimeout(() => {
-            modal.style.opacity = '1';
-            modal.querySelector('.card').style.transform = 'scale(1)';
-        }, 10);
-    }
-
-    function cerrarEditarModal() {
-        const modal = document.getElementById('modal-editar-egreso');
-        modal.style.opacity = '0';
-        modal.querySelector('.card').style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 250);
-    }
-
-    // Cerrar haciendo click afuera del contenido del modal
-    document.getElementById('modal-editar-egreso').addEventListener('click', function(e) {
-        if (e.target === this) {
-            cerrarEditarModal();
-        }
-    });
-
-    // Acción de Guardar Cambios
-    document.getElementById('edit-scheduled-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        if (!selectedExpenseId) return;
-
-        const payload = {
-            descripcion: document.getElementById('edit-sch-desc').value,
-            monto: parseFloat(document.getElementById('edit-sch-monto').value),
-            fecha_vencimiento: document.getElementById('edit-sch-fecha').value,
-            frecuencia: document.getElementById('edit-sch-freq').value,
-            categoria: 'General',
-            estatus: document.getElementById('edit-sch-estado').value
-        };
-
-        try {
-            const res = await fetch(`/api/v1/scheduled-expenses/${selectedExpenseId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                window.showToast('Egreso actualizado con éxito', 'success');
-                cerrarEditarModal();
-                loadDashboardMetrics();
-            } else {
-                window.showToast('Error al actualizar el egreso', 'error');
-            }
-        } catch (err) {
-            console.error(err);
-            window.showToast('Error de conexión', 'error');
-        }
-    });
-
-    // Acción rápida de Marcar Pagado (desde la lista)
-    async function pagarEgresoRapido(id) {
-        const confirmed = await window.showConfirm({
-            title: 'Confirmar Pago',
-            message: '¿Estás seguro de que deseas marcar este egreso como Pagado?',
-            confirmText: 'Sí, pagar',
-            cancelText: 'Cancelar'
-        });
-        
-        if (!confirmed) return;
-
-        try {
-            const exp = globalScheduledExpenses.find(e => e.id === id);
-            if (!exp) return;
-
-            const res = await fetch(`/api/v1/scheduled-expenses/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    descripcion: exp.descripcion,
-                    monto: parseFloat(exp.monto),
-                    fecha_vencimiento: exp.fecha_vencimiento,
-                    frecuencia: exp.frecuencia,
-                    categoria: exp.categoria,
-                    estatus: 'Pagado'
-                })
-            });
-
-            if (res.ok) {
-                window.showToast('Egreso marcado como Pagado', 'success');
-                loadDashboardMetrics();
-            } else {
-                window.showToast('Error al actualizar el egreso', 'error');
-            }
-        } catch (e) {
-            console.error(e);
-            window.showToast('Error de conexión', 'error');
-        }
-    }
-
-    // Acción rápida de Eliminar (desde la lista)
-    async function eliminarEgresoRapido(id) {
-        const confirmed = await window.showConfirm({
-            title: 'Confirmar Eliminación',
-            message: '¿Estás seguro de que deseas eliminar este egreso programado?\nEsta acción no se puede deshacer.',
-            confirmText: 'Eliminar',
-            cancelText: 'Cancelar',
-            type: 'danger'
-        });
-        
-        if (!confirmed) return;
-
-        try {
-            const res = await fetch(`/api/v1/scheduled-expenses/${id}`, {
-                method: 'DELETE'
-            });
-
-            if (res.ok) {
-                window.showToast('Egreso programado eliminado', 'success');
-                loadDashboardMetrics();
-            } else {
-                window.showToast('Error al eliminar el egreso', 'error');
-            }
-        } catch (e) {
-            console.error(e);
-            window.showToast('Error de conexión', 'error');
-        }
-    }
-
-    // --- Navegación del Calendario ---
-    function changeCalendarMonth(offset) {
-        currentCalendarDate.setDate(1); // Evitar saltos de mes debido al día actual (ej: 31 de mayo -> 31 de junio = 1 de julio)
-        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset);
-        renderCalendar(globalScheduledExpenses, currentCalendarDate);
-    }
-
-    function resetCalendarMonth() {
-        currentCalendarDate = new Date();
-        renderCalendar(globalScheduledExpenses, currentCalendarDate);
-    }
-
-    // --- Renderizado del Calendario ---
-    function renderCalendar(expenses, targetDate = new Date()) {
-        const year = targetDate.getFullYear();
-        const month = targetDate.getMonth();
-
-        // Sincronizar selectores de mes y año
-        const monthSelect = document.getElementById('calendar-select-month');
-        const yearSelect = document.getElementById('calendar-select-year');
-        if (monthSelect) monthSelect.value = month;
-        if (yearSelect) yearSelect.value = year;
-
-        const gridView = document.getElementById('calendar-grid-view');
-        const listView = document.getElementById('calendar-list-view');
-
-        if (currentCalendarView === 'grid') {
-            gridView.style.display = 'block';
-            listView.style.display = 'none';
-
-            const grid = document.getElementById('calendar-grid');
-            grid.innerHTML = '';
-
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const firstDay = new Date(year, month, 1).getDay();
-
-            // Celdas vacías del mes anterior
-            for(let i=0; i<firstDay; i++) {
-                grid.innerHTML += `<div style="padding: var(--space-3); background-color: transparent; border-radius: var(--radius-md);"></div>`;
-            }
-
-            const now = new Date();
-            const isCurrentMonth = (now.getFullYear() === year && now.getMonth() === month);
-
-            // Días del mes activo
-            for(let day=1; day<=daysInMonth; day++) {
-                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-                const dayExpenses = expenses.filter(e => e.fecha_vencimiento === dateStr);
-
-                let badges = '';
-                dayExpenses.forEach(exp => {
-                    const expDate = new Date(exp.fecha_vencimiento + 'T12:00:00');
-                    const diffHours = (expDate - now) / (1000 * 60 * 60);
-
-                    let dotColor = 'var(--primary)';
-                    let bgColor = 'rgba(79, 70, 229, 0.06)';
-                    let textColor = 'var(--primary-dark)';
-                    let borderLeftColor = 'var(--primary)';
-                    let isPaid = exp.estatus === 'Pagado';
-                    let iconHtml = `<i class="bi bi-clock-history" style="font-size: 0.75rem;"></i>`;
-                    
-                    if (isPaid) {
-                        dotColor = 'var(--success)';
-                        bgColor = 'rgba(16, 185, 129, 0.08)';
-                        textColor = 'var(--success-dark)';
-                        borderLeftColor = 'var(--success)';
-                        iconHtml = `<i class="bi bi-check-circle-fill" style="font-size: 0.75rem;"></i>`;
-                    } else if (diffHours <= 48 && diffHours >= 0) {
-                        dotColor = 'var(--danger)';
-                        bgColor = 'rgba(239, 68, 68, 0.08)';
-                        textColor = 'var(--danger-dark)';
-                        borderLeftColor = 'var(--danger)';
-                        iconHtml = `<i class="bi bi-exclamation-triangle-fill" style="font-size: 0.75rem;"></i>`;
-                    } else if (diffHours < 0) {
-                        dotColor = 'var(--danger-dark)';
-                        bgColor = 'rgba(239, 68, 68, 0.12)';
-                        textColor = 'var(--danger-dark)';
-                        borderLeftColor = 'var(--danger-dark)';
-                        iconHtml = `<i class="bi bi-exclamation-octagon-fill" style="font-size: 0.75rem;"></i>`;
-                    }
-
-                    const displayMonto = parseFloat(exp.monto).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
-
-                    badges += `
-                    <div onclick="mostrarDetalleModal(${exp.id})" 
-                         style="font-size: 0.7rem; font-weight: 600; color: ${textColor}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: var(--space-1.5); display: flex; align-items: center; gap: 6px; background-color: ${bgColor}; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); border: 1px solid rgba(0,0,0,0.02); border-left: 3px solid ${borderLeftColor}; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.03);" 
-                         title="${exp.descripcion} - ${displayMonto}" 
-                         onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 3px 6px rgba(0,0,0,0.06)'" 
-                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.03)'">
-                        ${iconHtml}
-                        <span style="flex-grow: 1; overflow: hidden; text-overflow: ellipsis;">${exp.descripcion}</span>
-                    </div>`;
-                });
-
-                const isToday = isCurrentMonth && day === now.getDate();
-                const todayStyle = isToday 
-                    ? 'background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; box-shadow: 0 4px 8px rgba(79,70,229,0.3);' 
-                    : 'color: var(--text-main); background-color: var(--gray-100);';
-                const cellBorder = isToday ? 'border: 1px solid var(--primary);' : 'border: 1px solid var(--border-color);';
-                const cellBackground = isToday 
-                    ? 'background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.05) 0%, #ffffff 80%);' 
-                    : 'background-color: var(--card-bg);';
+                let dotColor = 'var(--primary)';
+                let bgColor = 'var(--primary-light)';
+                let textColor = 'var(--primary-dark)';
                 
-                grid.innerHTML += `
-                <div style="padding: var(--space-2.5); ${cellBorder} border-radius: var(--radius-md); min-height: 105px; ${cellBackground} position: relative; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.01);" 
-                     onmouseover="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 8px 16px rgba(79, 70, 229, 0.08)'; this.style.transform='translateY(-2px)';" 
-                     onmouseout="this.style.borderColor='${isToday ? 'var(--primary)' : 'var(--border-color)'}'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.01)'; this.style.transform='translateY(0)';"
-                     title="${isToday ? 'Hoy' : ''}">
-                    <div style="display: flex; justify-content: flex-end; margin-bottom: var(--space-2);">
-                        <span style="font-size: 0.85rem; font-weight: var(--font-weight-bold); display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; ${todayStyle}">${day}</span>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 4px;">${badges}</div>
+                if(exp.estatus === 'Pendiente' && diffHours <= 48 && diffHours >= 0) { dotColor = 'var(--danger)'; bgColor = 'var(--danger-light)'; textColor = 'var(--danger-dark)'; }
+                else if(exp.estatus === 'Pendiente' && diffHours < 0) { dotColor = 'var(--danger-dark)'; bgColor = '#fef2f2'; textColor = 'var(--danger-dark)'; }
+                else if(exp.estatus === 'Pagado') { dotColor = 'var(--success)'; bgColor = 'var(--success-light)'; textColor = 'var(--success-dark)'; }
+
+                badges += `<div style="font-size: 0.7rem; font-weight: var(--font-weight-medium); color: ${textColor}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: var(--space-1); display: flex; align-items: center; gap: var(--space-1); background-color: ${bgColor}; padding: 0.2rem 0.4rem; border-radius: var(--radius-sm); border: 1px solid rgba(0,0,0,0.05); transition: transform 0.2s; cursor: pointer;" title="${exp.descripcion} - $${exp.monto}" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="min-width: 6px; height: 6px; border-radius: 50%; background-color: ${dotColor}; box-shadow: 0 0 0 1px rgba(255,255,255,0.5);"></div>
+                    ${exp.descripcion}
                 </div>`;
-            }
-        } else {
-            gridView.style.display = 'none';
-            listView.style.display = 'block';
-
-            const tbody = document.getElementById('calendar-list-body');
-            const emptyState = document.getElementById('calendar-list-empty');
-            const tableWrapper = listView.querySelector('div');
-
-            tbody.innerHTML = '';
-
-            // Filtrar los egresos programados para el mes activo
-            const activeMonthExpenses = expenses.filter(e => {
-                const parts = e.fecha_vencimiento.split('-');
-                const expYear = parseInt(parts[0], 10);
-                const expMonth = parseInt(parts[1], 10) - 1;
-                return expYear === year && expMonth === month;
             });
 
-            if (activeMonthExpenses.length === 0) {
-                emptyState.style.display = 'flex';
-                tableWrapper.style.display = 'none';
-            } else {
-                emptyState.style.display = 'none';
-                tableWrapper.style.display = 'block';
-
-                activeMonthExpenses.forEach(exp => {
-                    const dateParts = exp.fecha_vencimiento.split('-');
-                    const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
-                    const formattedDate = dateObj.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
-                    
-                    const displayMonto = parseFloat(exp.monto).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
-                    
-                    let statusBadge = '';
-                    if (exp.estatus === 'Pagado') {
-                        statusBadge = `<span style="background-color: var(--success-light); color: var(--success-dark); font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.03em;">Pagado</span>`;
-                    } else {
-                        statusBadge = `<span style="background-color: var(--danger-light); color: var(--danger-dark); font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.03em;">Pendiente</span>`;
-                    }
-
-                    // Acciones Rápidas
-                    let actionButtons = `
-                        <button type="button" onclick="mostrarEditarModal(${exp.id})" style="background: none; border: none; color: var(--primary); cursor: pointer; padding: 6px; border-radius: var(--radius-md); transition: all 0.15s; font-size: 0.9rem;" onmouseover="this.style.backgroundColor='var(--primary-light)'" onmouseout="this.style.backgroundColor='transparent';" title="Editar"><i class="bi bi-pencil-fill"></i></button>
-                        <button type="button" onclick="eliminarEgresoRapido(${exp.id})" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 6px; border-radius: var(--radius-md); transition: all 0.15s; font-size: 0.9rem;" onmouseover="this.style.backgroundColor='var(--danger-light)'" onmouseout="this.style.backgroundColor='transparent';" title="Eliminar"><i class="bi bi-trash-fill"></i></button>
-                    `;
-
-                    if (exp.estatus !== 'Pagado') {
-                        actionButtons = `
-                            <button type="button" onclick="pagarEgresoRapido(${exp.id})" style="background: none; border: none; color: var(--success); cursor: pointer; padding: 6px; border-radius: var(--radius-md); transition: all 0.15s; font-size: 0.9rem;" onmouseover="this.style.backgroundColor='var(--success-light)'" onmouseout="this.style.backgroundColor='transparent';" title="Marcar Pagado"><i class="bi bi-check-circle-fill"></i></button>
-                        ` + actionButtons;
-                    }
-
-                    const tr = document.createElement('tr');
-                    tr.style.borderBottom = '1px solid var(--border-color)';
-                    tr.style.transition = 'background-color 0.15s';
-                    tr.onmouseover = () => tr.style.backgroundColor = 'var(--gray-50)';
-                    tr.onmouseout = () => tr.style.backgroundColor = 'transparent';
-
-                    tr.innerHTML = `
-                        <td style="padding: var(--space-3) var(--space-4); font-size: 0.88rem; font-weight: 600; color: var(--gray-800); word-break: break-word;">${exp.descripcion}</td>
-                        <td style="padding: var(--space-3) var(--space-4); font-size: 0.85rem; color: var(--gray-600);">${formattedDate}</td>
-                        <td style="padding: var(--space-3) var(--space-4); font-size: 0.85rem; color: var(--gray-600);">${exp.frecuencia}</td>
-                        <td style="padding: var(--space-3) var(--space-4); font-size: 0.9rem; font-weight: 700; color: var(--primary); text-align: right;">${displayMonto}</td>
-                        <td style="padding: var(--space-3) var(--space-4); text-align: center;">${statusBadge}</td>
-                        <td style="padding: var(--space-3) var(--space-4); text-align: center; white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 4px;">${actionButtons}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
+            const isToday = day === now.getDate();
+            const todayStyle = isToday ? 'background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; box-shadow: 0 2px 4px rgba(79,70,229,0.3);' : 'color: var(--gray-700); background-color: var(--gray-100);';
+            const cellBorder = isToday ? 'border: 2px solid var(--primary-light);' : 'border: 1px solid var(--border-color);';
+            
+            grid.innerHTML += `<div style="padding: var(--space-2); ${cellBorder} border-radius: var(--radius-md); min-height: 90px; background-color: var(--card-bg); position: relative; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='var(--primary-light)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.05)';" onmouseout="this.style.borderColor='${isToday ? 'var(--primary-light)' : 'var(--border-color)'}'; this.style.boxShadow='0 1px 2px rgba(0,0,0,0.02)';">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: var(--space-1);">
+                    <span style="font-size: 0.85rem; font-weight: var(--font-weight-bold); display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; ${todayStyle}">${day}</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 2px;">${badges}</div>
+            </div>`;
         }
     }
 
@@ -1242,24 +410,17 @@
             categoria: 'General',
             estatus: 'Pendiente'
         };
-        
-        try {
-            const res = await fetch('/api/v1/scheduled-expenses/', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            if(res.ok) {
-                document.getElementById('modal-egreso').style.display = 'none';
-                this.reset();
-                window.showToast('Egreso programado con éxito', 'success');
-                loadDashboardMetrics(); // Recarga calendario y balance
-            } else {
-                window.showToast('Error al programar el egreso', 'error');
-            }
-        } catch (err) {
-            console.error(err);
-            window.showToast('Error de conexión', 'error');
+        const res = await fetch('/api/v1/scheduled-expenses/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        if(res.ok) {
+            document.getElementById('modal-egreso').style.display = 'none';
+            this.reset();
+            loadDashboardMetrics(); // Recarga calendario y balance
+        } else {
+            alert("Error al programar egreso.");
         }
     });
 
