@@ -1,0 +1,32 @@
+# Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Database
+sqlmodel>=0.0.14
+
+# Data Processing
+pandas>=2.0.0
+openpyxl>=3.1.0
+
+# Configuration
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+email-validator>=2.0.0
+
+# API Documentation
+scalar-fastapi>=1.0.0
+
+# File Uploads
+python-multipart>=0.0.6
+
+# Templates (FastAPI incluye Jinja2, pero por si acaso)
+jinja2>=3.1.0
+
+# PDF Generation
+xhtml2pdf>=0.2.5
+fpdf2>=2.7.0
+
+# Testing
+pytest>=7.4.0
+httpx>=0.25.0

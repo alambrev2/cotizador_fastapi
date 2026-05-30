@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}Resumen Financiero - Cotizador{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="header-bar">
+    <h2 class="page-title">💰 Resumen Financiero: Ingresos vs Gastos</h2>
+    <div class="d-flex gap-4 align-items-center">
+        <label for="month-selector" class="font-weight-semibold">Corte Mensual:</label>
+        <input type="month" id="month-selector" class="form-control">
+    </div>
+</div>
+
+<!-- Forms Row (Top) -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); margin-bottom: var(--space-10);">
+    <!-- Form: Otros Ingresos -->
+    <div class="card" style="border-top: 4px solid var(--success); border-radius: var(--radius-lg); padding: var(--space-6); display: flex; flex-direction: column;">
+        <div style="margin-bottom: var(--space-6); display: flex; align-items: center; gap: var(--space-3);">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--success-light); color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">➕</div>
+            <div>
+                <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--gray-800);">Registrar Ingreso</h3>
+                <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Entradas adicionales al negocio</p>
+            </div>
+        </div>
+        <form id="income-form" style="display: flex; flex-direction: column; gap: var(--space-4); flex-grow: 1;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="inc-descripcion" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Descripción <span style="color: var(--danger);">*</span></label>
+                <input type="text" id="inc-descripcion" required placeholder="Ej. Venta de equipo, Intereses..." style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="inc-monto" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Monto <span style="color: var(--danger);">*</span></label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); color: var(--gray-400); font-weight: bold;">$</span>
+                        <input type="number" step="0.01" id="inc-monto" required placeholder="0.00" style="padding-left: 1.8rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300);">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="inc-categoria" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Categoría</label>
+                    <input type="text" id="inc-categoria" placeholder="Ej. Otros" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+                </div>
+            </div>
+            <div style="margin-top: auto; padding-top: var(--space-4);">
+                <button type="submit" class="btn btn-success" style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);">✓ Guardar Ingreso</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Form: Gastos -->
+    <div class="card" style="border-top: 4px solid var(--danger); border-radius: var(--radius-lg); padding: var(--space-6); display: flex; flex-direction: column;">
+        <div style="margin-bottom: var(--space-6); display: flex; align-items: center; gap: var(--space-3);">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--danger-light); color: var(--danger); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">➖</div>
+            <div>
+                <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--gray-800);">Registrar Gasto</h3>
+                <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Salidas de operación y servicios</p>
+            </div>
+        </div>
+        <form id="expense-form" style="display: flex; flex-direction: column; gap: var(--space-4); flex-grow: 1;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="exp-descripcion" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Descripción <span style="color: var(--danger);">*</span></label>
+                <input type="text" id="exp-descripcion" required placeholder="Ej. Pago de Renta, Luz..." style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="exp-monto" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Monto <span style="color: var(--danger);">*</span></label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); color: var(--gray-400); font-weight: bold;">$</span>
+                        <input type="number" step="0.01" id="exp-monto" required placeholder="0.00" style="padding-left: 1.8rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300);">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="exp-categoria" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Categoría</label>
+                    <input type="text" id="exp-categoria" placeholder="Ej. Servicios" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+                </div>
+            </div>
+            <div style="margin-top: auto; padding-top: var(--space-4);">
+                <button type="submit" class="btn btn-danger" style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4);">✓ Guardar Gasto</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Balance Summary & Chart -->
+<div class="d-flex gap-8 mb-8">
+    <div class="card d-flex flex-column justify-content-center" style="background: #0b1329; border: 1px solid rgba(255, 255, 255, 0.06); padding: var(--space-6); color: white; position: relative; overflow: hidden; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 320px; flex-shrink: 0;">
+        <!-- Glowing circular decorative shape -->
+        <div style="position: absolute; right: -30px; top: -30px; width: 160px; height: 160px; background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
+        
+        <p style="text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; color: var(--gray-400); margin: 0; font-weight: 700;">BALANCE NETO</p>
+        <h2 id="balance-title" style="font-size: 2.2rem; margin: 0.5rem 0 0.25rem 0; color: #10b981; font-weight: 800; letter-spacing: -0.02em;">$0.00</h2>
+        <p id="balance-subtitle" style="font-weight: 700; font-size: 0.85rem; margin: 0 0 1.25rem 0; display: inline-flex; align-items: center; color: #10b981;">Saldo Positivo <span style="background: #10b981; color: white; border-radius: 4px; padding: 2px; font-size: 0.6rem; font-weight: bold; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px;"><i class="bi bi-check-lg"></i></span></p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; background: #070b14; padding: var(--space-4); border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,0.06); text-align: center; position: relative;">
+            <div style="padding-right: var(--space-2);">
+                <p style="font-size: 0.65rem; color: var(--gray-400); margin: 0 0 0.25rem 0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Ingresos</p>
+                <div class="text-success" style="font-weight: 800; font-size: 1.1rem; color: #10b981;" id="summary-income">$0.00</div>
+            </div>
+            <!-- Vertical divider line -->
+            <div style="position: absolute; left: 50%; top: 15%; bottom: 15%; width: 1px; background: rgba(255, 255, 255, 0.12); transform: translateX(-50%);"></div>
+            <div style="padding-left: var(--space-2);">
+                <p style="font-size: 0.65rem; color: var(--gray-400); margin: 0 0 0.25rem 0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Gastos</p>
+                <div class="text-danger" style="font-weight: 800; font-size: 1.1rem; color: #ef4444;" id="summary-expenses">$0.00</div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <h3 style="margin-top: 0;">📈 Comparativa Mensual</h3>
+        <div style="height: 250px;">
+            <canvas id="financeChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- History Tables -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8);">
+    <!-- Ingresos History -->
+    <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="padding: var(--space-6) var(--space-6) var(--space-4); border-bottom: 1px solid var(--border-color); background: var(--gray-50); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0; color: var(--gray-800);">Historial de Ingresos</h3>
+                <p style="margin: var(--space-1) 0 0 0; font-size: var(--font-size-xs); color: var(--text-muted);">Movimientos registrados en el mes</p>
+            </div>
+            <button onclick="downloadPDF('ingresos')" class="btn btn-outline" style="width: auto; margin: 0; border-color: var(--success); color: var(--success); padding: var(--space-2) var(--space-4);">
+                📄 Exportar
+            </button>
+        </div>
+        <div style="overflow-x: auto; flex: 1;">
+            <table style="margin-bottom: 0;">
+                <thead style="background: white;">
+                    <tr>
+                        <th style="padding-left: var(--space-6);">Fecha</th>
+                        <th>Origen/Descripción</th>
+                        <th style="text-align: right; padding-right: var(--space-6);">Monto</th>
+                    </tr>
+                </thead>
+                <tbody id="income-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Gastos History -->
+    <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="padding: var(--space-6) var(--space-6) var(--space-4); border-bottom: 1px solid var(--border-color); background: var(--gray-50); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0; color: var(--gray-800);">Historial de Gastos</h3>
+                <p style="margin: var(--space-1) 0 0 0; font-size: var(--font-size-xs); color: var(--text-muted);">Salidas registradas en el mes</p>
+            </div>
+            <button onclick="downloadPDF('egresos')" class="btn btn-outline" style="width: auto; margin: 0; border-color: var(--danger); color: var(--danger); padding: var(--space-2) var(--space-4);">
+                📄 Exportar
+            </button>
+        </div>
+        <div style="overflow-x: auto; flex: 1;">
+            <table style="margin-bottom: 0;">
+                <thead style="background: white;">
+                    <tr>
+                        <th style="padding-left: var(--space-6);">Fecha</th>
+                        <th>Descripción del Servicio</th>
+                        <th style="text-align: right; padding-right: var(--space-6);">Monto</th>
+                    </tr>
+                </thead>
+                <tbody id="expense-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let myChart = null;
+    const monthSelector = document.getElementById('month-selector');
+
+    // Default current month
+    const now = new Date();
+    monthSelector.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    function downloadPDF(type) {
+        const selected = monthSelector.value;
+        if (!selected) return;
+        const [year, month] = selected.split('-');
+        window.open(`/api/v1/dashboard/export/${type}?mes=${parseInt(month)}&anio=${year}`, '_blank');
+    }
+
+    async function fetchData() {
+        try {
+            const [resExp, resPym, resOth] = await Promise.all([
+                fetch('/api/v1/expenses/'),
+                fetch('/api/v1/payments/'),
+                fetch('/api/v1/incomes/')
+            ]);
+
+            const expenses = await resExp.json();
+            const payments = await resPym.json();
+            const otherIncomes = await resOth.json();
+
+            updateView(expenses, payments, otherIncomes);
+        } catch (error) {
+            console.error("Error loading finance data:", error);
+        }
+    }
+
+    function updateView(expenses, payments, otherIncomes) {
+        const monthStr = monthSelector.value;
+
+        const filteredExpenses = expenses.filter(e => e.fecha.startsWith(monthStr));
+        const filteredPayments = payments.filter(p => p.fecha_pago.startsWith(monthStr));
+        const filteredOther = otherIncomes.filter(i => i.fecha.startsWith(monthStr));
+
+        // Income table content
+        const combinedIncome = [
+            ...filteredPayments.map(p => ({
+                fecha: p.fecha_pago,
+                desc: (p.cliente ? p.cliente.nombre : 'Pago Cliente'),
+                monto: p.monto,
+                tipo: 'Pago'
+            })),
+            ...filteredOther.map(i => ({
+                fecha: i.fecha,
+                desc: i.descripcion,
+                monto: i.monto,
+                tipo: 'Otro'
+            }))
+        ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+        renderIncome(combinedIncome);
+        renderExpenses(filteredExpenses.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)));
+
+        const totalInc = combinedIncome.reduce((sum, i) => sum + parseFloat(i.monto), 0);
+        const totalExp = filteredExpenses.reduce((sum, e) => sum + parseFloat(e.monto), 0);
+
+        updateSummary(totalInc, totalExp, monthStr);
+    }
+
+    function renderIncome(items) {
+        const body = document.getElementById('income-body');
+        body.innerHTML = items.map(i => `
+            <tr>
+                <td style="padding: var(--space-3) var(--space-6); font-size: var(--font-size-sm); color: var(--text-muted);">${new Date(i.fecha).toLocaleDateString()}</td>
+                <td style="padding: var(--space-3) var(--space-4); font-weight: var(--font-weight-medium);">${i.desc} <span style="font-size:0.7rem; background: var(--success-light); color: var(--success-dark); padding: 2px 6px; border-radius: var(--radius-sm); margin-left: var(--space-2);">${i.tipo}</span></td>
+                <td style="padding: var(--space-3) var(--space-6); text-align: right; color: var(--success); font-weight: var(--font-weight-bold);">$${parseFloat(i.monto).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            </tr>
+        `).join('');
+        if (items.length === 0) body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: var(--space-8); color: var(--text-muted);">No hay ingresos registrados este mes.</td></tr>';
+    }
+
+    function renderExpenses(items) {
+        const body = document.getElementById('expense-body');
+        body.innerHTML = items.map(e => `
+            <tr>
+                <td style="padding: var(--space-3) var(--space-6); font-size: var(--font-size-sm); color: var(--text-muted);">${new Date(e.fecha).toLocaleDateString()}</td>
+                <td style="padding: var(--space-3) var(--space-4); font-weight: var(--font-weight-medium);">${e.descripcion}</td>
+                <td style="padding: var(--space-3) var(--space-6); text-align: right; color: var(--danger); font-weight: var(--font-weight-bold);">$${parseFloat(e.monto).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            </tr>
+        `).join('');
+        if (items.length === 0) body.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: var(--space-8); color: var(--text-muted);">No hay gastos registrados este mes.</td></tr>';
+    }
+
+    function updateSummary(totalInc, totalExp, month) {
+        const balance = totalInc - totalExp;
+        document.getElementById('balance-title').textContent = `$${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('summary-income').textContent = `$${totalInc.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('summary-expenses').textContent = `$${totalExp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        const subtitle = document.getElementById('balance-subtitle');
+        if (balance >= 0) {
+            document.getElementById('balance-title').style.color = '#10b981';
+            subtitle.innerHTML = `Saldo Positivo <span style="background: #10b981; color: white; border-radius: 4px; padding: 2px; font-size: 0.65rem; font-weight: bold; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px;"><i class="bi bi-check-lg"></i></span>`;
+            subtitle.style.color = '#10b981';
+        } else {
+            document.getElementById('balance-title').style.color = '#ef4444';
+            subtitle.innerHTML = `Déficit Detectado <span style="background: #ef4444; color: white; border-radius: 4px; padding: 2px; font-size: 0.65rem; font-weight: bold; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px;"><i class="bi bi-exclamation-triangle"></i></span>`;
+            subtitle.style.color = '#ef4444';
+        }
+
+        updateChart(totalInc, totalExp, month);
+    }
+
+    function updateChart(inc, exp, label) {
+        const ctx = document.getElementById('financeChart').getContext('2d');
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Ingresos', 'Egresos'],
+                datasets: [{
+                    data: [inc, exp],
+                    backgroundColor: ['#16a34a', '#ef4444'],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    // Forms Handlers
+    document.getElementById('income-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const res = await fetch('/api/v1/incomes/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                descripcion: document.getElementById('inc-descripcion').value,
+                monto: parseFloat(document.getElementById('inc-monto').value),
+                categoria: document.getElementById('inc-categoria').value || 'Otros'
+            })
+        });
+        if (res.ok) { this.reset(); fetchData(); }
+    });
+
+    document.getElementById('expense-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const res = await fetch('/api/v1/expenses/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                descripcion: document.getElementById('exp-descripcion').value,
+                monto: parseFloat(document.getElementById('exp-monto').value),
+                categoria: document.getElementById('exp-categoria').value || 'Servicios'
+            })
+        });
+        if (res.ok) { this.reset(); fetchData(); }
+    });
+
+    monthSelector.addEventListener('change', fetchData);
+    fetchData();
+</script>
+{% endblock %}
