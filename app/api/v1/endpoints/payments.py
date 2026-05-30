@@ -9,13 +9,30 @@ from pydantic import BaseModel
 from fastapi import Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import selectinload
-from app.core.pdf import generate_pdf_bytes
+from app.core.pdf import generate_pdf_bytes, clean_filename
 import os
 
-# Obtener el directorio base del proyecto
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# Buscar la carpeta 'templates' subiendo en la jerarquía de directorios de manera segura
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_templates_dir = None
+while True:
+    _possible_templates = os.path.join(_current_dir, "templates")
+    if os.path.isdir(_possible_templates):
+        _templates_dir = _possible_templates
+        break
+    _possible_app_templates = os.path.join(_current_dir, "app", "templates")
+    if os.path.isdir(_possible_app_templates):
+        _templates_dir = _possible_app_templates
+        break
+    _parent = os.path.dirname(_current_dir)
+    if _parent == _current_dir:
+        break
+    _current_dir = _parent
 
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app", "templates"))
+if not _templates_dir:
+    _templates_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates")
+
+templates = Jinja2Templates(directory=_templates_dir)
 
 router = APIRouter()
 
@@ -337,7 +354,7 @@ def get_customer_statement_pdf(*, session: Session = Depends(get_session), custo
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename=estado_cuenta_{customer.id}.pdf"}
+            headers={"Content-Disposition": f'attachment; filename="Estado_Cuenta_CLI{customer.id:04d}_{clean_filename(customer.nombre)}.pdf"'}
         )
     except Exception as e:
         import traceback
@@ -397,17 +414,9 @@ def generate_charge_remission(*, session: Session = Depends(get_session), req: R
                 
     nuevo_folio = f"{prefix}{(max_num + 1):04d}"
     
-    for c in cargos:
-        c.documentado = True
-        c.folio_nota = nuevo_folio
-        c.estatus = 'Remisión Emitida'
-        session.add(c)
-        
-    session.commit()
-
     total_remission = sum([float(c.monto) for c in cargos])
 
-    # Generar PDF
+    # Generar PDF primero para no corromper la base de datos si falla
     try:
         html_content = templates.get_template("pdf/remission.html").render(
             cliente=cliente,
@@ -416,13 +425,55 @@ def generate_charge_remission(*, session: Session = Depends(get_session), req: R
             folio=nuevo_folio
         )
         pdf_bytes = generate_pdf_bytes(html_content)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generando PDF: {str(e)}")
+
+    # Si se generó con éxito, guardamos en la base de datos
+    for c in cargos:
+        c.documentado = True
+        c.folio_nota = nuevo_folio
+        c.estatus = 'Remisión Emitida'
+        session.add(c)
+        
+    session.commit()
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="Remision_{nuevo_folio}_{clean_filename(cliente.nombre)}.pdf"',
+            "X-Folio-Nota": nuevo_folio,
+            "Access-Control-Expose-Headers": "X-Folio-Nota"
+        }
+    )
+
+
+@router.get("/remission/{folio}/pdf")
+def get_remission_pdf_by_folio(*, session: Session = Depends(get_session), folio: str):
+    cargos = session.exec(select(AccountCharge).where(AccountCharge.folio_nota == folio)).all()
+    if not cargos:
+        raise HTTPException(status_code=404, detail=f"No se encontraron cargos con el folio {folio}.")
+    
+    cliente = cargos[0].cliente
+    total_remission = sum([float(c.monto) for c in cargos])
+    
+    try:
+        html_content = templates.get_template("pdf/remission.html").render(
+            cliente=cliente,
+            cargos=cargos,
+            total=total_remission,
+            folio=folio
+        )
+        pdf_bytes = generate_pdf_bytes(html_content)
+        cliente_nombre = cliente.nombre if cliente else "general"
+        filename = f"Remision_{folio}_{clean_filename(cliente_nombre)}.pdf"
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="remision_{nuevo_folio}.pdf"',
-                "X-Folio-Nota": nuevo_folio,
-                "Access-Control-Expose-Headers": "X-Folio-Nota"
+                "Content-Disposition": f'attachment; filename="{filename}"'
             }
         )
     except Exception as e:

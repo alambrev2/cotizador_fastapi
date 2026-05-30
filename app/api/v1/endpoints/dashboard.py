@@ -45,7 +45,7 @@ def export_ingresos_pdf(mes: int, anio: int, session: Session = Depends(get_sess
     pdf.cell(40, 10, text=f"${total:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
     
     pdf_bytes = bytes(pdf.output())
-    return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=Ingresos_{mes}_{anio}.pdf"})
+    return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="Ingresos_{mes}_{anio}.pdf"'})
 
 @router.get("/export/egresos")
 def export_egresos_pdf(mes: int, anio: int, session: Session = Depends(get_session)):
@@ -86,7 +86,7 @@ def export_egresos_pdf(mes: int, anio: int, session: Session = Depends(get_sessi
     pdf.cell(40, 10, text=f"-${total:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
     
     pdf_bytes = bytes(pdf.output())
-    return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=Egresos_{mes}_{anio}.pdf"})
+    return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="Egresos_{mes}_{anio}.pdf"'})
 
 @router.get("/summary")
 def get_dashboard_summary(*, session: Session = Depends(get_session), response: Response):

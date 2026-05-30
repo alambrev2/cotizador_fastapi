@@ -7,13 +7,13 @@ from sqlmodel import Session, select
 from app.database import get_session
 from app.models import Quote, QuoteItem, Product, Customer
 from app.schemas import QuoteCreate, QuoteRead, QuoteUpdate
-from app.core.pdf import generate_pdf_bytes
+from app.core.pdf import generate_pdf_bytes, clean_filename
 from sqlalchemy.orm import selectinload
 from decimal import Decimal
 from datetime import datetime
 
 # Obtener el directorio base del proyecto
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app", "templates"))
 
@@ -255,11 +255,15 @@ def generate_quote_pdf(*, session: Session = Depends(get_session), quote_id: int
         pdf_bytes = generate_pdf_bytes(html_content)
 
         # Retornar como archivo descargable
+        cliente_nombre = quote.cliente.nombre if quote.cliente else "general"
+        folio = quote.folio_cotizacion or f"ID{quote.id}"
+        filename = f"Cotizacion_{folio}_{clean_filename(cliente_nombre)}.pdf"
+        
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=cotizacion_{quote_id}.pdf"
+                "Content-Disposition": f'attachment; filename="{filename}"'
             },
         )
     except Exception as e:

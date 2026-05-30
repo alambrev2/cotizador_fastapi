@@ -1,5 +1,19 @@
+import re
+import unicodedata
 from io import BytesIO
 from xhtml2pdf import pisa
+
+
+def clean_filename(text: str) -> str:
+    """Normaliza texto para usarlo como nombre de archivo seguro."""
+    if not text:
+        return "sin_nombre"
+    # Quitar acentos y caracteres especiales
+    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
+    # Reemplazar espacios por guiones bajos y remover caracteres no permitidos
+    text = text.replace(" ", "_")
+    text = re.sub(r'[^a-zA-Z0-9_-]', '', text)
+    return text.lower()
 
 
 def generate_pdf_bytes(html_content: str) -> bytes:
