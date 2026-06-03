@@ -103,9 +103,12 @@
                     <span>$<span id="calc-iva">0.00</span></span>
                 </div>
                 <div style="height: 1px; background: var(--gray-300); width: 100%; margin: 4px 0;"></div>
-                <div style="font-size: 1.4rem; font-weight: 800; color: var(--gray-800); width: 100%; display: flex; justify-content: space-between;">
+                <div style="font-size: 1.4rem; font-weight: 800; color: var(--gray-800); width: 100%; display: flex; justify-content: space-between; align-items: center;">
                     <span>Total Venta:</span>
-                    <span>$<span id="grand-total">0.00</span></span>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 0.5rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: var(--gray-500);">$</span>
+                        <input type="number" id="grand-total" step="0.01" value="0.00" onchange="recalculateFromTotal()" onkeyup="recalculateFromTotal()" style="width: 140px; padding: 0.25rem 0.5rem 0.25rem 1.5rem; font-size: 1.2rem; font-weight: 800; text-align: right; border-radius: var(--radius-sm); border: 1px dashed var(--gray-400); color: var(--gray-800); background: white; outline: none;">
+                    </div>
                 </div>
                 <div style="font-size: 0.95rem; color: var(--success); font-weight: 700; width: 100%; display: flex; justify-content: space-between; margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--success-light);">
                     <span>Utilidad Est. (Secreta):</span>
@@ -433,7 +436,7 @@
             ivaRow.style.display = 'none';
         }
 
-        document.getElementById('grand-total').textContent = total.toFixed(2);
+        document.getElementById('grand-total').value = total.toFixed(2);
         
         const utilEl = document.getElementById('estimated-utility');
         if (utilEl) utilEl.textContent = totalUtility.toFixed(2);
@@ -441,8 +444,47 @@
         calculateFinance(autoSuggestFinance); 
     }
 
+    function recalculateFromTotal() {
+        const total = parseFloat(document.getElementById('grand-total').value) || 0;
+        const requiereFactura = document.getElementById('requiere_factura').checked;
+        
+        let subtotal = 0;
+        let iva = 0;
+        
+        if (requiereFactura) {
+            subtotal = total / 1.16;
+            iva = total - subtotal;
+        } else {
+            subtotal = total;
+            iva = 0;
+        }
+        
+        document.getElementById('calc-subtotal').textContent = subtotal.toFixed(2);
+        
+        const ivaRow = document.getElementById('iva-row');
+        if (requiereFactura) {
+            ivaRow.style.display = 'block';
+            document.getElementById('calc-iva').textContent = iva.toFixed(2);
+        } else {
+            ivaRow.style.display = 'none';
+        }
+        
+        let totalCost = 0;
+        document.querySelectorAll('#items-container tr').forEach(row => {
+            const qty = parseInt(row.querySelector('.qty-input').value || 0);
+            const cost = parseFloat(row.dataset.costPrice || 0);
+            totalCost += cost * qty;
+        });
+        
+        const totalUtility = subtotal - totalCost;
+        const utilEl = document.getElementById('estimated-utility');
+        if (utilEl) utilEl.textContent = totalUtility.toFixed(2);
+        
+        calculateFinance(false);
+    }
+
     function setAnticipoPct(pct) {
-        const total = parseFloat(document.getElementById('grand-total').textContent) || 0;
+        const total = parseFloat(document.getElementById('grand-total').value) || 0;
         const anticipoVal = total * pct;
         document.getElementById('anticipo').value = anticipoVal.toFixed(2);
         calculateFinance(true);
@@ -462,7 +504,7 @@
         const type = document.getElementById('tipo_pago').value;
         if (type !== 'Semanal') return;
 
-        const total = parseFloat(document.getElementById('grand-total').textContent) || 0;
+        const total = parseFloat(document.getElementById('grand-total').value) || 0;
         const anticipo = parseFloat(document.getElementById('anticipo').value) || 0;
         const saldo = total - anticipo;
 
@@ -538,7 +580,8 @@
             plazo_semanas: parseInt(document.getElementById('plazo_semanas').value) || parseInt(document.getElementById('weeks-count').textContent) || 0,
             monto_semanal: parseFloat(document.getElementById('weekly-amount').textContent) || 0,
             padre_id: isEditing ? parseInt(editId) : null,
-            motivo_edicion: isEditing ? document.getElementById('motivo_edicion').value : null
+            motivo_edicion: isEditing ? document.getElementById('motivo_edicion').value : null,
+            total_venta_override: parseFloat(document.getElementById('grand-total').value) || null
         };
 
         try {
@@ -577,7 +620,7 @@
                     addItemRow(); // Restaurar una fila vacía
                 }
                 
-                document.getElementById('grand-total').textContent = '0.00';
+                document.getElementById('grand-total').value = '0.00';
 
             } else {
                 const error = await response.json();
