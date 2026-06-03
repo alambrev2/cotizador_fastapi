@@ -1148,29 +1148,33 @@
                     const diffHours = (expDate - now) / (1000 * 60 * 60);
 
                     let dotColor = 'var(--primary)';
-                    let bgColor = 'rgba(79, 70, 229, 0.06)';
-                    let textColor = 'var(--primary-dark)';
-                    let borderLeftColor = 'var(--primary)';
+                    let bgColor = 'var(--primary)';
+                    let textColor = 'white';
+                    let borderLeftColor = 'var(--primary-dark)';
+                    let borderColor = 'var(--primary-dark)';
                     let isPaid = exp.estatus === 'Pagado';
                     let iconHtml = `<i class="bi bi-clock-history" style="font-size: 0.75rem;"></i>`;
                     
                     if (isPaid) {
                         dotColor = 'var(--success)';
-                        bgColor = 'rgba(16, 185, 129, 0.08)';
-                        textColor = 'var(--success-dark)';
-                        borderLeftColor = 'var(--success)';
+                        bgColor = 'var(--success)';
+                        textColor = 'white';
+                        borderLeftColor = 'var(--success-dark)';
+                        borderColor = 'var(--success-dark)';
                         iconHtml = `<i class="bi bi-check-circle-fill" style="font-size: 0.75rem;"></i>`;
                     } else if (diffHours <= 48 && diffHours >= 0) {
                         dotColor = 'var(--danger)';
-                        bgColor = 'rgba(239, 68, 68, 0.08)';
-                        textColor = 'var(--danger-dark)';
-                        borderLeftColor = 'var(--danger)';
+                        bgColor = 'var(--danger)';
+                        textColor = 'white';
+                        borderLeftColor = 'var(--danger-dark)';
+                        borderColor = 'var(--danger-dark)';
                         iconHtml = `<i class="bi bi-exclamation-triangle-fill" style="font-size: 0.75rem;"></i>`;
                     } else if (diffHours < 0) {
                         dotColor = 'var(--danger-dark)';
-                        bgColor = 'rgba(239, 68, 68, 0.12)';
-                        textColor = 'var(--danger-dark)';
-                        borderLeftColor = 'var(--danger-dark)';
+                        bgColor = 'var(--danger-dark)';
+                        textColor = 'white';
+                        borderLeftColor = '#7f1d1d';
+                        borderColor = '#7f1d1d';
                         iconHtml = `<i class="bi bi-exclamation-octagon-fill" style="font-size: 0.75rem;"></i>`;
                     }
 
@@ -1178,28 +1182,54 @@
 
                     badges += `
                     <div onclick="mostrarDetalleModal(${exp.id})" 
-                         style="font-size: 0.7rem; font-weight: 600; color: ${textColor}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: var(--space-1.5); display: flex; align-items: center; gap: 6px; background-color: ${bgColor}; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); border: 1px solid rgba(0,0,0,0.02); border-left: 3px solid ${borderLeftColor}; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.03);" 
+                         style="font-size: 0.75rem; font-weight: 700; color: ${textColor}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: var(--space-1.5); display: flex; align-items: center; gap: 6px; background-color: ${bgColor}; padding: var(--space-1.5) var(--space-2); border-radius: var(--radius-sm); border: 1px solid ${borderColor}; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.15);" 
                          title="${exp.descripcion} - ${displayMonto}" 
-                         onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 3px 6px rgba(0,0,0,0.06)'" 
-                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.03)'">
+                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.25)'" 
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.15)'">
                         ${iconHtml}
                         <span style="flex-grow: 1; overflow: hidden; text-overflow: ellipsis;">${exp.descripcion}</span>
                     </div>`;
                 });
 
                 const isToday = isCurrentMonth && day === now.getDate();
+                const hasEvents = dayExpenses.length > 0;
                 const todayStyle = isToday 
                     ? 'background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; box-shadow: 0 4px 8px rgba(79,70,229,0.3);' 
                     : 'color: var(--text-main); background-color: var(--gray-100);';
-                const cellBorder = isToday ? 'border: 1px solid var(--primary);' : 'border: 1px solid var(--border-color);';
-                const cellBackground = isToday 
-                    ? 'background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.05) 0%, #ffffff 80%);' 
-                    : 'background-color: var(--card-bg);';
+                
+                let cellBorder = 'border: 1px solid var(--border-color);';
+                let cellShadow = 'box-shadow: 0 2px 4px rgba(0,0,0,0.01);';
+                let dominantColorRGB = '79, 70, 229'; // Indigo por defecto
+                
+                if (hasEvents) {
+                    const firstExp = dayExpenses[0];
+                    const expDate = new Date(firstExp.fecha_vencimiento + 'T12:00:00');
+                    const diffHours = (expDate - now) / (1000 * 60 * 60);
+                    if (firstExp.estatus === 'Pagado') {
+                        dominantColorRGB = '16, 185, 129'; // Success
+                    } else if (diffHours < 48) {
+                        dominantColorRGB = '239, 68, 68'; // Danger
+                    }
+                }
+
+                if (isToday) {
+                    cellBorder = 'border: 1px solid var(--primary);';
+                } else if (hasEvents) {
+                    cellBorder = `border: 1.5px solid rgba(${dominantColorRGB}, 0.3);`;
+                    cellShadow = `box-shadow: 0 4px 12px rgba(${dominantColorRGB}, 0.1);`;
+                }
+
+                let cellBackground = 'background-color: var(--card-bg);';
+                if (isToday) {
+                    cellBackground = 'background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.05) 0%, #ffffff 80%);';
+                } else if (hasEvents) {
+                    cellBackground = `background: linear-gradient(135deg, rgba(${dominantColorRGB}, 0.12) 0%, rgba(${dominantColorRGB}, 0.02) 100%);`;
+                }
                 
                 grid.innerHTML += `
-                <div style="padding: var(--space-2.5); ${cellBorder} border-radius: var(--radius-md); min-height: 105px; ${cellBackground} position: relative; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.01);" 
-                     onmouseover="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 8px 16px rgba(79, 70, 229, 0.08)'; this.style.transform='translateY(-2px)';" 
-                     onmouseout="this.style.borderColor='${isToday ? 'var(--primary)' : 'var(--border-color)'}'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.01)'; this.style.transform='translateY(0)';"
+                <div style="padding: var(--space-2.5); ${cellBorder} border-radius: var(--radius-md); min-height: 105px; ${cellBackground} position: relative; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); ${cellShadow}" 
+                     onmouseover="this.style.borderColor='rgba(${dominantColorRGB}, 0.8)'; this.style.boxShadow='0 8px 16px rgba(${dominantColorRGB}, 0.15)'; this.style.transform='translateY(-2px)';" 
+                     onmouseout="this.style.borderColor='${isToday ? 'var(--primary)' : (hasEvents ? `rgba(${dominantColorRGB}, 0.3)` : 'var(--border-color)')}'; this.style.boxShadow='${hasEvents && !isToday ? `0 4px 12px rgba(${dominantColorRGB}, 0.1)` : '0 2px 4px rgba(0,0,0,0.01)'}'; this.style.transform='translateY(0)';"
                      title="${isToday ? 'Hoy' : ''}">
                     <div style="display: flex; justify-content: flex-end; margin-bottom: var(--space-2);">
                         <span style="font-size: 0.85rem; font-weight: var(--font-weight-bold); display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; ${todayStyle}">${day}</span>
