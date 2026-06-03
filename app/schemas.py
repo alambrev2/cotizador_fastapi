@@ -29,6 +29,7 @@ class QuoteCreate(SQLModel):
     # Edición
     padre_id: Optional[int] = None
     motivo_edicion: Optional[str] = None
+    total_venta_override: Optional[Decimal] = None
 
 
 class QuoteUpdate(SQLModel):
