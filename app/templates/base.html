@@ -18,8 +18,20 @@
             <div class="logo-text">SMART SITE COMPANY</div>
         </div>
 
+        <!-- Información del usuario -->
+        <div id="user-info-sidebar" style="padding: 10px 16px 6px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <i class="bi bi-person-circle" style="font-size:22px; color: rgba(255,255,255,0.85);"></i>
+                <div>
+                    <div id="sidebar-username" style="font-size:13px; font-weight:600; color:#fff;">Cargando...</div>
+                    <div id="sidebar-role-badge" style="font-size:11px; color:rgba(255,255,255,0.6);">—</div>
+                </div>
+            </div>
+        </div>
+
         <nav>
-            <div class="nav-group">
+            <!-- Sección Principal: visible para Admin y Operativo -->
+            <div class="nav-group" id="nav-principal">
                 <div class="nav-label">Principal</div>
                 <a href="/dashboard" class="nav-link">
                     <i class="bi bi-grid-1x2-fill"></i>
@@ -27,7 +39,8 @@
                 </a>
             </div>
 
-            <div class="nav-group">
+            <!-- Sección Finanzas: solo Admin -->
+            <div class="nav-group" id="nav-finanzas" style="display:none;">
                 <div class="nav-label">Finanzas</div>
                 <a href="/statement" class="nav-link">
                     <i class="bi bi-credit-card-2-back-fill"></i>
@@ -39,7 +52,8 @@
                 </a>
             </div>
 
-            <div class="nav-group">
+            <!-- Sección Clientes: solo Admin -->
+            <div class="nav-group" id="nav-clientes" style="display:none;">
                 <div class="nav-label">Clientes</div>
                 <a href="/new-customer" class="nav-link">
                     <i class="bi bi-person-plus-fill"></i>
@@ -51,7 +65,8 @@
                 </a>
             </div>
 
-            <div class="nav-group">
+            <!-- Sección Productos: solo Admin -->
+            <div class="nav-group" id="nav-productos" style="display:none;">
                 <div class="nav-label">Productos</div>
                 <a href="/new-product" class="nav-link">
                     <i class="bi bi-plus-circle-dotted"></i>
@@ -63,7 +78,8 @@
                 </a>
             </div>
 
-            <div class="nav-group">
+            <!-- Sección Cotizaciones: solo Admin -->
+            <div class="nav-group" id="nav-cotizaciones" style="display:none;">
                 <div class="nav-label">Cotizaciones</div>
                 <a href="/new-quote" class="nav-link">
                     <i class="bi bi-file-earmark-plus-fill"></i>
@@ -75,7 +91,8 @@
                 </a>
             </div>
 
-            <div class="nav-group">
+            <!-- Sección Operación: Admin y Operativo -->
+            <div class="nav-group" id="nav-operacion" style="display:none;">
                 <div class="nav-label">Operación</div>
                 <a href="/projects" class="nav-link">
                     <i class="bi bi-rocket-takeoff-fill"></i>
@@ -83,11 +100,20 @@
                 </a>
             </div>
 
-            <div class="nav-group">
+            <!-- Sección Sistema: solo Admin -->
+            <div class="nav-group" id="nav-sistema" style="display:none;">
                 <div class="nav-label">Sistema</div>
                 <a href="/scalar" target="_blank" class="nav-link">
                     <i class="bi bi-journal-code"></i>
                     <span>API Docs</span>
+                </a>
+            </div>
+
+            <!-- Botón Cerrar Sesión: visible siempre -->
+            <div class="nav-group" style="margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <a href="#" onclick="logout(event)" class="nav-link" style="color: #ff8080;">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>Cerrar Sesión</span>
                 </a>
             </div>
         </nav>
@@ -101,13 +127,69 @@
     {% block scripts %}{% endblock %}
 
     <script>
+        // ── Logout ────────────────────────────────────────────────────────────
+        async function logout(event) {
+            if (event) event.preventDefault();
+            try {
+                await fetch('/api/v1/auth/logout', { method: 'POST' });
+            } catch (e) {
+                console.error(e);
+            }
+            window.location.href = '/login';
+        }
+
+        // ── Cargar info del usuario y ajustar menú por rol ───────────────────
+        async function loadUserAndMenu() {
+            try {
+                const res = await fetch('/api/v1/auth/me');
+                if (!res.ok) {
+                    // No autenticado → redirigir a login
+                    window.location.href = '/login';
+                    return;
+                }
+                const user = await res.json();
+                const role = user.role; // 'Administrador' | 'Operativo' | 'Cliente'
+
+                // Actualizar info en sidebar
+                document.getElementById('sidebar-username').textContent = user.username;
+                const roleLabels = {
+                    'Administrador': '🛡️ Administrador',
+                    'Operativo': '⚙️ Operativo',
+                    'Cliente': '👤 Cliente',
+                };
+                document.getElementById('sidebar-role-badge').textContent = roleLabels[role] || role;
+
+                // Mostrar secciones según rol
+                if (role === 'Administrador') {
+                    document.getElementById('nav-principal').style.display = '';
+                    document.getElementById('nav-finanzas').style.display = '';
+                    document.getElementById('nav-clientes').style.display = '';
+                    document.getElementById('nav-productos').style.display = '';
+                    document.getElementById('nav-cotizaciones').style.display = '';
+                    document.getElementById('nav-operacion').style.display = '';
+                    document.getElementById('nav-sistema').style.display = '';
+                } else if (role === 'Operativo') {
+                    document.getElementById('nav-principal').style.display = '';
+                    document.getElementById('nav-operacion').style.display = '';
+                } else if (role === 'Cliente') {
+                    // El cliente tiene su propio template (client_dashboard.html), no usa base.html
+                    // Pero si llegase aquí, ocultar todo
+                    document.getElementById('nav-principal').style.display = 'none';
+                }
+            } catch (err) {
+                console.error('Error cargando usuario:', err);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            // Cargar menú según rol
+            loadUserAndMenu();
+
+            // Marcar link activo
             const currentPath = window.location.pathname;
             const navLinks = document.querySelectorAll('.nav-link');
             
             navLinks.forEach(link => {
-                // Check if the link's href matches the current path
-                // For exact matches or root prefixes like /quotes
                 if (link.getAttribute('href') === currentPath || 
                    (currentPath.startsWith(link.getAttribute('href')) && link.getAttribute('href') !== '/')) {
                     link.classList.add('active');
@@ -116,22 +198,20 @@
                 }
             });
 
-            // Restore scroll position
+            // Restaurar scroll del sidebar
             const sidebar = document.querySelector('.sidebar');
             if (sidebar) {
                 const savedScroll = localStorage.getItem('sidebar-scroll-pos');
                 if (savedScroll !== null) {
                     sidebar.scrollTop = parseInt(savedScroll, 10);
                 }
-                
-                // Ensure active link is scrolled into view smoothly if not fully visible
                 const activeLink = sidebar.querySelector('.nav-link.active');
                 if (activeLink) {
                     activeLink.scrollIntoView({ block: 'nearest', behavior: 'instant' });
                 }
             }
 
-            // Save scroll position when a nav-link is clicked or on beforeunload
+            // Guardar scroll al navegar
             const navLinksList = document.querySelectorAll('.nav-link');
             navLinksList.forEach(link => {
                 link.addEventListener('click', () => {

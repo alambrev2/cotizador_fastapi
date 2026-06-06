@@ -8,6 +8,8 @@ from app.models import CustomerBase, QuoteBase, PaymentBase, AccountChargeBase, 
 class Token(SQLModel):
     access_token: str
     token_type: str
+    role: Optional[str] = None
+    username: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -41,6 +43,7 @@ class QuoteCreate(SQLModel):
     # Edición
     padre_id: Optional[int] = None
     motivo_edicion: Optional[str] = None
+    total_manual: Optional[Decimal] = None
 
 
 class QuoteUpdate(SQLModel):

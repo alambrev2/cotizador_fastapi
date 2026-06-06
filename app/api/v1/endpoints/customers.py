@@ -2,8 +2,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models import Customer
+from app.models import Customer, User
 from fastapi import UploadFile, File, Response
+from app.api.deps import get_current_active_admin, get_current_active_operativo_or_admin
 import pandas as pd
 from io import BytesIO
 from openpyxl.styles import Font
@@ -32,14 +33,22 @@ router = APIRouter()
 
 
 @router.post("/", response_model=Customer)
-def create_customer(*, session: Session = Depends(get_session), customer: Customer):
+def create_customer(
+    *,
+    session: Session = Depends(get_session),
+    customer: Customer,
+    current_user: User = Depends(get_current_active_admin)
+):
     session.add(customer)
     session.commit()
     session.refresh(customer)
     return customer
 
 @router.get("/export")
-def export_excel_route(session: Session = Depends(get_session)):
+def export_excel_route(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_admin)
+):
     customers = session.exec(select(Customer)).all()
     data = [{
         "Nombre Completo": c.nombre,
@@ -64,7 +73,9 @@ def export_excel_route(session: Session = Depends(get_session)):
     return Response(content=io.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={'Content-Disposition': 'attachment; filename="clientes.xlsx"'})
 
 @router.get("/template")
-def export_template_route():
+def export_template_route(
+    current_user: User = Depends(get_current_active_admin)
+):
     data = [{
         "Nombre Completo": "Juan Perez",
         "Correo Electrónico": "juan@ejemplo.com",
@@ -87,7 +98,12 @@ def export_template_route():
     return Response(content=io.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={'Content-Disposition': 'attachment; filename="plantilla_clientes.xlsx"'})
 
 @router.post("/import")
-def import_excel_route(dry_run: bool = False, session: Session = Depends(get_session), file: UploadFile = File(...)):
+def import_excel_route(
+    dry_run: bool = False,
+    session: Session = Depends(get_session),
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_admin)
+):
     # Asegurar que el directorio de logs exista
     os.makedirs('logs', exist_ok=True)
     
@@ -264,6 +280,7 @@ def read_customers(
     offset: int = 0,
     limit: int = Query(default=100, le=100),
     search: str = None,
+    current_user: User = Depends(get_current_active_admin),
 ):
     from app.models import Quote
     from sqlalchemy.orm import selectinload
@@ -310,7 +327,12 @@ def read_customers(
 
 
 @router.get("/{customer_id}", response_model=Customer)
-def read_customer(*, session: Session = Depends(get_session), customer_id: int):
+def read_customer(
+    *,
+    session: Session = Depends(get_session),
+    customer_id: int,
+    current_user: User = Depends(get_current_active_admin)
+):
     customer = session.get(Customer, customer_id)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -323,6 +345,7 @@ def update_customer(
     session: Session = Depends(get_session),
     customer_id: int,
     customer_update: Customer,
+    current_user: User = Depends(get_current_active_admin),
 ):
     db_customer = session.get(Customer, customer_id)
     if not db_customer:
@@ -346,7 +369,12 @@ def update_customer(
 
 
 @router.delete("/{customer_id}")
-def delete_customer(*, session: Session = Depends(get_session), customer_id: int):
+def delete_customer(
+    *,
+    session: Session = Depends(get_session),
+    customer_id: int,
+    current_user: User = Depends(get_current_active_admin)
+):
     customer = session.get(Customer, customer_id)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")

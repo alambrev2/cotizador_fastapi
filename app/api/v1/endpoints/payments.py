@@ -3,13 +3,19 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models import Payment, Quote, AccountCharge
+from app.models import Payment, Quote, AccountCharge, User
 from app.schemas import PaymentCreate, AccountChargeCreate
 from pydantic import BaseModel
 from fastapi import Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import selectinload
 from app.core.pdf import generate_pdf_bytes
+from app.api.deps import (
+    get_current_user,
+    get_current_active_admin,
+    get_current_active_operativo_or_admin,
+)
+from app.models import RoleEnum
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -17,7 +23,10 @@ router = APIRouter()
 
 
 @router.get("/active")
-def read_active_statements(session: Session = Depends(get_session)):
+def read_active_statements(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_admin)
+):
     # Obtener cotizaciones con total > 0 que NO estén rechazadas o en borrador (opcional, pero asumimos que solo 'Enviada'/'Aprobada' cuentan)
     # Por lealtad al usuario, mostraremos todas las que tengan saldo, independientemente del estado,
     # aunque logico seria solo Aprobada. Vamos filtrar solo Aprobada para ser más limpios, o todas.
@@ -55,7 +64,10 @@ def read_active_statements(session: Session = Depends(get_session)):
 
 
 @router.get("/active-customers")
-def read_active_customers(session: Session = Depends(get_session)):
+def read_active_customers(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_admin)
+):
     """Obtiene lista de clientes con deuda activa (saldo inicial + cotizaciones - pagos)."""
     from app.models import Customer
 
@@ -129,9 +141,16 @@ def read_active_customers(session: Session = Depends(get_session)):
 
 @router.get("/statement/customer/{customer_id}")
 def get_customer_statement(
-    *, session: Session = Depends(get_session), customer_id: int
+    *, session: Session = Depends(get_session), customer_id: int,
+    current_user: User = Depends(get_current_user)
 ):
     """Obtiene estado de cuenta consolidado de un cliente."""
+    # El cliente solo puede ver su propio estado
+    if current_user.role == RoleEnum.CLIENTE:
+        if current_user.cliente_id != customer_id:
+            raise HTTPException(status_code=403, detail="Solo puedes ver tu propio estado de cuenta")
+    elif current_user.role == RoleEnum.OPERATIVO:
+        raise HTTPException(status_code=403, detail="No tienes permisos para esta acción")
     # 1. Obtener cliente
     from app.models import Customer
 
@@ -239,8 +258,17 @@ def get_customer_statement(
 
 
 @router.get("/statement/customer/{customer_id}/pdf")
-def get_customer_statement_pdf(*, session: Session = Depends(get_session), customer_id: int):
-    """Genera estado de cuenta en PDF listando movimientos cronológicos."""
+def get_customer_statement_pdf(
+    *, session: Session = Depends(get_session), customer_id: int,
+    current_user: User = Depends(get_current_user)
+):
+    """Genera estado de cuenta en PDF. Cliente solo puede ver el suyo."""
+    # El cliente solo puede descargar su propio PDF
+    if current_user.role == RoleEnum.CLIENTE:
+        if current_user.cliente_id != customer_id:
+            raise HTTPException(status_code=403, detail="Solo puedes descargar tu propio estado de cuenta")
+    elif current_user.role == RoleEnum.OPERATIVO:
+        raise HTTPException(status_code=403, detail="No tienes permisos para esta acción")
     from app.models import Customer, AccountCharge
     from datetime import datetime
 
@@ -344,7 +372,12 @@ def get_customer_statement_pdf(*, session: Session = Depends(get_session), custo
 
 
 @router.post("/charges", response_model=AccountCharge)
-def create_charge(*, session: Session = Depends(get_session), charge_in: AccountChargeCreate):
+def create_charge(
+    *,
+    session: Session = Depends(get_session),
+    charge_in: AccountChargeCreate,
+    current_user: User = Depends(get_current_active_admin)
+):
     from app.models import Customer
     if not charge_in.cliente_id:
         raise HTTPException(status_code=400, detail="Debe vincular el cargo a un cliente.")
@@ -364,7 +397,12 @@ class RemissionRequest(BaseModel):
     charge_ids: List[int]
 
 @router.post("/remission")
-def generate_charge_remission(*, session: Session = Depends(get_session), req: RemissionRequest):
+def generate_charge_remission(
+    *,
+    session: Session = Depends(get_session),
+    req: RemissionRequest,
+    current_user: User = Depends(get_current_active_admin)
+):
     if not req.charge_ids:
         raise HTTPException(status_code=400, detail="Debe enviar al menos un cargo.")
 
@@ -431,7 +469,8 @@ def generate_charge_remission(*, session: Session = Depends(get_session), req: R
 
 @router.post("/", response_model=Payment)
 def create_payment(
-    *, session: Session = Depends(get_session), payment_in: PaymentCreate
+    *, session: Session = Depends(get_session), payment_in: PaymentCreate,
+    current_user: User = Depends(get_current_active_admin)
 ):
     if not payment_in.quote_id and not payment_in.cliente_id and not payment_in.cargo_id:
         raise HTTPException(
@@ -457,7 +496,12 @@ def create_payment(
 
 
 @router.get("/by-quote/{quote_id}", response_model=List[Payment])
-def read_payments_by_quote(*, session: Session = Depends(get_session), quote_id: int):
+def read_payments_by_quote(
+    *,
+    session: Session = Depends(get_session),
+    quote_id: int,
+    current_user: User = Depends(get_current_active_admin)
+):
     query = (
         select(Payment)
         .where(Payment.quote_id == quote_id)
@@ -468,7 +512,11 @@ def read_payments_by_quote(*, session: Session = Depends(get_session), quote_id:
 
 
 @router.get("/", response_model=List[Payment])
-def read_payments(*, session: Session = Depends(get_session)):
+def read_payments(
+    *,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_admin)
+):
     query = (
         select(Payment)
         .options(selectinload(Payment.cliente))
