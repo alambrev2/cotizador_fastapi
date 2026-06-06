@@ -32,6 +32,23 @@ class UserCreate(UserBase):
 class UserRead(UserBase):
     id: int
 
+class UserAdminCreate(SQLModel):
+    """Schema para que el Admin cree usuarios Operativos o Clientes."""
+    username: str
+    email: str
+    password: str
+    role: RoleEnum = RoleEnum.OPERATIVO
+    is_active: bool = True
+    cliente_id: Optional[int] = None
+
+class UserUpdate(SQLModel):
+    """Schema para editar un usuario existente (campos opcionales)."""
+    username: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[RoleEnum] = None
+    is_active: Optional[bool] = None
+    cliente_id: Optional[int] = None
+
 
 class QuoteItemCreate(SQLModel):
     producto_id: int
