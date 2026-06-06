@@ -295,13 +295,19 @@ def generate_quote_pdf(
         # Generar bytes PDF
         pdf_bytes = generate_pdf_bytes(html_content)
 
-        # Retornar como archivo descargable
+        # Nomenclatura: Cotizacion_FOLIO_CLI0001_nombre.pdf
+        import unicodedata, re
+        def _safe(t, n=20):
+            s = unicodedata.normalize('NFKD', t or '').encode('ascii','ignore').decode()
+            return re.sub(r'_+','_', re.sub(r'[^\w]','_', s)).strip('_')[:n]
+        folio = quote.folio_cotizacion or f"COT{quote_id:04d}"
+        nombre = _safe(quote.cliente.nombre) if quote.cliente else "cliente"
+        pdf_name = f"Cotizacion_{folio}_CLI{quote.cliente_id:04d}_{nombre}.pdf"
+
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={
-                "Content-Disposition": f"attachment; filename=cotizacion_{quote_id}.pdf"
-            },
+            headers={"Content-Disposition": f'attachment; filename="{pdf_name}"'},
         )
     except Exception as e:
         import traceback

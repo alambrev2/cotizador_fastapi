@@ -16,10 +16,20 @@ from app.api.deps import (
     get_current_active_operativo_or_admin,
 )
 from app.models import RoleEnum
+import unicodedata, re
 
 templates = Jinja2Templates(directory="app/templates")
 
 router = APIRouter()
+
+
+def _safe_name(text: str, max_len: int = 20) -> str:
+    """Normaliza un nombre para usar en filename: sin acentos, solo alfanuméricos/guion bajo."""
+    nfkd = unicodedata.normalize('NFKD', text or '')
+    ascii_str = nfkd.encode('ascii', 'ignore').decode('ascii')
+    clean = re.sub(r'[^\w]', '_', ascii_str).strip('_')
+    clean = re.sub(r'_+', '_', clean)
+    return clean[:max_len]
 
 
 @router.get("/active")
@@ -360,10 +370,12 @@ def get_customer_statement_pdf(
             movements=movements
         )
         pdf_bytes = generate_pdf_bytes(html_content)
+        nombre_safe = _safe_name(customer.nombre)
+        pdf_name = f"Estado_Cuenta_CLI{customer.id:04d}_{nombre_safe}.pdf"
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename=estado_cuenta_{customer.id}.pdf"}
+            headers={"Content-Disposition": f'attachment; filename="{pdf_name}"'}
         )
     except Exception as e:
         import traceback
@@ -448,7 +460,7 @@ def download_remission_by_folio(
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="remision_{folio}.pdf"'},
+            headers={"Content-Disposition": f'attachment; filename="Remision_{folio}_CLI{cliente.id:04d}_{_safe_name(cliente.nombre)}.pdf"'},
         )
     except Exception as e:
         import traceback
@@ -517,7 +529,7 @@ def generate_charge_remission(
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         reports_dir = os.path.join(BASE_DIR, "app", "static", "reports")
         os.makedirs(reports_dir, exist_ok=True)
-        pdf_filename = f"remision_{nuevo_folio}.pdf"
+        pdf_filename = f"Remision_{nuevo_folio}_CLI{cliente.id:04d}_{_safe_name(cliente.nombre)}.pdf"
         pdf_path = os.path.join(reports_dir, pdf_filename)
         with open(pdf_path, "wb") as f:
             f.write(pdf_bytes)
@@ -527,7 +539,7 @@ def generate_charge_remission(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="remision_{nuevo_folio}.pdf"',
+                "Content-Disposition": f'attachment; filename="{pdf_filename}"',
                 "X-Folio-Nota": nuevo_folio,
                 "X-PDF-Path": f"/static/reports/{pdf_filename}",
                 "Access-Control-Expose-Headers": "X-Folio-Nota, X-PDF-Path"
