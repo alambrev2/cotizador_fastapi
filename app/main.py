@@ -242,3 +242,10 @@ async def finance_page(request: Request, current_user: User = Depends(get_admin_
     return templates.TemplateResponse(request, "financial_summary.html", {
         "current_user": {"username": current_user.username, "role": current_user.role.value}
     })
+
+
+@app.get("/users", include_in_schema=False)
+async def list_users_page(request: Request, current_user: User = Depends(get_admin_only_page)):
+    return templates.TemplateResponse(request, "list_users.html", {
+        "current_user": {"username": current_user.username, "role": current_user.role.value}
+    })
