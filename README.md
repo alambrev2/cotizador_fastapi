@@ -48,10 +48,11 @@ Sigue estos pasos para levantar la aplicación en tu entorno local:
 
 ### 2. Clonar el Repositorio
 ```bash
-# Descargar el proyecto desde GitHub
-# Descomprimir el archivo zip
+# Clonar el proyecto desde GitHub
+git clone https://github.com/alambrev2/cotizador_fastapi.git
+
 # Entrar a la carpeta del proyecto
-cd cotizador_fastapi-main
+cd cotizador_fastapi
 ```
 
 ### 3. Inicializar el Proyecto (Nuevo paso)

@@ -300,7 +300,7 @@ Se han implementado todas las mejoras necesarias para cumplir con los criterios 
 ## Repositorio GitHub
 
 Los cambios han sido subidos exitosamente al repositorio:
-- **URL:** https://github.com/al222410908-ctrl/cotizador_fastapi-main_valan.git
+- **URL:** https://github.com/alambrev2/cotizador_fastapi.git
 - **Branch:** master
 - **Commit:** "Implementar validaciones robustas en importación Excel de clientes y productos"
 
