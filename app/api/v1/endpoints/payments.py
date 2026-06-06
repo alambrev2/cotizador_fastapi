@@ -396,6 +396,65 @@ def create_charge(
 class RemissionRequest(BaseModel):
     charge_ids: List[int]
 
+
+# ── GET: Descargar PDF de remisión existente por folio ────────────────────────
+@router.get("/remission/{folio}")
+def download_remission_by_folio(
+    folio: str,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_admin),
+):
+    """Regenera y descarga el PDF de una remisión existente dado su folio."""
+    import os
+
+    # 1. Intentar servir desde disco si ya existe
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    reports_dir = os.path.join(BASE_DIR, "app", "static", "reports")
+    pdf_path = os.path.join(reports_dir, f"remision_{folio}.pdf")
+
+    if os.path.exists(pdf_path):
+        with open(pdf_path, "rb") as f:
+            pdf_bytes = f.read()
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="remision_{folio}.pdf"'},
+        )
+
+    # 2. Regenerar desde BD si no existe en disco
+    cargos = session.exec(
+        select(AccountCharge).where(AccountCharge.folio_nota == folio)
+    ).all()
+    if not cargos:
+        raise HTTPException(status_code=404, detail=f"No se encontró la remisión con folio {folio}")
+
+    cliente = cargos[0].cliente
+    total_remission = sum([float(c.monto) for c in cargos])
+
+    try:
+        html_content = templates.get_template("pdf/remission.html").render(
+            cliente=cliente,
+            cargos=cargos,
+            total=total_remission,
+            folio=folio,
+        )
+        pdf_bytes = generate_pdf_bytes(html_content)
+
+        # Guardar para futuras descargas
+        os.makedirs(reports_dir, exist_ok=True)
+        with open(pdf_path, "wb") as f:
+            f.write(pdf_bytes)
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="remision_{folio}.pdf"'},
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error regenerando PDF: {str(e)}")
+
 @router.post("/remission")
 def generate_charge_remission(
     *,
