@@ -460,7 +460,7 @@
                     <td class="text-end py-3 fw-bold" style="color: var(--gray-800);">$${parseFloat(c.monto).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="text-center py-3">
                         ${c.saldo <= 0.1 ? '<span style="background: var(--success-light); color: var(--success-dark); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">Pagado</span>' : '<span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">Pendiente</span>'}
-                        ${(c.documentado || c.estatus === 'Remisión Emitida') ? `<br><span style="display: inline-block; background: var(--gray-200); color: var(--gray-700); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; margin-top: 4px;">${c.estatus || 'Remisión Emitida'}</span>` : ''}
+                        ${(c.documentado || c.estatus === 'Remisión Emitida') ? `<br><span style="display: inline-block; background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; margin-top: 4px;"><i class="bi bi-file-earmark-pdf-fill"></i> PDF Guardado</span>` : ''}
                         ${c.folio_nota ? `<br><small style="color: var(--gray-500); font-weight: bold; font-size: 0.7rem; display: block; margin-top: 4px;">${c.folio_nota}</small>` : ''}
                     </td>
                     <td class="text-end pe-4 py-3">
@@ -672,8 +672,8 @@
             a.click();
             window.URL.revokeObjectURL(url);
 
-            // Mostrar el folio al usuario
-            alert(`Nota de remisión ${folio} generada con éxito.`);
+            // Mostrar mensaje de éxito
+            alert(`✅ Archivo listo para descargar en PDF.\nFolio: ${folio}`);
 
             // Refrescar para que salgan como documentados
             loadCustomerStatement(lastLoadedCustomerId);

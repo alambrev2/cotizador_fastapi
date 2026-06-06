@@ -452,13 +452,26 @@ def generate_charge_remission(
             folio=nuevo_folio
         )
         pdf_bytes = generate_pdf_bytes(html_content)
+
+        # ── Guardar PDF permanentemente en disco ──────────────────────────────
+        import os
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        reports_dir = os.path.join(BASE_DIR, "app", "static", "reports")
+        os.makedirs(reports_dir, exist_ok=True)
+        pdf_filename = f"remision_{nuevo_folio}.pdf"
+        pdf_path = os.path.join(reports_dir, pdf_filename)
+        with open(pdf_path, "wb") as f:
+            f.write(pdf_bytes)
+        # ─────────────────────────────────────────────────────────────────────
+
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
                 "Content-Disposition": f'attachment; filename="remision_{nuevo_folio}.pdf"',
                 "X-Folio-Nota": nuevo_folio,
-                "Access-Control-Expose-Headers": "X-Folio-Nota"
+                "X-PDF-Path": f"/static/reports/{pdf_filename}",
+                "Access-Control-Expose-Headers": "X-Folio-Nota, X-PDF-Path"
             }
         )
     except Exception as e:
