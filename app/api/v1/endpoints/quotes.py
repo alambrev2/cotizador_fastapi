@@ -146,10 +146,23 @@ def create_quote(
         session.add(db_item)
 
     # 4. Actualizar total y utilidades de la cotización
-    db_quote.subtotal = Decimal(str(total_cotizacion))
-    db_quote.iva = db_quote.subtotal * Decimal('0.16') if quote_in.requiere_factura else Decimal('0')
-    db_quote.total = db_quote.subtotal + db_quote.iva
-    db_quote.utilidad_total = Decimal(str(utilidad_acumulada))
+    if quote_in.total_manual is not None and quote_in.total_manual > 0:
+        db_quote.total = Decimal(str(quote_in.total_manual))
+        if quote_in.requiere_factura:
+            db_quote.subtotal = db_quote.total / Decimal('1.16')
+            db_quote.iva = db_quote.total - db_quote.subtotal
+        else:
+            db_quote.subtotal = db_quote.total
+            db_quote.iva = Decimal('0')
+            
+        # Recalcular utilidad: Subtotal - Costo Total de los productos
+        costo_total = sum((item.cantidad * session.get(Product, item.producto_id).costo) for item in quote_in.items)
+        db_quote.utilidad_total = db_quote.subtotal - costo_total
+    else:
+        db_quote.subtotal = Decimal(str(total_cotizacion))
+        db_quote.iva = db_quote.subtotal * Decimal('0.16') if quote_in.requiere_factura else Decimal('0')
+        db_quote.total = db_quote.subtotal + db_quote.iva
+        db_quote.utilidad_total = Decimal(str(utilidad_acumulada))
     
     # Validar que el anticipo no exceda el total
     if quote_in.anticipo and quote_in.anticipo > db_quote.total:

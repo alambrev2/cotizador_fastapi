@@ -93,9 +93,12 @@
                     <span>$<span id="calc-iva">0.00</span></span>
                 </div>
                 <div style="height: 1px; background: var(--gray-300); width: 100%; margin: 4px 0;"></div>
-                <div style="font-size: 1.4rem; font-weight: 800; color: var(--gray-800); width: 100%; display: flex; justify-content: space-between;">
+                <div style="font-size: 1.4rem; font-weight: 800; color: var(--gray-800); width: 100%; display: flex; justify-content: space-between; align-items: center;">
                     <span>Total Venta:</span>
-                    <span>$<span id="grand-total">0.00</span></span>
+                    <div style="display: flex; align-items: center; background: white; padding: 2px 8px; border-radius: var(--radius-md); border: 2px solid var(--indigo-light); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); cursor: text;" onclick="document.getElementById('grand-total-input').focus()">
+                        <span style="color: var(--gray-500); font-size: 1.1rem; margin-right: 4px;">$</span>
+                        <input type="number" id="grand-total-input" step="0.01" onchange="calculateFromTotal()" onkeyup="calculateFromTotal()" style="width: 140px; text-align: right; font-size: 1.4rem; font-weight: 800; color: var(--gray-800); border: none; background: transparent; outline: none; margin: 0; padding: 0;">
+                    </div>
                 </div>
                 <div style="font-size: 0.95rem; color: var(--success); font-weight: 700; width: 100%; display: flex; justify-content: space-between; margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--success-light);">
                     <span>Utilidad Est. (Secreta):</span>
@@ -189,6 +192,7 @@
     let productsList = [];
     let isEditing = false;
     let editId = null;
+    let isManualTotal = false;
 
     async function init() {
         try {
@@ -327,11 +331,13 @@
         const row = document.getElementById(`row-${id}`);
         if (document.querySelectorAll('#items-container tr').length > 1) {
             row.remove();
+            isManualTotal = false; // Reset manual override
             calculateGrandTotal();
         }
     }
 
     window.updateRow = function (id) {
+        isManualTotal = false; // Reset manual override on item change
         const row = document.getElementById(`row-${id}`);
         const select = row.querySelector('.product-select');
         const selectedOpt = select.selectedOptions[0];
@@ -401,39 +407,75 @@
     function calculateGrandTotal(autoSuggestFinance = false) {
         let subtotal = 0;
         let totalUtility = 0;
+        let totalCost = 0;
         document.querySelectorAll('#items-container tr').forEach(row => {
             const qty = parseInt(row.querySelector('.qty-input').value || 0);
             const price = parseFloat(row.dataset.effectivePrice || 0);
             const cost = parseFloat(row.dataset.costPrice || 0);
             
             subtotal += price * qty;
+            totalCost += cost * qty;
             totalUtility += (price - cost) * qty;
         });
         
         const requiereFactura = document.getElementById('requiere_factura').checked;
-        const iva = requiereFactura ? (subtotal * 0.16) : 0;
-        const total = subtotal + iva;
-
-        document.getElementById('calc-subtotal').textContent = subtotal.toFixed(2);
         
-        const ivaRow = document.getElementById('iva-row');
-        if (requiereFactura) {
-            ivaRow.style.display = 'block';
-            document.getElementById('calc-iva').textContent = iva.toFixed(2);
+        if (isManualTotal) {
+            const customTotal = parseFloat(document.getElementById('grand-total-input').value || 0);
+            let calcSubtotal = 0;
+            let calcIva = 0;
+            
+            if (requiereFactura) {
+                calcSubtotal = customTotal / 1.16;
+                calcIva = customTotal - calcSubtotal;
+            } else {
+                calcSubtotal = customTotal;
+            }
+            
+            document.getElementById('calc-subtotal').textContent = calcSubtotal.toFixed(2);
+            
+            const ivaRow = document.getElementById('iva-row');
+            if (requiereFactura) {
+                ivaRow.style.display = 'block';
+                document.getElementById('calc-iva').textContent = calcIva.toFixed(2);
+            } else {
+                ivaRow.style.display = 'none';
+            }
+            
+            const manualUtility = calcSubtotal - totalCost;
+            const utilEl = document.getElementById('estimated-utility');
+            if (utilEl) utilEl.textContent = manualUtility.toFixed(2);
+            
         } else {
-            ivaRow.style.display = 'none';
-        }
+            const iva = requiereFactura ? (subtotal * 0.16) : 0;
+            const total = subtotal + iva;
 
-        document.getElementById('grand-total').textContent = total.toFixed(2);
-        
-        const utilEl = document.getElementById('estimated-utility');
-        if (utilEl) utilEl.textContent = totalUtility.toFixed(2);
+            document.getElementById('calc-subtotal').textContent = subtotal.toFixed(2);
+            
+            const ivaRow = document.getElementById('iva-row');
+            if (requiereFactura) {
+                ivaRow.style.display = 'block';
+                document.getElementById('calc-iva').textContent = iva.toFixed(2);
+            } else {
+                ivaRow.style.display = 'none';
+            }
+
+            document.getElementById('grand-total-input').value = total.toFixed(2);
+            
+            const utilEl = document.getElementById('estimated-utility');
+            if (utilEl) utilEl.textContent = totalUtility.toFixed(2);
+        }
         
         calculateFinance(autoSuggestFinance); 
     }
 
+    function calculateFromTotal() {
+        isManualTotal = true;
+        calculateGrandTotal(true);
+    }
+
     function setAnticipoPct(pct) {
-        const total = parseFloat(document.getElementById('grand-total').textContent) || 0;
+        const total = parseFloat(document.getElementById('grand-total-input').value) || 0;
         const anticipoVal = total * pct;
         document.getElementById('anticipo').value = anticipoVal.toFixed(2);
         calculateFinance(true);
@@ -453,7 +495,7 @@
         const type = document.getElementById('tipo_pago').value;
         if (type !== 'Semanal') return;
 
-        const total = parseFloat(document.getElementById('grand-total').textContent) || 0;
+        const total = parseFloat(document.getElementById('grand-total-input').value) || 0;
         const anticipo = parseFloat(document.getElementById('anticipo').value) || 0;
         const saldo = total - anticipo;
 
@@ -524,7 +566,8 @@
             plazo_semanas: parseInt(document.getElementById('plazo_semanas').value) || parseInt(document.getElementById('weeks-count').textContent) || 0,
             monto_semanal: parseFloat(document.getElementById('weekly-amount').textContent) || 0,
             padre_id: isEditing ? parseInt(editId) : null,
-            motivo_edicion: isEditing ? document.getElementById('motivo_edicion').value : null
+            motivo_edicion: isEditing ? document.getElementById('motivo_edicion').value : null,
+            total_manual: isManualTotal ? parseFloat(document.getElementById('grand-total-input').value) : null
         };
 
         try {
@@ -562,7 +605,8 @@
                     addItemRow(); // Restaurar una fila vacía
                 }
                 
-                document.getElementById('grand-total').textContent = '0.00';
+                document.getElementById('grand-total-input').value = '0.00';
+                isManualTotal = false;
 
             } else {
                 const error = await response.json();
