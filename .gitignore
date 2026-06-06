@@ -32,11 +32,12 @@ ENV/
 *.swo
 *~
 
-# Database
-data/*
-!data/database.db
+# Database (SQLite es binario y cambia con cada ejecucion local, no rastrear)
+data/
 *.sqlite
 *.sqlite3
+*.db
+*.db.local_backup
 
 
 # Reports operativos
