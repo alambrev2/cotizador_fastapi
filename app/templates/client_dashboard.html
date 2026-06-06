@@ -4,203 +4,608 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Estado de Cuenta - Cotizador Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         :root {
-            --primary: #000080;
-            --primary-light: #333399;
-            --bg-color: #f8f9fa;
-            --text-main: #333;
-            --text-muted: #6c757d;
-            --card-bg: #ffffff;
-            --border-radius: 12px;
+            --primary:       #4f46e5;
+            --primary-hover: #4338ca;
+            --success:       #10b981;
+            --success-dark:  #059669;
+            --danger:        #ef4444;
+            --danger-dark:   #dc2626;
+            --warning:       #f59e0b;
+            --bg:            #0a0f1e;
+            --surface:       #111827;
+            --surface-2:     #1a2235;
+            --border:        rgba(255,255,255,0.07);
+            --text:          #f1f5f9;
+            --text-muted:    #94a3b8;
+            --radius-md:     10px;
+            --radius-lg:     16px;
+            --radius-xl:     22px;
+            --shadow-lg:     0 20px 40px rgba(0,0,0,0.4);
+            --shadow-glow:   0 0 40px rgba(79,70,229,0.15);
         }
+
         body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
-        .header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            padding: 20px 0;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+
+        /* ── Background mesh ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% -10%, rgba(79,70,229,0.18) 0%, transparent 55%),
+                radial-gradient(ellipse 60% 40% at 80% 110%, rgba(16,185,129,0.12) 0%, transparent 55%);
+            pointer-events: none;
+            z-index: 0;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-        .header p {
-            margin: 5px 0 0;
-            opacity: 0.9;
-            font-size: 14px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-        .balance-card {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 30px;
-            border-top: 5px solid var(--primary);
-        }
-        .balance-card h2 {
-            margin: 0 0 10px;
-            color: var(--text-muted);
-            font-size: 16px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .balance-amount {
-            font-size: 48px;
-            font-weight: bold;
-            color: var(--primary);
-            margin: 0;
-        }
-        .section-title {
-            font-size: 20px;
-            color: var(--primary);
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .history-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .history-item {
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 15px 20px;
-            margin-bottom: 10px;
+
+        /* ── Header ── */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            background: rgba(10,15,30,0.85);
+            border-bottom: 1px solid var(--border);
+            padding: 0 28px;
+            height: 64px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            border-left: 4px solid #28a745;
+            justify-content: space-between;
         }
-        .history-item.cargo {
-            border-left-color: #dc3545;
+        .top-bar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        .history-info strong {
-            display: block;
-            font-size: 16px;
-        }
-        .history-info span {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-        .history-amount {
-            font-size: 18px;
-            font-weight: bold;
-            color: #28a745;
-        }
-        .history-item.cargo .history-amount {
-            color: #dc3545;
-        }
-        .btn-download {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            background: var(--primary);
+        .top-bar-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
             color: white;
-            text-align: center;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
-            margin-top: 20px;
-            transition: background 0.3s;
+            box-shadow: 0 4px 12px rgba(79,70,229,0.4);
         }
-        .btn-download:hover {
-            background: var(--primary-light);
+        .top-bar-title {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        .top-bar-subtitle {
+            font-size: 0.72rem;
+            color: var(--text-muted);
         }
         .logout-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: white;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.25);
+            color: #fca5a5;
+            padding: 7px 16px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
             text-decoration: none;
-            font-size: 14px;
-            background: rgba(255,255,255,0.2);
-            padding: 5px 15px;
-            border-radius: 20px;
+            transition: all 0.2s;
         }
         .logout-btn:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(239,68,68,0.2);
+            border-color: rgba(239,68,68,0.45);
+            color: #ff7171;
         }
-        
+
+        /* ── Hero greeting ── */
+        .hero {
+            position: relative;
+            z-index: 1;
+            padding: 48px 28px 0;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .hero-greeting {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+        }
+        .hero-greeting span {
+            background: linear-gradient(135deg, #818cf8, #6ee7b7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-sub {
+            margin-top: 8px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* ── Main grid ── */
+        .page-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 36px auto 60px;
+            padding: 0 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* ── Balance hero card ── */
+        .balance-card {
+            background: linear-gradient(135deg, #0d1535 0%, #131c38 60%, #0b1329 100%);
+            border: 1px solid rgba(79,70,229,0.25);
+            border-radius: var(--radius-xl);
+            padding: 36px 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-glow), var(--shadow-lg);
+        }
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            right: -60px; top: -60px;
+            width: 260px; height: 260px;
+            background: radial-gradient(circle, rgba(79,70,229,0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .balance-card::after {
+            content: '';
+            position: absolute;
+            left: -40px; bottom: -60px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .balance-label {
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .balance-label::before {
+            content: '';
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 8px rgba(79,70,229,0.8);
+        }
+        .balance-amount {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .balance-amount.positive { background: linear-gradient(135deg, #6ee7b7, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .balance-amount.negative { background: linear-gradient(135deg, #fca5a5, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .balance-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 14px;
+            padding: 5px 14px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            background: rgba(16,185,129,0.12);
+            color: #6ee7b7;
+            border: 1px solid rgba(16,185,129,0.25);
+        }
+        .balance-pill.debt {
+            background: rgba(239,68,68,0.12);
+            color: #fca5a5;
+            border-color: rgba(239,68,68,0.25);
+        }
+
+        /* ── Section header ── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .section-icon {
+            width: 34px; height: 34px;
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.95rem;
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        .section-count {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-weight: 600;
+        }
+
+        /* ── Movement list ── */
+        .movements-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+        .movements-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .movements-list { list-style: none; }
+        .movement-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.18s;
+            cursor: default;
+        }
+        .movement-item:last-child { border-bottom: none; }
+        .movement-item:hover { background: rgba(255,255,255,0.03); }
+        .movement-icon {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .movement-icon.pago {
+            background: rgba(16,185,129,0.12);
+            color: #6ee7b7;
+            border: 1px solid rgba(16,185,129,0.2);
+        }
+        .movement-icon.cargo {
+            background: rgba(239,68,68,0.12);
+            color: #fca5a5;
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+        .movement-info { flex: 1; min-width: 0; }
+        .movement-name {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .movement-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .movement-amount {
+            font-size: 1rem;
+            font-weight: 800;
+            white-space: nowrap;
+            letter-spacing: -0.02em;
+        }
+        .movement-amount.pago { color: #6ee7b7; }
+        .movement-amount.cargo { color: #fca5a5; }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 56px 24px;
+            color: var(--text-muted);
+        }
+        .empty-state-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+        .empty-state p { font-size: 0.9rem; }
+
+        /* ── Download button ── */
+        .btn-download {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: var(--radius-lg);
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: -0.01em;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(79,70,229,0.35);
+            border: 1px solid rgba(255,255,255,0.12);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-download::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .btn-download:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(79,70,229,0.5); }
+        .btn-download:hover::before { opacity: 1; }
+        .btn-download:active { transform: translateY(0); }
+        .btn-download.disabled {
+            background: var(--surface-2);
+            color: var(--text-muted);
+            box-shadow: none;
+            cursor: not-allowed;
+            border-color: var(--border);
+        }
+        .btn-download.disabled:hover { transform: none; }
+
+        /* ── Stats mini row ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .stat-mini {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px 22px;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-mini::before {
+            content: '';
+            position: absolute;
+            right: -20px; top: -20px;
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .stat-mini.green::before { background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%); }
+        .stat-mini.red::before   { background: radial-gradient(circle, rgba(239,68,68,0.15) 0%, transparent 70%); }
+        .stat-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 1.55rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+        .stat-value.green { color: #6ee7b7; }
+        .stat-value.red   { color: #fca5a5; }
+        .stat-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        /* ── Responsive ── */
         @media (max-width: 600px) {
-            .balance-amount { font-size: 36px; }
-            .history-item { flex-direction: column; align-items: flex-start; }
-            .history-amount { margin-top: 10px; align-self: flex-end; }
+            .top-bar { padding: 0 16px; }
+            .hero { padding: 32px 16px 0; }
+            .hero-greeting { font-size: 1.5rem; }
+            .page-content { padding: 0 16px; margin-top: 24px; }
+            .balance-amount { font-size: 2.5rem; }
+            .balance-card { padding: 24px 22px; }
+            .stats-row { grid-template-columns: 1fr; }
+            .movement-item { padding: 14px 16px; }
+            .movements-header { padding: 16px; }
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <a href="#" onclick="logout(event)" class="logout-btn">Cerrar Sesión</a>
-        <h1>¡Hola, {{ cliente.nombre if cliente else user.username }}!</h1>
-        <p>Este es tu panel simplificado de estado de cuenta</p>
+
+    <!-- ── Top bar ── -->
+    <header class="top-bar">
+        <div class="top-bar-brand">
+            <div class="top-bar-logo"><i class="bi bi-graph-up-arrow"></i></div>
+            <div>
+                <div class="top-bar-title">Cotizador Pro</div>
+                <div class="top-bar-subtitle">Portal del Cliente</div>
+            </div>
+        </div>
+        <a href="#" onclick="logout(event)" class="logout-btn">
+            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+        </a>
     </header>
 
-    <div class="container">
+    <!-- ── Hero greeting ── -->
+    <div class="hero">
+        <h1 class="hero-greeting">
+            Hola, <span>{{ cliente.nombre if cliente else user.username }}</span>
+        </h1>
+        <p class="hero-sub">Aquí tienes un resumen de tu estado de cuenta actualizado.</p>
+    </div>
+
+    <!-- ── Page content ── -->
+    <main class="page-content">
+
+        <!-- Balance hero -->
         <div class="balance-card">
-            <h2>Saldo Actual a Pagar</h2>
-            {% set saldo_actual = (cliente.saldo_inicial if cliente else 0) %}
+            <div class="balance-label">Saldo Actual a Pagar</div>
+
+            {% set total_cargos = namespace(value=0) %}
+            {% set total_pagos  = namespace(value=0) %}
             {% if cliente %}
                 {% for cargo in cliente.cargos %}
-                    {% set saldo_actual = saldo_actual + cargo.monto %}
+                    {% set total_cargos.value = total_cargos.value + cargo.monto %}
                 {% endfor %}
                 {% for pago in cliente.pagos %}
-                    {% set saldo_actual = saldo_actual - pago.monto %}
+                    {% set total_pagos.value = total_pagos.value + pago.monto %}
                 {% endfor %}
             {% endif %}
-            
-            <p class="balance-amount">${{ "%.2f"|format(saldo_actual) }}</p>
+            {% set saldo_actual = (cliente.saldo_inicial if cliente else 0) + total_cargos.value - total_pagos.value %}
+
+            <div class="balance-amount {% if saldo_actual <= 0 %}positive{% elif saldo_actual > 0 %}negative{% endif %}">
+                ${{ "%.2f"|format(saldo_actual) }}
+            </div>
+
+            {% if saldo_actual <= 0 %}
+            <div class="balance-pill">
+                <i class="bi bi-check-circle-fill"></i> Sin deuda pendiente
+            </div>
+            {% else %}
+            <div class="balance-pill debt">
+                <i class="bi bi-exclamation-triangle-fill"></i> Saldo pendiente por liquidar
+            </div>
+            {% endif %}
         </div>
 
-        <h3 class="section-title">Historial de Movimientos</h3>
-        <ul class="history-list">
-            {% if cliente and (cliente.pagos or cliente.cargos) %}
-                {% for pago in cliente.pagos %}
-                <li class="history-item">
-                    <div class="history-info">
-                        <strong>Pago Recibido</strong>
-                        <span>{{ pago.fecha_pago.strftime('%d/%m/%Y') }} - {{ pago.metodo_pago }}</span>
-                    </div>
-                    <div class="history-amount">+ ${{ "%.2f"|format(pago.monto) }}</div>
-                </li>
-                {% endfor %}
-                
-                {% for cargo in cliente.cargos %}
-                <li class="history-item cargo">
-                    <div class="history-info">
-                        <strong>{{ cargo.detalle }}</strong>
-                        <span>{{ cargo.fecha.strftime('%d/%m/%Y') }}</span>
-                    </div>
-                    <div class="history-amount">- ${{ "%.2f"|format(cargo.monto) }}</div>
-                </li>
-                {% endfor %}
-            {% else %}
-                <li class="history-item" style="border-left: none; justify-content: center; color: var(--text-muted);">
-                    No hay movimientos recientes
-                </li>
-            {% endif %}
-        </ul>
-
+        <!-- Mini stats -->
         {% if cliente %}
-        <a href="/api/v1/payments/statement/customer/{{ cliente.id }}/pdf" target="_blank" class="btn-download">📄 Descargar Estado de Cuenta en PDF</a>
-        {% else %}
-        <a href="#" class="btn-download" style="opacity: 0.5; cursor: not-allowed;" onclick="alert('No hay cliente vinculado a esta cuenta.')">📄 Descargar Estado de Cuenta en PDF</a>
+        <div class="stats-row">
+            <div class="stat-mini green">
+                <div class="stat-label">Total Pagos</div>
+                <div class="stat-value green">{{ cliente.pagos | length }}</div>
+                <div class="stat-sub">Pagos registrados</div>
+            </div>
+            <div class="stat-mini red">
+                <div class="stat-label">Total Cargos</div>
+                <div class="stat-value red">{{ cliente.cargos | length }}</div>
+                <div class="stat-sub">Cargos aplicados</div>
+            </div>
+        </div>
         {% endif %}
+
+        <!-- Movement history -->
+        <div class="movements-card">
+            <div class="movements-header">
+                <div class="section-header" style="margin-bottom:0;">
+                    <div class="section-icon" style="background:rgba(79,70,229,0.12); color:#818cf8; border:1px solid rgba(79,70,229,0.2);">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <span class="section-title">Historial de Movimientos</span>
+                    {% if cliente %}
+                    <span class="section-count">{{ (cliente.pagos | length) + (cliente.cargos | length) }} registros</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <ul class="movements-list">
+                {% if cliente and (cliente.pagos or cliente.cargos) %}
+
+                    {% for pago in cliente.pagos | sort(attribute='fecha_pago', reverse=True) %}
+                    <li class="movement-item">
+                        <div class="movement-icon pago">
+                            <i class="bi bi-arrow-down-circle-fill"></i>
+                        </div>
+                        <div class="movement-info">
+                            <div class="movement-name">Pago Recibido</div>
+                            <div class="movement-meta">
+                                <i class="bi bi-calendar3" style="margin-right:4px;"></i>
+                                {{ pago.fecha_pago.strftime('%d/%m/%Y') }}
+                                &nbsp;·&nbsp;
+                                <i class="bi bi-credit-card" style="margin-right:4px;"></i>
+                                {{ pago.metodo_pago }}
+                            </div>
+                        </div>
+                        <div class="movement-amount pago">+ ${{ "%.2f"|format(pago.monto) }}</div>
+                    </li>
+                    {% endfor %}
+
+                    {% for cargo in cliente.cargos | sort(attribute='fecha', reverse=True) %}
+                    <li class="movement-item">
+                        <div class="movement-icon cargo">
+                            <i class="bi bi-arrow-up-circle-fill"></i>
+                        </div>
+                        <div class="movement-info">
+                            <div class="movement-name">{{ cargo.detalle }}</div>
+                            <div class="movement-meta">
+                                <i class="bi bi-calendar3" style="margin-right:4px;"></i>
+                                {{ cargo.fecha.strftime('%d/%m/%Y') }}
+                                {% if cargo.estatus %}
+                                &nbsp;·&nbsp;
+                                <span style="
+                                    padding: 2px 8px;
+                                    border-radius: 4px;
+                                    font-size: 0.68rem;
+                                    font-weight: 700;
+                                    {% if cargo.estatus == 'Pagado' %}background:rgba(16,185,129,0.15); color:#6ee7b7;
+                                    {% else %}background:rgba(245,158,11,0.15); color:#fcd34d;{% endif %}
+                                ">{{ cargo.estatus }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="movement-amount cargo">- ${{ "%.2f"|format(cargo.monto) }}</div>
+                    </li>
+                    {% endfor %}
+
+                {% else %}
+                    <li>
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="bi bi-inbox"></i></div>
+                            <p>No hay movimientos registrados aún.</p>
+                        </div>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Download button -->
+        {% if cliente %}
+        <a href="/api/v1/payments/statement/customer/{{ cliente.id }}/pdf"
+           target="_blank"
+           class="btn-download">
+            <i class="bi bi-file-earmark-pdf-fill" style="font-size:1.1rem;"></i>
+            Descargar Estado de Cuenta en PDF
+        </a>
+        {% else %}
+        <a href="#"
+           class="btn-download disabled"
+           onclick="alert('No hay cliente vinculado a esta cuenta.'); return false;">
+            <i class="bi bi-file-earmark-pdf" style="font-size:1.1rem;"></i>
+            Estado de Cuenta no disponible
+        </a>
+        {% endif %}
+
+    </main>
 
     <script>
         async function logout(event) {
