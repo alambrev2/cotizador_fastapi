@@ -416,33 +416,44 @@ def download_remission_by_folio(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_active_admin),
 ):
-    """Regenera y descarga el PDF de una remisión existente dado su folio."""
+    """Regenera y descarga el PDF de una remision existente dado su folio."""
     import os
+    from app.models import Customer
 
-    # 1. Intentar servir desde disco si ya existe
+    # 1. Buscar cargos cargando la relacion cliente explicitamente
+    cargos = session.exec(
+        select(AccountCharge)
+        .where(AccountCharge.folio_nota == folio)
+        .options(selectinload(AccountCharge.cliente))
+    ).all()
+    if not cargos:
+        raise HTTPException(status_code=404, detail=f"No se encontro la remision con folio {folio}")
+
+    cliente = cargos[0].cliente or session.get(Customer, cargos[0].cliente_id)
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente de la remision no encontrado")
+
+    nombre_safe = _safe_name(cliente.nombre)
+    pdf_filename = f"Remision_{folio}_CLI{cliente.id:04d}_{nombre_safe}.pdf"
+
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     reports_dir = os.path.join(BASE_DIR, "app", "static", "reports")
-    pdf_path = os.path.join(reports_dir, f"remision_{folio}.pdf")
+    os.makedirs(reports_dir, exist_ok=True)
 
-    if os.path.exists(pdf_path):
-        with open(pdf_path, "rb") as f:
+    # 2. Buscar cualquier variante del PDF en disco
+    existing = [f for f in os.listdir(reports_dir)
+                if f.lower().startswith(f"remision_{folio.lower()}")]
+    if existing:
+        with open(os.path.join(reports_dir, existing[0]), "rb") as f:
             pdf_bytes = f.read()
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="remision_{folio}.pdf"'},
+            headers={"Content-Disposition": f'attachment; filename="{pdf_filename}"'},
         )
 
-    # 2. Regenerar desde BD si no existe en disco
-    cargos = session.exec(
-        select(AccountCharge).where(AccountCharge.folio_nota == folio)
-    ).all()
-    if not cargos:
-        raise HTTPException(status_code=404, detail=f"No se encontró la remisión con folio {folio}")
-
-    cliente = cargos[0].cliente
+    # 3. Regenerar desde BD
     total_remission = sum([float(c.monto) for c in cargos])
-
     try:
         html_content = templates.get_template("pdf/remission.html").render(
             cliente=cliente,
@@ -451,16 +462,13 @@ def download_remission_by_folio(
             folio=folio,
         )
         pdf_bytes = generate_pdf_bytes(html_content)
-
-        # Guardar para futuras descargas
-        os.makedirs(reports_dir, exist_ok=True)
+        pdf_path = os.path.join(reports_dir, pdf_filename)
         with open(pdf_path, "wb") as f:
             f.write(pdf_bytes)
-
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="Remision_{folio}_CLI{cliente.id:04d}_{_safe_name(cliente.nombre)}.pdf"'},
+            headers={"Content-Disposition": f'attachment; filename="{pdf_filename}"'},
         )
     except Exception as e:
         import traceback
