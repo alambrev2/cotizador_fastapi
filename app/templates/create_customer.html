@@ -53,12 +53,17 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
                 <div class="form-group" style="margin-bottom: 0;">
                     <label for="username" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Nombre de usuario</label>
-                    <input type="text" id="username" name="username" placeholder="usuario123" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+                    <input type="text" id="username" name="username" placeholder="usuario123" autocomplete="new-password" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0;">
                     <label for="password" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Contraseña</label>
-                    <input type="password" id="password" name="password" placeholder="••••••••" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+                    <div style="position: relative;">
+                        <input type="text" id="password" name="password" placeholder="Escribe la contraseña" autocomplete="new-password" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 2.5rem 0.75rem 1rem; width: 100%;">
+                        <button type="button" onclick="togglePassword('password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--gray-500);" title="Ocultar/Mostrar contraseña">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -117,6 +122,20 @@
 
 {% block scripts %}
 <script>
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
+
     document.getElementById('customer-form').addEventListener('submit', async function (e) {
         e.preventDefault();
 
