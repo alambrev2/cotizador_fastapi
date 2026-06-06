@@ -47,6 +47,24 @@
             <div style="height: 1px; background: var(--gray-200); margin: var(--space-6) 0;"></div>
 
             <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--gray-800); margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-2);">
+                <i class="bi bi-person-badge" style="color: #0dcaf0;"></i> Acceso al Portal (Opcional)
+            </h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="username" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Nombre de usuario</label>
+                    <input type="text" id="username" name="username" placeholder="usuario123" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="password" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+                </div>
+            </div>
+
+            <div style="height: 1px; background: var(--gray-200); margin: var(--space-6) 0;"></div>
+
+            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--gray-800); margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-2);">
                 <i class="bi bi-cash-stack text-success"></i> Estado Financiero
             </h4>
 
@@ -113,6 +131,18 @@
             consumo_2023: parseFloat(formData.get('consumo_2023') || 0),
             consumo_2024: parseFloat(formData.get('consumo_2024') || 0)
         };
+        
+        const username = formData.get('username');
+        const password = formData.get('password');
+        
+        if (username && password) {
+            data.username = username;
+            data.password = password;
+        } else if (username || password) {
+            alert('Para habilitar el acceso al portal, debes proporcionar tanto nombre de usuario como contraseña.');
+            return;
+        }
+        
         const alertBox = document.getElementById('alert-box');
 
         try {

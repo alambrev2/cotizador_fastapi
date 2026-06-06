@@ -523,13 +523,44 @@
                     </div>
                     <span class="section-title">Historial de Movimientos</span>
                     {% if cliente %}
-                    <span class="section-count">{{ (cliente.pagos | length) + (cliente.cargos | length) }} registros</span>
+                    <span class="section-count">{{ (cliente.pagos | length) + (cliente.cargos | length) + (cliente.cotizaciones | length) }} registros</span>
                     {% endif %}
                 </div>
             </div>
 
             <ul class="movements-list">
-                {% if cliente and (cliente.pagos or cliente.cargos) %}
+                {% if cliente and (cliente.pagos or cliente.cargos or cliente.cotizaciones) %}
+
+                    {% for cotizacion in cliente.cotizaciones | sort(attribute='fecha_creacion', reverse=True) %}
+                    <li class="movement-item">
+                        <div class="movement-icon" style="background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2);">
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                        </div>
+                        <div class="movement-info">
+                            <div class="movement-name">Cotización {{ cotizacion.folio_cotizacion or ("#%s"|format(cotizacion.id)) }}</div>
+                            <div class="movement-meta">
+                                <i class="bi bi-calendar3" style="margin-right:4px;"></i>
+                                {{ cotizacion.fecha_creacion.strftime('%d/%m/%Y') }}
+                                &nbsp;·&nbsp;
+                                <span style="
+                                    padding: 2px 8px;
+                                    border-radius: 4px;
+                                    font-size: 0.68rem;
+                                    font-weight: 700;
+                                    {% if cotizacion.estado == 'Aceptada' %}background:rgba(16,185,129,0.15); color:#6ee7b7;
+                                    {% elif cotizacion.estado == 'Rechazada' %}background:rgba(239,68,68,0.15); color:#fca5a5;
+                                    {% else %}background:rgba(59,130,246,0.15); color:#93c5fd;{% endif %}
+                                ">{{ cotizacion.estado }}</span>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="movement-amount" style="color: #93c5fd;">${{ "%.2f"|format(cotizacion.total) }}</div>
+                            <a href="/api/v1/quotes/{{ cotizacion.id }}/pdf" target="_blank" style="font-size: 0.75rem; color: #60a5fa; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px;">
+                                <i class="bi bi-download"></i> PDF
+                            </a>
+                        </div>
+                    </li>
+                    {% endfor %}
 
                     {% for pago in cliente.pagos | sort(attribute='fecha_pago', reverse=True) %}
                     <li class="movement-item">

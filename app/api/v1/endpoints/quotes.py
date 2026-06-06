@@ -278,11 +278,15 @@ def generate_quote_pdf(
     *,
     session: Session = Depends(get_session),
     quote_id: int,
-    current_user: User = Depends(get_current_active_operativo_or_admin)
+    current_user: User = Depends(get_current_user)
 ):
     quote = session.get(Quote, quote_id)
     if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
+
+    if current_user.role == RoleEnum.CLIENTE:
+        if current_user.cliente_id != quote.cliente_id:
+            raise HTTPException(status_code=403, detail="No tienes permiso para descargar esta cotización")
 
     try:
         # Renderizar HTML con datos reales
