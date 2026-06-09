@@ -38,17 +38,19 @@
 </div>
 
 <!-- Filtros -->
-<div class="card" style="border-radius:var(--radius-xl);padding:var(--space-5);margin-bottom:var(--space-6);border:1px solid var(--border-color);display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;">
-    <div style="position:relative;flex:1;min-width:260px;max-width:440px;">
+<div class="card" style="border-radius:var(--radius-xl);padding:var(--space-5);margin-bottom:var(--space-6);border:1px solid var(--border-color);display:flex;flex-direction:column;gap:var(--space-4);">
+    <div style="position:relative;width:100%;max-width:500px;">
+        <input type="text" name="fakeusernameremembered" style="display:none" aria-hidden="true">
+        <input type="password" name="fakepasswordremembered" style="display:none" aria-hidden="true">
         <i class="bi bi-search" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--gray-400);"></i>
-        <input id="search-input" type="text" placeholder="Buscar usuario o email..." style="border-radius:var(--radius-lg);border:1px solid var(--gray-300);padding:0.65rem 1rem 0.65rem 2.5rem;width:100%;font-size:0.95rem;background:var(--gray-50);">
+        <input id="q-filter" name="q-filter" type="search" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" placeholder="Buscar usuario o email..." style="border-radius:var(--radius-lg);border:1px solid var(--gray-300);padding:0.65rem 1rem 0.65rem 2.5rem;width:100%;font-size:0.95rem;background:var(--gray-50);">
     </div>
-    <select id="filter-role" style="border-radius:var(--radius-lg);border:1px solid var(--gray-300);padding:0.65rem 1rem;font-size:0.95rem;background:white;min-width:180px;">
-        <option value="">Todos los roles</option>
-        <option value="Administrador">Administrador</option>
-        <option value="Operativo">Operativo</option>
-        <option value="Cliente">Cliente</option>
-    </select>
+    <div id="role-filters" style="display:flex;flex-wrap:wrap;gap:8px;">
+        <button class="role-filter-btn active" data-role="" style="padding:6px 16px;border-radius:20px;border:none;background:var(--primary);color:white;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 4px rgba(79,70,229,0.3);">Todos los roles</button>
+        <button class="role-filter-btn" data-role="Administrador" style="padding:6px 16px;border-radius:20px;border:1px solid var(--gray-300);background:white;color:var(--gray-600);font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;">Administrador</button>
+        <button class="role-filter-btn" data-role="Operativo" style="padding:6px 16px;border-radius:20px;border:1px solid var(--gray-300);background:white;color:var(--gray-600);font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;">Operativo</button>
+        <button class="role-filter-btn" data-role="Cliente" style="padding:6px 16px;border-radius:20px;border:1px solid var(--gray-300);background:white;color:var(--gray-600);font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;">Cliente</button>
+    </div>
 </div>
 
 <!-- Tabla -->
@@ -251,13 +253,40 @@ function renderTable(users) {
     }).join('');
 }
 
+let currentFilterRole = '';
+
 function applyFilters() {
-    const q = document.getElementById('search-input').value.toLowerCase();
-    const role = document.getElementById('filter-role').value;
+    const q = document.getElementById('q-filter').value.toLowerCase();
     renderTable(allUsers.filter(u =>
         (u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)) &&
-        (role === '' || u.role === role)
+        (currentFilterRole === '' || u.role === currentFilterRole)
     ));
+}
+
+function initRoleFilters() {
+    const btns = document.querySelectorAll('.role-filter-btn');
+    btns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Remove active style from all
+            btns.forEach(b => {
+                b.style.background = 'white';
+                b.style.color = 'var(--gray-600)';
+                b.style.border = '1px solid var(--gray-300)';
+                b.style.boxShadow = 'none';
+                b.classList.remove('active');
+            });
+            // Add active style to clicked
+            const t = e.currentTarget;
+            t.style.background = 'var(--primary)';
+            t.style.color = 'white';
+            t.style.border = 'none';
+            t.style.boxShadow = '0 2px 4px rgba(79,70,229,0.3)';
+            t.classList.add('active');
+            
+            currentFilterRole = t.getAttribute('data-role');
+            applyFilters();
+        });
+    });
 }
 
 // ── Modal ──
@@ -315,7 +344,15 @@ async function submitForm(e) {
         const res = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
         const data = await res.json();
         if (!res.ok) { errEl.textContent = data.detail || 'Error al guardar.'; errEl.style.display = 'block'; return; }
-        closeModal(); loadUsers();
+        
+        if (!editingMode) {
+            sessionStorage.setItem('prefill_email', document.getElementById('f-email').value.trim());
+            sessionStorage.setItem('prefill_username', document.getElementById('f-username').value.trim());
+            sessionStorage.setItem('prefill_password', document.getElementById('f-password').value);
+            window.location.href = '/new-customer';
+        } else {
+            closeModal(); loadUsers();
+        }
     } catch { errEl.textContent = 'Error de conexión.'; errEl.style.display = 'block'; }
     finally { btn.textContent = 'Guardar'; btn.disabled = false; }
 }
@@ -421,8 +458,16 @@ document.getElementById('modal-confirm').addEventListener('click', e => { if (e.
 
 document.addEventListener('DOMContentLoaded', () => {
     loadUsers();
-    document.getElementById('search-input').addEventListener('input', applyFilters);
-    document.getElementById('filter-role').addEventListener('change', applyFilters);
+    document.getElementById('q-filter').addEventListener('input', applyFilters);
+    initRoleFilters();
+
+    // Catch redirect from Dashboard customer creation
+    const prefillUserEmail = sessionStorage.getItem('prefill_new_user_email');
+    if (prefillUserEmail) {
+        openModal('create');
+        document.getElementById('f-email').value = prefillUserEmail;
+        sessionStorage.removeItem('prefill_new_user_email');
+    }
 });
 </script>
 {% endblock %}
