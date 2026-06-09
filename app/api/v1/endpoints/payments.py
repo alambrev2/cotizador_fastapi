@@ -268,6 +268,7 @@ def get_customer_statement(
 @router.get("/statement/customer/{customer_id}/pdf")
 def get_customer_statement_pdf(
     *, session: Session = Depends(get_session), customer_id: int,
+    full: bool = False,
     current_user: User = Depends(get_current_user)
 ):
     """Genera estado de cuenta en PDF. Cliente solo puede ver el suyo."""
@@ -354,6 +355,9 @@ def get_customer_statement_pdf(
 
     # Sort chronological
     movements.sort(key=lambda x: x["raw_date"])
+
+    if not full and len(movements) > 10:
+        movements = movements[-10:]
 
     try:
         html_content = templates.get_template("pdf/statement.html").render(

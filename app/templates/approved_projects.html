@@ -123,12 +123,12 @@
             const folioText = p.folio_cotizacion || `#${p.id}`;
 
             // Calculo de Métrica de Utilidad Real
-            const saleAmount = p.subtotal || p.total || 0;
-            const estimUtility = p.utilidad_total || 0;
+            const saleAmount = parseFloat(p.subtotal || p.total || 0);
+            const estimUtility = parseFloat(p.utilidad_total || 0);
             const originalMaterialCost = saleAmount - estimUtility;
             
-            const realMaterialCost = p.costo_compra_real !== null && p.costo_compra_real !== undefined ? p.costo_compra_real : originalMaterialCost;
-            const opCosts = p.costos_operativos || 0;
+            const realMaterialCost = p.costo_compra_real !== null && p.costo_compra_real !== undefined ? parseFloat(p.costo_compra_real) : originalMaterialCost;
+            const opCosts = parseFloat(p.costos_operativos || 0);
             const netUtility = saleAmount - realMaterialCost - opCosts;
 
             // Margin %

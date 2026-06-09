@@ -232,7 +232,7 @@ def read_quote(
 @router.patch("/{quote_id}", response_model=Quote)
 def update_quote(
     *, session: Session = Depends(get_session), quote_id: int, quote_in: QuoteUpdate,
-    current_user: User = Depends(get_current_active_admin)
+    current_user: User = Depends(get_current_active_operativo_or_admin)
 ):
     db_quote = session.get(Quote, quote_id)
     if not db_quote:

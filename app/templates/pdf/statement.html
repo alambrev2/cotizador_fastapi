@@ -69,6 +69,39 @@
         </tr>
     </table>
 
+    <div style="margin-bottom: 25px;">
+        <table style="width: 100%;">
+            <tr>
+                <td width="45%" valign="top">
+                    <!-- Espacio libre -->
+                    <p style="color: #64748b; font-size: 9pt; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                        <em>Notas:</em><br>
+                        - Este estado de cuenta refleja los saldos conformes a la fecha de emisión.<br>
+                        - Los pagos depositados pueden tardar hasta 24h en verse reflejados.
+                    </p>
+                </td>
+                <td width="55%" valign="top">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td width="50%" style="padding: 8px 5px;">
+                                <div style="border-left: 3px solid #15803d; padding-left: 12px;">
+                                    <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Pagos / Abonos</div>
+                                    <div style="font-size: 15pt; font-weight: bold; color: #15803d;">${{ "{:,.2f}".format(deuda_historica - saldo_pendiente) }}</div>
+                                </div>
+                            </td>
+                            <td width="50%" style="padding: 8px 5px;">
+                                <div style="border-left: 4px solid #b91c1c; padding-left: 12px;">
+                                    <div style="font-size: 9pt; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: bold;">SALDO PENDIENTE</div>
+                                    <div style="font-size: 15pt; font-weight: bold; color: #b91c1c;">${{ "{:,.2f}".format(saldo_pendiente) }}</div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+
     <table class="items-table">
         <thead>
             <tr>
@@ -110,39 +143,6 @@
             {% endfor %}
         </tbody>
     </table>
-
-    <div style="margin-top: 10px;">
-        <table style="width: 100%; margin-top: 15px;">
-            <tr>
-                <td width="45%" valign="top">
-                    <!-- Espacio libre -->
-                    <p style="color: #64748b; font-size: 9pt; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-                        <em>Notas:</em><br>
-                        - Este estado de cuenta refleja los saldos conformes a la fecha de emisión.<br>
-                        - Los pagos depositados pueden tardar hasta 24h en verse reflejados.
-                    </p>
-                </td>
-                <td width="55%" valign="top">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td width="50%" style="padding: 8px 5px;">
-                                <div style="border-left: 3px solid #15803d; padding-left: 12px;">
-                                    <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Pagos / Abonos</div>
-                                    <div style="font-size: 15pt; font-weight: bold; color: #15803d;">${{ "{:,.2f}".format(deuda_historica - saldo_pendiente) }}</div>
-                                </div>
-                            </td>
-                            <td width="50%" style="padding: 8px 5px;">
-                                <div style="border-left: 4px solid #b91c1c; padding-left: 12px;">
-                                    <div style="font-size: 9pt; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: bold;">SALDO PENDIENTE</div>
-                                    <div style="font-size: 15pt; font-weight: bold; color: #b91c1c;">${{ "{:,.2f}".format(saldo_pendiente) }}</div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </div>
 
     <div id="footerContent">
         Este documento es un resumen operativo de movimientos. Para aclaraciones, contacte al área administrativa. Emitido por Smart Site Company.

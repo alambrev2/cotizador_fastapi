@@ -621,12 +621,20 @@
 
         <!-- Download button -->
         {% if cliente %}
-        <a href="/api/v1/payments/statement/customer/{{ cliente.id }}/pdf"
-           target="_blank"
-           class="btn-download">
-            <i class="bi bi-file-earmark-pdf-fill" style="font-size:1.1rem;"></i>
-            Descargar Estado de Cuenta en PDF
-        </a>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <a href="/api/v1/payments/statement/customer/{{ cliente.id }}/pdf?full=false"
+               target="_blank"
+               class="btn-download">
+                <i class="bi bi-file-earmark-pdf-fill" style="font-size:1.1rem;"></i>
+                Descargar Estado de Cuenta (Últimos 10 movs)
+            </a>
+            <a href="/api/v1/payments/statement/customer/{{ cliente.id }}/pdf?full=true"
+               target="_blank"
+               class="btn-download" style="background: rgba(255,255,255,0.05); color: var(--text-muted); box-shadow: none; border: 1px solid rgba(255,255,255,0.1);">
+                <i class="bi bi-clock-history" style="font-size:1.1rem;"></i>
+                Descargar Historial Completo
+            </a>
+        </div>
         {% else %}
         <a href="#"
            class="btn-download disabled"

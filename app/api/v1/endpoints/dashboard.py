@@ -136,7 +136,17 @@ def get_dashboard_summary(*, session: Session = Depends(get_session), response: 
     scheduled_query = select(ScheduledExpense).where(ScheduledExpense.estatus == 'Pendiente')
     scheduled_expenses = session.exec(scheduled_query).all()
     total_scheduled = sum([float(s.monto) for s in scheduled_expenses])
-    flujo_caja_real = saldo_por_cobrar - total_scheduled
+    
+    # Flujo de Caja Real: Ingresos Totales Confirmados - Egresos Ejecutados
+    all_payments = session.exec(select(Payment)).all()
+    unique_payments = {p.id: p for p in all_payments}.values()
+    ingresos_totales_confirmados = sum([float(p.monto) for p in unique_payments if p.monto])
+
+    all_expenses = session.exec(select(Expense)).all()
+    unique_expenses = {e.id: e for e in all_expenses}.values()
+    egresos_ejecutados = sum([float(e.monto) for e in unique_expenses if e.monto])
+
+    flujo_caja_real = ingresos_totales_confirmados - egresos_ejecutados
 
     import datetime as dt
     hoy = dt.date.today()

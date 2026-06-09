@@ -119,9 +119,7 @@ async def dashboard(request: Request, current_user: User = Depends(get_current_u
     if current_user.role == RoleEnum.CLIENTE:
         return RedirectResponse(url="/client-dashboard")
     elif current_user.role == RoleEnum.OPERATIVO:
-        return templates.TemplateResponse(request, "quick_register.html", {
-            "current_user": {"username": current_user.username, "role": current_user.role.value}
-        })
+        return RedirectResponse(url="/projects")
     else:  # ADMINISTRADOR
         return templates.TemplateResponse(request, "quick_register.html", {
             "current_user": {"username": current_user.username, "role": current_user.role.value}

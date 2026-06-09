@@ -119,8 +119,11 @@
                             </div>
                             <h4 class="fw-bold mb-1" id="st-client-name" style="color: var(--gray-800);">Nombre Cliente</h4>
                             <p class="text-muted small mb-4" id="st-client-info">email@ejemplo.com</p>
-                            <button onclick="downloadStatementPDF()" class="btn btn-outline-danger btn-sm px-3 py-2" style="border-radius: var(--radius-md); width: 100%; font-size: 0.85rem; font-weight: 600;">
-                                📄 Exportar Estado de Cuenta
+                            <button onclick="downloadStatementPDF(false)" class="btn btn-outline-primary btn-sm px-4 py-2" style="border-radius: var(--radius-md); width: 100%; margin-bottom: 8px;">
+                                📄 PDF (Últimos 10 Movimientos)
+                            </button>
+                            <button onclick="downloadStatementPDF(true)" class="btn btn-outline-secondary btn-sm px-4 py-2" style="border-radius: var(--radius-md); width: 100%;">
+                                📄 PDF (Historial Completo)
                             </button>
                         </div>
 
@@ -781,12 +784,12 @@
         }
     }
 
-    function downloadStatementPDF() {
+    function downloadStatementPDF(full = false) {
         if (!lastLoadedCustomerId) {
             showToast('warning', 'Sin cliente seleccionado', 'Selecciona un cliente primero.');
             return;
         }
-        window.open(`/api/v1/payments/statement/customer/${lastLoadedCustomerId}/pdf`, '_blank');
+        window.open(`/api/v1/payments/statement/customer/${lastLoadedCustomerId}/pdf?full=${full}`, '_blank');
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
