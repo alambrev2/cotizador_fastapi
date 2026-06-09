@@ -150,6 +150,29 @@
         }
     }
 
+    document.addEventListener('DOMContentLoaded', () => {
+        const prefillEmail = sessionStorage.getItem('prefill_email');
+        const prefillUsername = sessionStorage.getItem('prefill_username');
+        const prefillPassword = sessionStorage.getItem('prefill_password');
+
+        if (prefillEmail) {
+            document.getElementById('email').value = prefillEmail;
+            sessionStorage.removeItem('prefill_email');
+        }
+        if (prefillUsername) {
+            document.getElementById('username').value = prefillUsername;
+            sessionStorage.removeItem('prefill_username');
+        }
+        if (prefillPassword) {
+            document.getElementById('password').value = prefillPassword;
+            sessionStorage.removeItem('prefill_password');
+            // Muestra la contraseña autocompletada por defecto para que el admin la vea
+            document.getElementById('password').type = 'text';
+            const icon = document.querySelector('button[title="Ocultar/Mostrar contraseña"] i');
+            if(icon) { icon.classList.remove('bi-eye-slash'); icon.classList.add('bi-eye'); }
+        }
+    });
+
     document.getElementById('customer-form').addEventListener('submit', async function (e) {
         e.preventDefault();
 
