@@ -6,8 +6,7 @@ from app.models import CustomerBase, QuoteBase, PaymentBase, AccountChargeBase, 
 
 
 class CustomerCreate(CustomerBase):
-    username: Optional[str] = None
-    password: Optional[str] = None
+    pass
 
 
 class CustomerUpdate(SQLModel):
@@ -15,8 +14,6 @@ class CustomerUpdate(SQLModel):
     email: Optional[str] = None
     telefono: Optional[str] = None
     direccion: Optional[str] = None
-    username: Optional[str] = None
-    password: Optional[str] = None
 
 
 class Token(SQLModel):

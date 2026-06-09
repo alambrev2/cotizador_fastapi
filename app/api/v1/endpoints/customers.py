@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models import Customer, User
+from app.models import Customer, User, Quote, QuoteItem, Payment, AccountCharge
 from fastapi import UploadFile, File, Response
 from app.api.deps import get_current_active_admin, get_current_active_operativo_or_admin
 import pandas as pd
@@ -55,21 +55,6 @@ def create_customer(
     session.add(customer)
     session.commit()
     session.refresh(customer)
-    
-    if customer_in.username and customer_in.password:
-        existing_user = session.exec(select(User).where(User.username == customer_in.username)).first()
-        if existing_user:
-            raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso.")
-        new_user = User(
-            username=customer_in.username,
-            email=customer_in.email,
-            role=RoleEnum.Cliente,
-            hashed_password=get_password_hash(customer_in.password),
-            cliente_id=customer.id
-        )
-        session.add(new_user)
-        session.commit()
-
     return customer
 
 @router.get("/export")
@@ -409,10 +394,6 @@ def update_customer(
 
     # Exclude unset fields from the update data
     customer_data = customer_update.model_dump(exclude_unset=True)
-    
-    # Remove username and password from customer_data since they go to User
-    username = customer_data.pop("username", None)
-    password = customer_data.pop("password", None)
 
     # Prevent historical fields from being updated via standard operations
     customer_data.pop("consumo_2022", None)
@@ -424,35 +405,6 @@ def update_customer(
 
     db_customer.sqlmodel_update(customer_data)
     session.add(db_customer)
-
-    # Actualizar o crear usuario
-    if username or password:
-        user = session.exec(select(User).where(User.cliente_id == db_customer.id)).first()
-        if user:
-            if username:
-                # Verificar si el nuevo username no está ocupado
-                if username != user.username:
-                    existing = session.exec(select(User).where(User.username == username)).first()
-                    if existing:
-                        raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso.")
-                user.username = username
-            if password:
-                user.hashed_password = get_password_hash(password)
-            session.add(user)
-        else:
-            if not username or not password:
-                raise HTTPException(status_code=400, detail="Se requiere nombre de usuario y contraseña para crear la cuenta de acceso.")
-            existing = session.exec(select(User).where(User.username == username)).first()
-            if existing:
-                raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso.")
-            new_user = User(
-                username=username,
-                email=db_customer.email,
-                role=RoleEnum.Cliente,
-                hashed_password=get_password_hash(password),
-                cliente_id=db_customer.id
-            )
-            session.add(new_user)
 
     session.commit()
     session.refresh(db_customer)
@@ -469,6 +421,36 @@ def delete_customer(
     customer = session.get(Customer, customer_id)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
+    # Eliminar usuarios vinculados
+    usuarios = session.exec(select(User).where(User.cliente_id == customer_id)).all()
+    for u in usuarios:
+        session.delete(u)
+
+    # Eliminar pagos
+    pagos_cliente = session.exec(select(Payment).where(Payment.cliente_id == customer_id)).all()
+    for p in pagos_cliente:
+        session.delete(p)
+        
+    # Eliminar cargos
+    cargos_cliente = session.exec(select(AccountCharge).where(AccountCharge.cliente_id == customer_id)).all()
+    for c in cargos_cliente:
+        session.delete(c)
+        
+    # Eliminar cotizaciones y sus elementos/pagos
+    cotizaciones_cliente = session.exec(select(Quote).where(Quote.cliente_id == customer_id)).all()
+    for q in cotizaciones_cliente:
+        items = session.exec(select(QuoteItem).where(QuoteItem.cotizacion_id == q.id)).all()
+        for i in items:
+            session.delete(i)
+        pagos_q = session.exec(select(Payment).where(Payment.quote_id == q.id)).all()
+        for pq in pagos_q:
+            session.delete(pq)
+        session.delete(q)
+
     session.delete(customer)
-    session.commit()
+    try:
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=f"No se pudo eliminar el cliente asociado: {str(e)}")
     return {"ok": True}

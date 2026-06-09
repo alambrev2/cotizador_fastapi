@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 from app.api.deps import get_current_active_admin
 from app.database import get_session
-from app.models import User, Customer, RoleEnum
+from app.models import User, Customer, RoleEnum, Quote, QuoteItem, Payment, AccountCharge
 from app.core.security import get_password_hash
 from app.schemas import UserCreate, UserRead, UserUpdate, UserAdminCreate
 
@@ -193,6 +193,45 @@ def delete_user(
     if user_id == admin.id:
         raise HTTPException(status_code=400, detail="No puedes eliminarte a ti mismo")
     user = _get_user_or_404(user_id, db)
+    
+    cliente_id = user.cliente_id
     db.delete(user)
-    db.commit()
-    return {"detail": "Usuario eliminado"}
+    
+    if cliente_id:
+        cliente = db.get(Customer, cliente_id)
+        if cliente:
+            # Eliminar otros usuarios vinculados al mismo cliente
+            otros_usuarios = db.exec(select(User).where(User.cliente_id == cliente_id)).all()
+            for ou in otros_usuarios:
+                db.delete(ou)
+
+            # Eliminar pagos
+            pagos_cliente = db.exec(select(Payment).where(Payment.cliente_id == cliente_id)).all()
+            for p in pagos_cliente:
+                db.delete(p)
+                
+            # Eliminar cargos
+            cargos_cliente = db.exec(select(AccountCharge).where(AccountCharge.cliente_id == cliente_id)).all()
+            for c in cargos_cliente:
+                db.delete(c)
+                
+            # Eliminar cotizaciones y sus elementos/pagos
+            cotizaciones_cliente = db.exec(select(Quote).where(Quote.cliente_id == cliente_id)).all()
+            for q in cotizaciones_cliente:
+                items = db.exec(select(QuoteItem).where(QuoteItem.cotizacion_id == q.id)).all()
+                for i in items:
+                    db.delete(i)
+                pagos_q = db.exec(select(Payment).where(Payment.quote_id == q.id)).all()
+                for pq in pagos_q:
+                    db.delete(pq)
+                db.delete(q)
+
+            db.delete(cliente)
+            
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"No se pudo eliminar el cliente asociado: {str(e)}")
+        
+    return {"detail": "Usuario, cliente vinculado y todos sus registros han sido eliminados"}

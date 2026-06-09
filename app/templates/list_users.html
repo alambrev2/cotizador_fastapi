@@ -7,9 +7,17 @@
         <h2 style="font-weight:800;color:var(--gray-800);margin:0;font-size:2rem;">Gestión de Usuarios</h2>
         <p style="color:var(--gray-500);margin:4px 0 0 0;font-size:1.05rem;">Crea y administra cuentas de operadores del sistema. Solo el administrador tiene acceso.</p>
     </div>
-    <button id="btn-nuevo" onclick="openModal('create')" class="btn btn-indigo" style="width:auto;padding:0.65rem 1.5rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;">
-        <i class="bi bi-person-plus-fill"></i> Nuevo Usuario
-    </button>
+    <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;">
+        <button onclick="window.location.href='/new-customer'" class="btn btn-outline" style="width:auto;padding:0.65rem 1.25rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--primary);color:var(--primary);background:white;">
+            <i class="bi bi-person-plus-fill"></i> Nuevo Cliente
+        </button>
+        <button onclick="openModal('create', null, 'Operativo')" class="btn btn-indigo" style="width:auto;padding:0.65rem 1.25rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;">
+            <i class="bi bi-gear-fill"></i> Nuevo Operativo
+        </button>
+        <button onclick="openModal('create', null, 'Administrador')" class="btn" style="background:var(--gray-800);color:white;width:auto;padding:0.65rem 1.25rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 6px -1px rgba(15,23,42,0.15);">
+            <i class="bi bi-shield-lock-fill"></i> Nuevo Administrador
+        </button>
+    </div>
 </div>
 
 <!-- Tarjetas resumen -->
@@ -94,14 +102,7 @@
                     <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">Contraseña *</label>
                     <input id="f-password" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:0.65rem 1rem;font-size:0.95rem;box-sizing:border-box;">
                 </div>
-                <div>
-                    <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">Rol *</label>
-                    <select id="f-role" required style="width:100%;border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:0.65rem 1rem;font-size:0.95rem;background:white;box-sizing:border-box;">
-                        <option value="Operativo">Operativo</option>
-                        <option value="Cliente">Cliente</option>
-                        <option value="Administrador">Administrador</option>
-                    </select>
-                </div>
+                <input type="hidden" id="f-role" value="Operativo">
                 <div>
                     <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">Estado</label>
                     <select id="f-active" style="width:100%;border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:0.65rem 1rem;font-size:0.95rem;background:white;box-sizing:border-box;">
@@ -290,9 +291,9 @@ function initRoleFilters() {
 }
 
 // ── Modal ──
-function openModal(mode, userId = null) {
+function openModal(mode, userId = null, role = 'Operativo') {
     editingMode = mode === 'edit';
-    document.getElementById('modal-title').textContent = editingMode ? 'Editar Usuario' : 'Nuevo Usuario Operativo';
+    
     document.getElementById('form-error').style.display = 'none';
     document.getElementById('user-form').reset();
     document.getElementById('form-user-id').value = '';
@@ -302,12 +303,16 @@ function openModal(mode, userId = null) {
     if (editingMode && userId) {
         const u = allUsers.find(x => x.id === userId);
         if (u) {
+            document.getElementById('modal-title').textContent = 'Editar Usuario';
             document.getElementById('form-user-id').value = u.id;
             document.getElementById('f-username').value = u.username;
             document.getElementById('f-email').value = u.email;
             document.getElementById('f-role').value = u.role;
             document.getElementById('f-active').value = u.is_active ? 'true' : 'false';
         }
+    } else {
+        document.getElementById('modal-title').textContent = `Nuevo Usuario ${role}`;
+        document.getElementById('f-role').value = role;
     }
     document.getElementById('modal-overlay').style.display = 'flex';
 }
@@ -345,17 +350,13 @@ async function submitForm(e) {
         const data = await res.json();
         if (!res.ok) { errEl.textContent = data.detail || 'Error al guardar.'; errEl.style.display = 'block'; return; }
         
-        if (!editingMode) {
-            sessionStorage.setItem('prefill_email', document.getElementById('f-email').value.trim());
-            sessionStorage.setItem('prefill_username', document.getElementById('f-username').value.trim());
-            sessionStorage.setItem('prefill_password', document.getElementById('f-password').value);
-            window.location.href = '/new-customer';
-        } else {
-            closeModal(); loadUsers();
-        }
+        closeModal(); loadUsers();
+        alert(editingMode ? 'Usuario actualizado correctamente.' : 'Usuario creado correctamente.');
     } catch { errEl.textContent = 'Error de conexión.'; errEl.style.display = 'block'; }
     finally { btn.textContent = 'Guardar'; btn.disabled = false; }
 }
+
+
 
 // ── Confirm Modal ──
 let confirmCallback = null;
