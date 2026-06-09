@@ -2,13 +2,20 @@
 
 Esta guía detalla los pasos y mejores prácticas para que tú y tu equipo colaboren en este proyecto de manera ordenada, evitando conflictos de código y de base de datos.
 
+## 📌 Configuración Actual del Repositorio
+
+- **URL del repositorio:** `https://github.com/alambrev2/cotizador_fastapi`
+- **Rama principal:** `main` (esta es la rama de producción)
+- **Ramas remotas disponibles:** `origin/main`, `origin/master` (ambas sincronizadas)
+- **Flujo de trabajo recomendado:** Trabajar en ramas feature y hacer Pull Requests a `main`
+
 ---
 
 ## Paso 1: Configuración en GitHub (Propietario del Proyecto)
 
 Para que tus compañeros puedan subir cambios, debes darles permisos de colaborador en tu repositorio de GitHub:
 
-1. Ve a tu repositorio en GitHub: `https://github.com/al222410908-ctrl/cotizador_fastapi-main` (o la URL de tu repositorio).
+1. Ve a tu repositorio en GitHub: `https://github.com/alambrev2/cotizador_fastapi` (o la URL de tu repositorio).
 2. Haz clic en la pestaña **Settings** (Configuración) en la barra superior.
 3. En el menú lateral izquierdo, haz clic en **Collaborators** (Colaboradores).
 4. Haz clic en el botón verde **Add people** (Añadir personas).
@@ -23,8 +30,8 @@ Cada integrante del equipo debe seguir estos pasos para tener el proyecto corrie
 
 ### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/al222410908-ctrl/cotizador_fastapi-main.git
-cd cotizador_fastapi-main
+git clone https://github.com/alambrev2/cotizador_fastapi.git
+cd cotizador_fastapi
 ```
 
 ### 2. Crear y activar el entorno virtual (venv)
@@ -54,13 +61,13 @@ Esto creará automáticamente los archivos de configuración local `.env` y los 
 
 ## Paso 3: Flujo de Trabajo con Git (Ramas / Branches)
 
-Para evitar que dos personas editen el mismo archivo a la vez y rompan la rama principal (`master` o `main`), se recomienda trabajar con **ramas de características** (Feature Branches):
+Para evitar que dos personas editen el mismo archivo a la vez y rompan la rama principal (`main`), se recomienda trabajar con **ramas de características** (Feature Branches):
 
 ### 1. Actualizar siempre tu repositorio local
-Antes de empezar a programar cualquier cosa, asegúrate de estar en `master` y tener lo último:
+Antes de empezar a programar cualquier cosa, asegúrate de estar en `main` y tener lo último:
 ```bash
-git checkout master
-git pull origin master
+git checkout main
+git pull origin main
 ```
 
 ### 2. Crear una nueva rama para tu tarea
@@ -85,14 +92,14 @@ git push -u origin feature/nombre-de-tu-tarea
 1. Entra a la página del repositorio en GitHub.
 2. Verás un botón amarillo que dice **Compare & pull request** para la rama que acabas de subir. Haz clic ahí.
 3. Escribe una descripción de tus cambios y crea el Pull Request.
-4. El propietario o tus compañeros revisan el código y, si todo está correcto, hacen clic en **Merge pull request** para unir los cambios a la rama principal (`master`).
-5. Tras el merge, todos vuelven a su rama `master` local y hacen `git pull` para descargar la versión final unificada.
+4. El propietario o tus compañeros revisan el código y, si todo está correcto, hacen clic en **Merge pull request** para unir los cambios a la rama principal (`main`).
+5. Tras el merge, todos vuelven a su rama `main` local y hacen `git pull` para descargar la versión final unificada.
 
 ---
 
 ## ⚠ REGLA DE ORO: Manejo de la Base de Datos SQLite (`database.db`)
 
-Dado que la base de datos SQLite es un archivo binario único (`data/database.db`) y ahora está siendo rastreado por Git, deben seguir estas estrictas pautas para evitar conflictos que Git no pueda resolver automáticamente:
+**IMPORTANTE:** Actualmente el archivo `database.db` está siendo rastreado por Git. Para evitar conflictos que Git no pueda resolver automáticamente, deben seguir estas estrictas pautas:
 
 ### El Problema de los Conflictos Binarios
 Si el Colaborador A agrega un cliente en su PC y el Colaborador B agrega un producto en su PC al mismo tiempo, ambos habrán modificado el archivo `database.db`. Git no puede "fusionar" (merge) las líneas dentro de un archivo SQLite porque es binario. El primero que haga `push` subirá sus datos, y el segundo recibirá un error de conflicto insalvable al intentar hacer `pull` o `push`.
