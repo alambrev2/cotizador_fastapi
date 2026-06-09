@@ -89,8 +89,9 @@ python scripts/migrations/init_db.py
 ```
 
 ### 6. Iniciar el Servidor de Desarrollo
+Para evitar que el recargador automático escanee archivos innecesarios de `venv`, limita la recarga al directorio `app`:
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --reload-dir app
 ```
 
 Una vez activo, abre tu navegador e ingresa a:

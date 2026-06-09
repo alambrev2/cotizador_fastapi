@@ -61,7 +61,7 @@ git pull origin master
 pip install fpdf2>=2.7.0
 
 # 3. Reiniciar el servidor
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --reload-dir app
 ```
 
 ## Verificación

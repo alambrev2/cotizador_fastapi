@@ -104,8 +104,8 @@ dir logs
 ## Paso 7: Iniciar el servidor
 
 ```bash
-# Iniciar el servidor de desarrollo con recarga automática
-uvicorn app.main:app --reload
+# Iniciar el servidor de desarrollo limitando la recarga al directorio 'app'
+uvicorn app.main:app --reload --reload-dir app
 ```
 
 **Salida esperada**:
@@ -200,7 +200,7 @@ pip install -r requirements.txt
 python scripts/migrations/init_db.py
 
 # 5. Reiniciar el servidor
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --reload-dir app
 ```
 
 ## Estructura de directorios esperada
@@ -290,9 +290,9 @@ Si haces cambios en una computadora y quieres verlos en la otra:
    ```bash
    git pull origin master
    ```
-3. Vuelve a iniciar el servidor:
+3. Vuelve a iniciar el servidor limitando la recarga a la carpeta 'app':
    ```bash
-   uvicorn app.main:app --reload
+   uvicorn app.main:app --reload --reload-dir app
    ```
 
 > [!WARNING]
