@@ -234,6 +234,7 @@
         </div>
     </div>
 
+<<<<<<< HEAD
     <div class="quick-register-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); margin-bottom: var(--space-10);">
 
         <!-- Columna Clientes -->
@@ -717,99 +718,6 @@
         }
     }
 
-    // --- Lógica Cliente ---
-    document.getElementById('customer-form').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const alertBox = document.getElementById('customer-alert');
-        const formData = new FormData(this);
-        const data = {
-            nombre: formData.get('nombre'),
-            email: formData.get('email'),
-            telefono: formData.get('telefono'),
-            direccion: formData.get('direccion'),
-            saldo_inicial: parseFloat(formData.get('saldo_inicial') || 0),
-            consumo_2022: parseFloat(formData.get('consumo_2022') || 0),
-            consumo_2023: parseFloat(formData.get('consumo_2023') || 0),
-            consumo_2024: parseFloat(formData.get('consumo_2024') || 0),
-            consumo_2025: parseFloat(formData.get('consumo_2025') || 0),
-            consumo_2026: parseFloat(formData.get('consumo_2026') || 0)
-        };
 
-        try {
-            const response = await fetch('/api/v1/customers/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                alertBox.textContent = `✓ Cliente "${result.nombre}" guardado`;
-                alertBox.className = 'alert alert-success';
-                alertBox.style.display = 'block';
-                this.reset();
-                setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
-            } else {
-                const error = await response.json();
-                alertBox.textContent = `Error: ${error.detail || 'Falló el registro'}`;
-                alertBox.className = 'alert alert-error';
-                alertBox.style.display = 'block';
-            }
-        } catch (err) {
-            console.error(err);
-            alertBox.textContent = 'Error de conexión';
-            alertBox.className = 'alert alert-error';
-            alertBox.style.display = 'block';
-        }
-    });
-
-    // --- Lógica Producto ---
-    document.getElementById('product-form').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const alertBox = document.getElementById('product-alert');
-        const formData = new FormData(this);
-
-        const data = {
-            nombre: formData.get('nombre'),
-            categoria: formData.get('categoria'),
-            precio_menudeo: parseFloat(formData.get('precio_menudeo')),
-            precio_mayoreo: parseFloat(formData.get('precio_mayoreo')),
-            cantidad_mayoreo: parseInt(formData.get('cantidad_mayoreo')),
-            stock: parseInt(formData.get('stock')),
-            activo: document.getElementById('prod_activo').checked
-        };
-
-        try {
-            const response = await fetch('/api/v1/products/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                alertBox.textContent = `✓ Producto "${result.nombre}" guardado`;
-                alertBox.className = 'alert alert-success';
-                alertBox.style.display = 'block';
-                this.reset();
-                // Reset defaults
-                document.getElementById('prod_min_mayoreo').value = 12;
-                document.getElementById('prod_stock').value = 0;
-                document.getElementById('prod_activo').checked = true;
-
-                setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
-            } else {
-                const error = await response.json();
-                alertBox.textContent = `Error: ${error.detail || 'Falló el registro'}`;
-                alertBox.className = 'alert alert-error';
-                alertBox.style.display = 'block';
-            }
-        } catch (err) {
-            console.error(err);
-            alertBox.textContent = 'Error de conexión';
-            alertBox.className = 'alert alert-error';
-            alertBox.style.display = 'block';
-        }
-    });
 </script>
 {% endblock %}
