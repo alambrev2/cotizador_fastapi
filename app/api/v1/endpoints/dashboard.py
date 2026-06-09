@@ -5,7 +5,10 @@ from app.models import Payment, Quote, Expense
 from datetime import datetime
 import datetime as dt
 from calendar import monthrange
-from fpdf import FPDF
+from fastapi.templating import Jinja2Templates
+from app.core.pdf import generate_pdf_bytes
+
+templates = Jinja2Templates(directory="app/templates")
 
 router = APIRouter()
 
@@ -16,35 +19,27 @@ def export_ingresos_pdf(mes: int, anio: int, session: Session = Depends(get_sess
     
     pagos = session.exec(select(Payment).where(Payment.fecha_pago >= first_day, Payment.fecha_pago <= last_day)).all()
     
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("helvetica", size=16, style='B')
-    pdf.cell(0, 10, text=f"Historial de Ingresos - {mes}/{anio}", new_x='LMARGIN', new_y='NEXT', align='C')
-    pdf.cell(0, 10, text="", new_x='LMARGIN', new_y='NEXT')
-    
-    # Cabeceras
-    pdf.set_font("helvetica", size=10, style='B')
-    pdf.cell(40, 10, text="Fecha", border=1, align='C')
-    pdf.cell(60, 10, text="Origen/Descripcion", border=1, align='C')
-    pdf.cell(40, 10, text="Tipo", border=1, align='C')
-    pdf.cell(40, 10, text="Monto ($)", border=1, new_x='LMARGIN', new_y='NEXT', align='C')
-    
-    pdf.set_font("helvetica", size=10)
+    filas = []
     total = 0.0
     for p in pagos:
         desc = p.metodo_pago or "Pago"
         monto = float(p.monto)
         total += monto
-        pdf.cell(40, 10, text=str(p.fecha_pago.date()), border=1)
-        pdf.cell(60, 10, text="Cobro Cliente" + (f" (Abono)" if not p.quote_id else f" (Cotización)"), border=1)
-        pdf.cell(40, 10, text=desc, border=1)
-        pdf.cell(40, 10, text=f"${monto:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
+        fecha = p.fecha_pago.strftime("%d/%m/%Y")
+        origen = "Cobro Cliente" + (" (Abono)" if not p.quote_id else " (Cotización)")
+        filas.append([fecha, origen, desc, f"${monto:,.2f}"])
         
-    pdf.set_font("helvetica", size=10, style='B')
-    pdf.cell(140, 10, text="Total del Periodo:", border=1, align='R')
-    pdf.cell(40, 10, text=f"${total:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
+    html_content = templates.get_template("pdf/financial_report.html").render(
+        tipo_reporte="INGRESOS",
+        mes=f"{mes:02d}",
+        anio=anio,
+        fecha_emision=datetime.now().strftime("%d/%m/%Y"),
+        columnas=["Fecha", "Origen/Descripción", "Tipo", "Monto"],
+        filas=filas,
+        total=f"${total:,.2f}"
+    )
     
-    pdf_bytes = bytes(pdf.output())
+    pdf_bytes = generate_pdf_bytes(html_content)
     return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=Ingresos_{mes}_{anio}.pdf"})
 
 @router.get("/export/egresos")
@@ -54,38 +49,27 @@ def export_egresos_pdf(mes: int, anio: int, session: Session = Depends(get_sessi
     
     egresos = session.exec(select(Expense).where(Expense.fecha >= first_day, Expense.fecha <= last_day)).all()
     
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("helvetica", size=16, style='B')
-    pdf.cell(0, 10, text=f"Historial de Egresos - {mes}/{anio}", new_x='LMARGIN', new_y='NEXT', align='C')
-    pdf.cell(0, 10, text="", new_x='LMARGIN', new_y='NEXT')
-    
-    pdf.set_font("helvetica", size=10, style='B')
-    pdf.cell(40, 10, text="Fecha", border=1, align='C')
-    pdf.cell(60, 10, text="Descripción del Servicio", border=1, align='C')
-    pdf.cell(40, 10, text="Categoría", border=1, align='C')
-    pdf.cell(40, 10, text="Monto ($)", border=1, new_x='LMARGIN', new_y='NEXT', align='C')
-    
-    pdf.set_font("helvetica", size=10)
+    filas = []
     total = 0.0
     for e in egresos:
         monto = float(e.monto)
         total += monto
-        pdf.set_text_color(0, 0, 0) # Negro para info base
-        pdf.cell(40, 10, text=str(e.fecha.date()), border=1)
-        pdf.cell(60, 10, text=e.descripcion[:30], border=1)
-        pdf.cell(40, 10, text=e.categoria or "General", border=1)
+        fecha = e.fecha.strftime("%d/%m/%Y")
+        desc = e.descripcion[:30]
+        cat = e.categoria or "General"
+        filas.append([fecha, desc, cat, f"-${monto:,.2f}"])
         
-        pdf.set_text_color(220, 38, 38) # Rojo para monto
-        pdf.cell(40, 10, text=f"-${monto:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
-        
-    pdf.set_text_color(0, 0, 0)
-    pdf.set_font("helvetica", size=10, style='B')
-    pdf.cell(140, 10, text="Total del Periodo:", border=1, align='R')
-    pdf.set_text_color(220, 38, 38)
-    pdf.cell(40, 10, text=f"-${total:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
+    html_content = templates.get_template("pdf/financial_report.html").render(
+        tipo_reporte="EGRESOS",
+        mes=f"{mes:02d}",
+        anio=anio,
+        fecha_emision=datetime.now().strftime("%d/%m/%Y"),
+        columnas=["Fecha", "Descripción del Servicio", "Categoría", "Monto"],
+        filas=filas,
+        total=f"-${total:,.2f}"
+    )
     
-    pdf_bytes = bytes(pdf.output())
+    pdf_bytes = generate_pdf_bytes(html_content)
     return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=Egresos_{mes}_{anio}.pdf"})
 
 @router.get("/summary")
