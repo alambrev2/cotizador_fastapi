@@ -136,6 +136,21 @@
         </div>
     </div>
 </div>
+
+<!-- ═══ MODAL CONFIRMACIÓN ═══ -->
+<div id="modal-confirm" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:1050;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div style="background:white;border-radius:var(--radius-xl);padding:var(--space-6) var(--space-8);width:100%;max-width:400px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.3);text-align:center;margin:1rem;transform:scale(0.95);transition:transform 0.2s cubic-bezier(0.4,0,0.2,1);">
+        <div id="confirm-icon" style="width:64px;height:64px;border-radius:50%;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin:0 auto var(--space-4);">
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <h3 id="confirm-title" style="margin:0 0 var(--space-2) 0;font-size:1.3rem;font-weight:800;color:var(--gray-800);letter-spacing:-0.01em;">Confirmar acción</h3>
+        <p id="confirm-message" style="color:var(--gray-500);font-size:0.95rem;margin:0 0 var(--space-6) 0;line-height:1.5;">¿Estás seguro?</p>
+        <div style="display:flex;gap:var(--space-3);justify-content:center;">
+            <button onclick="closeConfirmModal()" style="flex:1;padding:0.75rem;border:1px solid var(--gray-300);border-radius:var(--radius-lg);font-size:0.95rem;font-weight:600;cursor:pointer;background:white;color:var(--gray-700);transition:all 0.2s;" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='white'">Cancelar</button>
+            <button id="confirm-btn-action" style="flex:1;padding:0.75rem;background:#dc2626;color:white;border:none;border-radius:var(--radius-lg);font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 6px rgba(220,38,38,0.2);" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 12px rgba(220,38,38,0.3)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 6px rgba(220,38,38,0.2)'">Confirmar</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -305,18 +320,75 @@ async function submitForm(e) {
     finally { btn.textContent = 'Guardar'; btn.disabled = false; }
 }
 
+// ── Confirm Modal ──
+let confirmCallback = null;
+
+function showConfirmModal(title, message, iconType, confirmText, callback) {
+    const modal = document.getElementById('modal-confirm');
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    
+    const iconContainer = document.getElementById('confirm-icon');
+    const actionBtn = document.getElementById('confirm-btn-action');
+    
+    if (iconType === 'danger') {
+        iconContainer.style.background = '#fee2e2';
+        iconContainer.style.color = '#dc2626';
+        iconContainer.innerHTML = '<i class="bi bi-exclamation-octagon"></i>';
+        actionBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+        actionBtn.style.boxShadow = '0 4px 6px rgba(220,38,38,0.2)';
+    } else if (iconType === 'warning') {
+        iconContainer.style.background = '#fef3c7';
+        iconContainer.style.color = '#d97706';
+        iconContainer.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
+        actionBtn.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+        actionBtn.style.boxShadow = '0 4px 6px rgba(217,119,6,0.2)';
+    } else {
+        iconContainer.style.background = '#e0e7ff';
+        iconContainer.style.color = '#4f46e5';
+        iconContainer.innerHTML = '<i class="bi bi-question-circle"></i>';
+        actionBtn.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)';
+        actionBtn.style.boxShadow = '0 4px 6px rgba(79,70,229,0.2)';
+    }
+    
+    actionBtn.textContent = confirmText;
+    confirmCallback = callback;
+    modal.style.display = 'flex';
+    // Timeout for smooth scale animation
+    setTimeout(() => modal.firstElementChild.style.transform = 'scale(1)', 10);
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('modal-confirm');
+    modal.firstElementChild.style.transform = 'scale(0.95)';
+    setTimeout(() => modal.style.display = 'none', 200);
+}
+
+document.getElementById('confirm-btn-action').addEventListener('click', () => {
+    if (confirmCallback) confirmCallback();
+    closeConfirmModal();
+});
+
 async function toggleUser(userId, isActive) {
-    if (!confirm(`¿Deseas ${isActive ? 'desactivar' : 'activar'} este usuario?`)) return;
-    const res = await fetch(`/api/v1/users/${userId}/toggle`, { method: 'PUT' });
-    if (res.ok) loadUsers();
-    else { const d = await res.json(); alert(d.detail || 'Error.'); }
+    const action = isActive ? 'desactivar' : 'activar';
+    const actionCap = isActive ? 'Desactivar' : 'Activar';
+    const title = `${actionCap} usuario`;
+    const msg = `¿Deseas ${action} este usuario? ${isActive ? 'Perderá el acceso al sistema temporalmente.' : 'Tendrá acceso al sistema nuevamente.'}`;
+    const type = isActive ? 'warning' : 'primary';
+    
+    showConfirmModal(title, msg, type, actionCap, async () => {
+        const res = await fetch(`/api/v1/users/${userId}/toggle`, { method: 'PUT' });
+        if (res.ok) loadUsers();
+        else { const d = await res.json(); alert(d.detail || 'Error.'); }
+    });
 }
 
 async function deleteUser(userId, username) {
-    if (!confirm(`¿Eliminar permanentemente al usuario "${username}"? Esta acción no se puede deshacer.`)) return;
-    const res = await fetch(`/api/v1/users/${userId}`, { method: 'DELETE' });
-    if (res.ok) loadUsers();
-    else { const d = await res.json(); alert(d.detail || 'Error al eliminar.'); }
+    showConfirmModal('Eliminar usuario', `¿Eliminar permanentemente al usuario "${username}"? Esta acción no se puede deshacer y borrará sus datos.`, 'danger', 'Eliminar permanentemente', async () => {
+        const res = await fetch(`/api/v1/users/${userId}`, { method: 'DELETE' });
+        if (res.ok) loadUsers();
+        else { const d = await res.json(); alert(d.detail || 'Error al eliminar.'); }
+    });
 }
 
 // ── Reset Password ──
@@ -345,6 +417,7 @@ async function submitReset() {
 // Cerrar modals al click fuera
 document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.getElementById('modal-reset').addEventListener('click', e => { if (e.target === e.currentTarget) closeResetModal(); });
+document.getElementById('modal-confirm').addEventListener('click', e => { if (e.target === e.currentTarget) closeConfirmModal(); });
 
 document.addEventListener('DOMContentLoaded', () => {
     loadUsers();
