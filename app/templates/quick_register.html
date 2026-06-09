@@ -79,16 +79,17 @@
                 <h3 style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--gray-800); word-wrap: break-word; flex: 1;">Calendario de Egresos</h3>
                 <button onclick="document.getElementById('modal-egreso').style.display = 'flex'" class="btn btn-primary" style="width: fit-content; font-size: 0.85rem;">+ Añadir Egreso</button>
             </div>
-            <div class="calendar-weekdays" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2); margin-bottom: var(--space-2);">
-                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Dom</div>
-                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Lun</div>
-                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Mar</div>
-                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Mié</div>
-                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Jue</div>
-                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Vie</div>
-                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Sáb</div>
+            
+            <div class="calendar-weekdays" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)) !important; gap: var(--space-1); margin-bottom: var(--space-2);">
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: 0.75rem;">Dom</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: 0.75rem;">Lun</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: 0.75rem;">Mar</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: 0.75rem;">Mié</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: 0.75rem;">Jue</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: 0.75rem;">Vie</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: 0.75rem;">Sáb</div>
             </div>
-            <div id="calendar-grid" class="calendar-days" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2);">
+            <div id="calendar-grid" class="calendar-days" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)) !important; gap: var(--space-1);">
                 <!-- Bloques generados dinámicamente -->
             </div>
         </div>
@@ -234,6 +235,10 @@
         </div>
     </div>
 
+<<<<<<< HEAD
+    <div class="quick-register-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); margin-bottom: var(--space-10);">
+=======
+>>>>>>> 831a7d1726a3d9afa6cb8bbc85d4d8401facc9f4
 
 </div>
 {% endblock %}
@@ -400,7 +405,7 @@
             const todayStyle = isToday ? 'background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; box-shadow: 0 2px 4px rgba(79,70,229,0.3);' : 'color: var(--gray-700); background-color: var(--gray-100);';
             const cellBorder = isToday ? 'border: 2px solid var(--primary-light);' : 'border: 1px solid var(--border-color);';
             
-            grid.innerHTML += `<div style="padding: var(--space-2); ${cellBorder} border-radius: var(--radius-md); min-height: 90px; background-color: var(--card-bg); position: relative; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='var(--primary-light)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.05)';" onmouseout="this.style.borderColor='${isToday ? 'var(--primary-light)' : 'var(--border-color)'}'; this.style.boxShadow='0 1px 2px rgba(0,0,0,0.02)';">
+            grid.innerHTML += `<div style="padding: var(--space-2); ${cellBorder} border-radius: var(--radius-md); min-height: 90px; background-color: var(--card-bg); position: relative; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.02); min-width: 0; overflow: hidden;" onmouseover="this.style.borderColor='var(--primary-light)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.05)';" onmouseout="this.style.borderColor='${isToday ? 'var(--primary-light)' : 'var(--border-color)'}'; this.style.boxShadow='0 1px 2px rgba(0,0,0,0.02)';">
                 <div style="display: flex; justify-content: flex-end; margin-bottom: var(--space-1);">
                     <span style="font-size: 0.85rem; font-weight: var(--font-weight-bold); display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; ${todayStyle}">${day}</span>
                 </div>
