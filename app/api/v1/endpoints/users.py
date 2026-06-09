@@ -64,6 +64,97 @@ def customers_without_user(
     return [{"id": c.id, "nombre": c.nombre, "email": c.email} for c in customers]
 
 
+# ── GENERACIÓN MASIVA DE CUENTAS DE CLIENTES ─────────────────────────────────
+
+import secrets
+import string
+
+def _generar_contrasena(longitud: int = 12) -> str:
+    """Genera contraseña segura aleatoria."""
+    chars = string.ascii_letters + string.digits + "!@#$%"
+    pwd = [
+        secrets.choice(string.ascii_uppercase),
+        secrets.choice(string.ascii_lowercase),
+        secrets.choice(string.digits),
+        secrets.choice("!@#$%"),
+    ]
+    pwd += [secrets.choice(chars) for _ in range(longitud - 4)]
+    secrets.SystemRandom().shuffle(pwd)
+    return "".join(pwd)
+
+def _generar_username(email: str, nombre: str, db: Session) -> str:
+    """Genera username único a partir del email."""
+    base = email.split("@")[0].lower() if email else nombre.lower().replace(" ", "")
+    base = "".join(c for c in base if c.isalnum() or c == ".")[:30]
+    username = base
+    counter = 1
+    while db.exec(select(User).where(User.username == username)).first():
+        username = f"{base}{counter}"
+        counter += 1
+    return username
+
+
+@router.post("/generar-cuentas-clientes")
+def generar_cuentas_clientes(
+    db: Session = Depends(get_session),
+    _admin: User = Depends(get_current_active_admin),
+):
+    """
+    Genera automáticamente cuentas de acceso (rol Cliente) para todos los clientes
+    que aún no tengan un usuario vinculado. Retorna la lista de cuentas creadas.
+    """
+    customers = db.exec(select(Customer)).all()
+    creados = []
+    omitidos = 0
+    vinculados = 0
+
+    for cliente in customers:
+        if not cliente.email:
+            omitidos += 1
+            continue
+
+        existing = db.exec(select(User).where(User.email == cliente.email)).first()
+        if existing:
+            # Vincular si existe pero no está enlazado al cliente
+            if not existing.cliente_id:
+                existing.cliente_id = cliente.id
+                db.add(existing)
+                vinculados += 1
+            else:
+                omitidos += 1
+            continue
+
+        username = _generar_username(cliente.email, cliente.nombre, db)
+        password = _generar_contrasena()
+
+        nuevo = User(
+            username=username,
+            email=cliente.email,
+            role=RoleEnum.Cliente,
+            hashed_password=get_password_hash(password),
+            cliente_id=cliente.id,
+            is_active=True,
+        )
+        db.add(nuevo)
+        creados.append({
+            "nombre_cliente": cliente.nombre,
+            "email": cliente.email,
+            "username": username,
+            "password": password,
+        })
+
+    db.commit()
+
+    return {
+        "creados": len(creados),
+        "vinculados": vinculados,
+        "omitidos": omitidos,
+        "cuentas": creados,
+    }
+
+
+
+
 # ── CREATE ────────────────────────────────────────────────────────────────────
 
 @router.post("/", response_model=UserRead, status_code=201)
