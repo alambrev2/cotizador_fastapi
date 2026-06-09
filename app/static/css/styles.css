@@ -1194,6 +1194,19 @@ tr:last-child td {
     padding: 0 4px !important;
   }
 
+  /* List view container - add margin and padding for mobile */
+  #view-list {
+    margin-top: 1.5rem !important;
+    padding: 0 1rem !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Table cells - increase padding for better readability on mobile */
+  #view-list th,
+  #view-list td {
+    padding: 12px 10px !important;
+  }
+
   /* Force weekdays to horizontal grid on mobile */
   .calendar-weekdays {
     display: grid !important;
@@ -1412,6 +1425,16 @@ tr:last-child td {
 @media (max-width: 575.98px) {
   .sidebar-overlay.active {
     display: block;
+  }
+  
+  /* Ensure sidebar is above overlay */
+  .sidebar {
+    z-index: calc(var(--z-modal-backdrop) + 1);
+  }
+  
+  /* Prevent content scrolling when sidebar is open */
+  body.sidebar-open {
+    overflow: hidden;
   }
 }
 

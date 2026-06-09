@@ -2,10 +2,10 @@
 {% block title %}Gestión de Usuarios{% endblock %}
 
 {% block content %}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-6);flex-wrap:wrap;gap:var(--space-4);">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-10);flex-wrap:wrap;gap:var(--space-4);">
     <div>
-        <h2 style="font-weight:800;color:var(--gray-800);margin:0;font-size:2rem;">Gestión de Usuarios</h2>
-        <p style="color:var(--gray-500);margin:4px 0 0 0;font-size:1.05rem;">Crea y administra cuentas de operadores del sistema. Solo el administrador tiene acceso.</p>
+        <h2 style="font-weight:800;color:var(--gray-800);margin:0 0 var(--space-3) 0;font-size:2rem;line-height:1.3;">Gestión de Usuarios</h2>
+        <p style="color:var(--gray-500);margin:0;font-size:1.1rem;line-height:1.5;">Crea y administra cuentas de operadores del sistema. Solo el administrador tiene acceso.</p>
     </div>
     <button id="btn-nuevo" onclick="openModal('create')" class="btn btn-indigo" style="width:auto;padding:0.65rem 1.5rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;">
         <i class="bi bi-person-plus-fill"></i> Nuevo Usuario
