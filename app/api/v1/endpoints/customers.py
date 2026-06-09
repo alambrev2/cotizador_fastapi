@@ -11,6 +11,9 @@ from openpyxl.styles import Font
 import logging
 import os
 from datetime import datetime
+from app.schemas import CustomerCreate, CustomerUpdate
+from app.core.security import get_password_hash
+from app.models import RoleEnum
 
 # Obtener el directorio base del proyecto
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -36,12 +39,37 @@ router = APIRouter()
 def create_customer(
     *,
     session: Session = Depends(get_session),
-    customer: Customer,
+    customer_in: CustomerCreate,
     current_user: User = Depends(get_current_active_admin)
 ):
+    customer = Customer(
+        nombre=customer_in.nombre,
+        email=customer_in.email,
+        telefono=customer_in.telefono,
+        direccion=customer_in.direccion,
+        saldo_inicial=customer_in.saldo_inicial,
+        consumo_2022=customer_in.consumo_2022,
+        consumo_2023=customer_in.consumo_2023,
+        consumo_2024=customer_in.consumo_2024
+    )
     session.add(customer)
     session.commit()
     session.refresh(customer)
+    
+    if customer_in.username and customer_in.password:
+        existing_user = session.exec(select(User).where(User.username == customer_in.username)).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso.")
+        new_user = User(
+            username=customer_in.username,
+            email=customer_in.email,
+            role=RoleEnum.CLIENTE,
+            hashed_password=get_password_hash(customer_in.password),
+            cliente_id=customer.id
+        )
+        session.add(new_user)
+        session.commit()
+
     return customer
 
 @router.get("/export")
@@ -372,7 +400,7 @@ def update_customer(
     *,
     session: Session = Depends(get_session),
     customer_id: int,
-    customer_update: Customer,
+    customer_update: CustomerUpdate,
     current_user: User = Depends(get_current_active_admin),
 ):
     db_customer = session.get(Customer, customer_id)
@@ -382,6 +410,10 @@ def update_customer(
     # Exclude unset fields from the update data
     customer_data = customer_update.model_dump(exclude_unset=True)
     
+    # Remove username and password from customer_data since they go to User
+    username = customer_data.pop("username", None)
+    password = customer_data.pop("password", None)
+
     # Prevent historical fields from being updated via standard operations
     customer_data.pop("consumo_2022", None)
     customer_data.pop("consumo_2023", None)
@@ -391,8 +423,37 @@ def update_customer(
     customer_data.pop("saldo_inicial", None)
 
     db_customer.sqlmodel_update(customer_data)
-
     session.add(db_customer)
+
+    # Actualizar o crear usuario
+    if username or password:
+        user = session.exec(select(User).where(User.cliente_id == db_customer.id)).first()
+        if user:
+            if username:
+                # Verificar si el nuevo username no está ocupado
+                if username != user.username:
+                    existing = session.exec(select(User).where(User.username == username)).first()
+                    if existing:
+                        raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso.")
+                user.username = username
+            if password:
+                user.hashed_password = get_password_hash(password)
+            session.add(user)
+        else:
+            if not username or not password:
+                raise HTTPException(status_code=400, detail="Se requiere nombre de usuario y contraseña para crear la cuenta de acceso.")
+            existing = session.exec(select(User).where(User.username == username)).first()
+            if existing:
+                raise HTTPException(status_code=400, detail="El nombre de usuario ya está en uso.")
+            new_user = User(
+                username=username,
+                email=db_customer.email,
+                role=RoleEnum.CLIENTE,
+                hashed_password=get_password_hash(password),
+                cliente_id=db_customer.id
+            )
+            session.add(new_user)
+
     session.commit()
     session.refresh(db_customer)
     return db_customer

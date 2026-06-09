@@ -5,6 +5,20 @@ from sqlmodel import SQLModel, Field
 from app.models import CustomerBase, QuoteBase, PaymentBase, AccountChargeBase, UserBase, RoleEnum
 
 
+class CustomerCreate(CustomerBase):
+    username: Optional[str] = None
+    password: Optional[str] = None
+
+
+class CustomerUpdate(SQLModel):
+    nombre: Optional[str] = None
+    email: Optional[str] = None
+    telefono: Optional[str] = None
+    direccion: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+
+
 class Token(SQLModel):
     access_token: str
     token_type: str
@@ -17,6 +31,23 @@ class UserCreate(UserBase):
 
 class UserRead(UserBase):
     id: int
+
+class UserAdminCreate(SQLModel):
+    """Schema para que el Admin cree usuarios Operativos o Clientes."""
+    username: str
+    email: str
+    password: str
+    role: RoleEnum = RoleEnum.OPERATIVO
+    is_active: bool = True
+    cliente_id: Optional[int] = None
+
+class UserUpdate(SQLModel):
+    """Schema para editar un usuario existente (campos opcionales)."""
+    username: Optional[str] = None
+    email: Optional[str] = None
+    role: Optional[RoleEnum] = None
+    is_active: Optional[bool] = None
+    cliente_id: Optional[int] = None
 
 
 class QuoteItemCreate(SQLModel):

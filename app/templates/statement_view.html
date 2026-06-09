@@ -4,6 +4,33 @@
 
 {% block content %}
 
+<!-- ═══ TOAST CONTAINER ═══ -->
+<div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none;"></div>
+
+<style>
+@keyframes toastIn  { from { opacity:0; transform:translateX(110%); } to { opacity:1; transform:translateX(0); } }
+@keyframes toastOut { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(110%); } }
+.toast-item {
+    pointer-events:auto;
+    min-width:300px; max-width:380px;
+    background:white;
+    border-radius:12px;
+    padding:14px 18px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08);
+    display:flex; align-items:flex-start; gap:12px;
+    animation: toastIn 0.35s cubic-bezier(.21,1.02,.73,1) forwards;
+    border-left:4px solid var(--primary);
+}
+.toast-item.toast-success { border-left-color: #059669; }
+.toast-item.toast-error   { border-left-color: #dc2626; }
+.toast-item.toast-info    { border-left-color: #3b82f6; }
+.toast-item.toast-warning { border-left-color: #f59e0b; }
+.toast-icon { font-size:1.3rem; flex-shrink:0; margin-top:1px; }
+.toast-body { flex:1; }
+.toast-title { font-weight:700; font-size:0.9rem; color:var(--gray-800); margin-bottom:2px; }
+.toast-msg   { font-size:0.82rem; color:var(--gray-500); line-height:1.4; }
+.toast-close { background:none; border:none; cursor:pointer; font-size:1rem; color:var(--gray-400); padding:0; flex-shrink:0; }
+</style>
 
 <div class="container py-4">
     <!-- Header & Summary Row -->
@@ -460,8 +487,26 @@
                     <td class="text-end py-3 fw-bold" style="color: var(--gray-800);">$${parseFloat(c.monto).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="text-center py-3">
                         ${c.saldo <= 0.1 ? '<span style="background: var(--success-light); color: var(--success-dark); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">Pagado</span>' : '<span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">Pendiente</span>'}
-                        ${(c.documentado || c.estatus === 'Remisión Emitida') ? `<br><span style="display: inline-block; background: var(--gray-200); color: var(--gray-700); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; margin-top: 4px;">${c.estatus || 'Remisión Emitida'}</span>` : ''}
-                        ${c.folio_nota ? `<br><small style="color: var(--gray-500); font-weight: bold; font-size: 0.7rem; display: block; margin-top: 4px;">${c.folio_nota}</small>` : ''}
+                        ${(c.documentado || c.estatus === 'Remisión Emitida') && c.folio_nota ? `
+                            <div style="margin-top:8px;">
+                                <button
+                                    onclick="downloadRemisionPDF('${c.folio_nota}', this)"
+                                    title="Descargar remisión ${c.folio_nota}"
+                                    style="display:inline-flex; align-items:center; gap:7px;
+                                           background:linear-gradient(135deg,#1e40af 0%,#4f46e5 100%);
+                                           color:white; border:none; padding:7px 14px;
+                                           border-radius:10px; font-size:0.8rem; font-weight:700;
+                                           cursor:pointer;
+                                           box-shadow:0 4px 14px rgba(79,70,229,0.4);
+                                           transition:all 0.22s ease; letter-spacing:0.01em;"
+                                    onmouseover="this.style.transform='translateY(-2px) scale(1.02)';this.style.boxShadow='0 8px 20px rgba(79,70,229,0.5)'"
+                                    onmouseout="this.style.transform='translateY(0) scale(1)';this.style.boxShadow='0 4px 14px rgba(79,70,229,0.4)'">
+                                    <i class="bi bi-file-earmark-pdf-fill" style="font-size:1rem;"></i>
+                                    <span>${c.folio_nota}</span>
+                                    <i class="bi bi-cloud-arrow-down-fill" style="font-size:0.9rem;"></i>
+                                </button>
+                            </div>
+                        ` : (c.documentado ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#ede9fe;color:#6d28d9;padding:3px 9px;border-radius:20px;font-size:0.7rem;font-weight:700;margin-top:6px;"><i class="bi bi-check-circle-fill"></i> Emitida</span>` : '')}
                     </td>
                     <td class="text-end pe-4 py-3">
                         <small style="color: var(--gray-500); display: block; font-size: 0.8rem;">Abonado: $${parseFloat(c.pagado).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</small>
@@ -672,23 +717,73 @@
             a.click();
             window.URL.revokeObjectURL(url);
 
-            // Mostrar el folio al usuario
-            alert(`Nota de remisión ${folio} generada con éxito.`);
+            // Toast de éxito
+            showToast('success', '¡Remisión generada!', `Folio <strong>${folio}</strong> — archivo descargado correctamente.`);
 
             // Refrescar para que salgan como documentados
             loadCustomerStatement(lastLoadedCustomerId);
             loadActiveAccounts();
         } catch(e) {
-            alert(e.message || "Error generacional");
+            showToast('error', 'Error al generar remisión', e.message || 'Intenta de nuevo.');
         } finally {
             btn.innerHTML = origContent;
             btn.disabled = false;
         }
     }
 
+    // ── Toast Notifications ───────────────────────────────────────────────────
+    function showToast(type, title, msg, duration = 4000) {
+        const icons = { success:'bi-check-circle-fill', error:'bi-x-circle-fill', info:'bi-info-circle-fill', warning:'bi-exclamation-triangle-fill' };
+        const colors = { success:'#059669', error:'#dc2626', info:'#3b82f6', warning:'#f59e0b' };
+        const container = document.getElementById('toast-container');
+        const el = document.createElement('div');
+        el.className = `toast-item toast-${type}`;
+        el.innerHTML = `
+            <i class="bi ${icons[type] || icons.info} toast-icon" style="color:${colors[type] || colors.info};"></i>
+            <div class="toast-body">
+                <div class="toast-title">${title}</div>
+                ${msg ? `<div class="toast-msg">${msg}</div>` : ''}
+            </div>
+            <button class="toast-close" onclick="this.closest('.toast-item').remove()">&times;</button>
+        `;
+        container.appendChild(el);
+        setTimeout(() => {
+            el.style.animation = 'toastOut 0.3s ease forwards';
+            setTimeout(() => el.remove(), 300);
+        }, duration);
+    }
+
+    // ── Descargar PDF de remisión por folio (vía API, regenera si no existe) ──
+    async function downloadRemisionPDF(folio, btn) {
+        const origHTML = btn ? btn.innerHTML : '';
+        if (btn) { btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Descargando...'; btn.disabled = true; }
+        const url = `/api/v1/payments/remission/${folio}`;
+        try {
+            const resp = await fetch(url);
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                throw new Error(err.detail || `Error ${resp.status}`);
+            }
+            const blob = await resp.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = blobUrl;
+            a.download = `remision_${folio}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { window.URL.revokeObjectURL(blobUrl); a.remove(); }, 1000);
+            showToast('success', 'PDF descargado', `Remisión ${folio} lista en tu carpeta de descargas.`);
+        } catch(e) {
+            showToast('error', 'Error al descargar', e.message || 'Verifica que el servidor esté activo.');
+        } finally {
+            if (btn) { btn.innerHTML = origHTML; btn.disabled = false; }
+        }
+    }
+
     function downloadStatementPDF() {
         if (!lastLoadedCustomerId) {
-            alert('Debe seleccionar a un cliente para generar su estado de cuenta.');
+            showToast('warning', 'Sin cliente seleccionado', 'Selecciona un cliente primero.');
             return;
         }
         window.open(`/api/v1/payments/statement/customer/${lastLoadedCustomerId}/pdf`, '_blank');

@@ -278,11 +278,15 @@ def generate_quote_pdf(
     *,
     session: Session = Depends(get_session),
     quote_id: int,
-    current_user: User = Depends(get_current_active_operativo_or_admin)
+    current_user: User = Depends(get_current_user)
 ):
     quote = session.get(Quote, quote_id)
     if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
+
+    if current_user.role == RoleEnum.CLIENTE:
+        if current_user.cliente_id != quote.cliente_id:
+            raise HTTPException(status_code=403, detail="No tienes permiso para descargar esta cotización")
 
     try:
         # Renderizar HTML con datos reales
@@ -291,13 +295,19 @@ def generate_quote_pdf(
         # Generar bytes PDF
         pdf_bytes = generate_pdf_bytes(html_content)
 
-        # Retornar como archivo descargable
+        # Nomenclatura: Cotizacion_FOLIO_CLI0001_nombre.pdf
+        import unicodedata, re
+        def _safe(t, n=20):
+            s = unicodedata.normalize('NFKD', t or '').encode('ascii','ignore').decode()
+            return re.sub(r'_+','_', re.sub(r'[^\w]','_', s)).strip('_')[:n]
+        folio = quote.folio_cotizacion or f"COT{quote_id:04d}"
+        nombre = _safe(quote.cliente.nombre) if quote.cliente else "cliente"
+        pdf_name = f"Cotizacion_{folio}_CLI{quote.cliente_id:04d}_{nombre}.pdf"
+
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={
-                "Content-Disposition": f"attachment; filename=cotizacion_{quote_id}.pdf"
-            },
+            headers={"Content-Disposition": f'attachment; filename="{pdf_name}"'},
         )
     except Exception as e:
         import traceback
