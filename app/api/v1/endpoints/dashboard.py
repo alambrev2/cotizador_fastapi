@@ -19,15 +19,15 @@ def export_ingresos_pdf(mes: int, anio: int, session: Session = Depends(get_sess
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("helvetica", size=16, style='B')
-    pdf.cell(0, 10, text=f"Historial de Ingresos - {mes}/{anio}", new_x='LMARGIN', new_y='NEXT', align='C')
-    pdf.cell(0, 10, text="", new_x='LMARGIN', new_y='NEXT')
+    pdf.cell(0, 10, txt=f"Historial de Ingresos - {mes}/{anio}", new_x='LMARGIN', new_y='NEXT', align='C')
+    pdf.cell(0, 10, txt="", new_x='LMARGIN', new_y='NEXT')
     
     # Cabeceras
     pdf.set_font("helvetica", size=10, style='B')
-    pdf.cell(40, 10, text="Fecha", border=1, align='C')
-    pdf.cell(60, 10, text="Origen/Descripcion", border=1, align='C')
-    pdf.cell(40, 10, text="Tipo", border=1, align='C')
-    pdf.cell(40, 10, text="Monto ($)", border=1, new_x='LMARGIN', new_y='NEXT', align='C')
+    pdf.cell(40, 10, txt="Fecha", border=1, align='C')
+    pdf.cell(60, 10, txt="Origen/Descripcion", border=1, align='C')
+    pdf.cell(40, 10, txt="Tipo", border=1, align='C')
+    pdf.cell(40, 10, txt="Monto ($)", border=1, new_x='LMARGIN', new_y='NEXT', align='C')
     
     pdf.set_font("helvetica", size=10)
     total = 0.0
@@ -35,14 +35,14 @@ def export_ingresos_pdf(mes: int, anio: int, session: Session = Depends(get_sess
         desc = p.metodo_pago or "Pago"
         monto = float(p.monto)
         total += monto
-        pdf.cell(40, 10, text=str(p.fecha_pago.date()), border=1)
-        pdf.cell(60, 10, text="Cobro Cliente" + (f" (Abono)" if not p.quote_id else f" (Cotización)"), border=1)
-        pdf.cell(40, 10, text=desc, border=1)
-        pdf.cell(40, 10, text=f"${monto:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
+        pdf.cell(40, 10, txt=str(p.fecha_pago.date()), border=1)
+        pdf.cell(60, 10, txt="Cobro Cliente" + (f" (Abono)" if not p.quote_id else f" (Cotización)"), border=1)
+        pdf.cell(40, 10, txt=desc, border=1)
+        pdf.cell(40, 10, txt=f"${monto:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
         
     pdf.set_font("helvetica", size=10, style='B')
-    pdf.cell(140, 10, text="Total del Periodo:", border=1, align='R')
-    pdf.cell(40, 10, text=f"${total:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
+    pdf.cell(140, 10, txt="Total del Periodo:", border=1, align='R')
+    pdf.cell(40, 10, txt=f"${total:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
     
     pdf_bytes = bytes(pdf.output())
     return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=Ingresos_{mes}_{anio}.pdf"})
@@ -57,14 +57,14 @@ def export_egresos_pdf(mes: int, anio: int, session: Session = Depends(get_sessi
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("helvetica", size=16, style='B')
-    pdf.cell(0, 10, text=f"Historial de Egresos - {mes}/{anio}", new_x='LMARGIN', new_y='NEXT', align='C')
-    pdf.cell(0, 10, text="", new_x='LMARGIN', new_y='NEXT')
+    pdf.cell(0, 10, txt=f"Historial de Egresos - {mes}/{anio}", new_x='LMARGIN', new_y='NEXT', align='C')
+    pdf.cell(0, 10, txt="", new_x='LMARGIN', new_y='NEXT')
     
     pdf.set_font("helvetica", size=10, style='B')
-    pdf.cell(40, 10, text="Fecha", border=1, align='C')
-    pdf.cell(60, 10, text="Descripción del Servicio", border=1, align='C')
-    pdf.cell(40, 10, text="Categoría", border=1, align='C')
-    pdf.cell(40, 10, text="Monto ($)", border=1, new_x='LMARGIN', new_y='NEXT', align='C')
+    pdf.cell(40, 10, txt="Fecha", border=1, align='C')
+    pdf.cell(60, 10, txt="Descripción del Servicio", border=1, align='C')
+    pdf.cell(40, 10, txt="Categoría", border=1, align='C')
+    pdf.cell(40, 10, txt="Monto ($)", border=1, new_x='LMARGIN', new_y='NEXT', align='C')
     
     pdf.set_font("helvetica", size=10)
     total = 0.0
@@ -72,18 +72,18 @@ def export_egresos_pdf(mes: int, anio: int, session: Session = Depends(get_sessi
         monto = float(e.monto)
         total += monto
         pdf.set_text_color(0, 0, 0) # Negro para info base
-        pdf.cell(40, 10, text=str(e.fecha.date()), border=1)
-        pdf.cell(60, 10, text=e.descripcion[:30], border=1)
-        pdf.cell(40, 10, text=e.categoria or "General", border=1)
+        pdf.cell(40, 10, txt=str(e.fecha.date()), border=1)
+        pdf.cell(60, 10, txt=e.descripcion[:30], border=1)
+        pdf.cell(40, 10, txt=e.categoria or "General", border=1)
         
         pdf.set_text_color(220, 38, 38) # Rojo para monto
-        pdf.cell(40, 10, text=f"-${monto:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
+        pdf.cell(40, 10, txt=f"-${monto:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
         
     pdf.set_text_color(0, 0, 0)
     pdf.set_font("helvetica", size=10, style='B')
-    pdf.cell(140, 10, text="Total del Periodo:", border=1, align='R')
+    pdf.cell(140, 10, txt="Total del Periodo:", border=1, align='R')
     pdf.set_text_color(220, 38, 38)
-    pdf.cell(40, 10, text=f"-${total:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
+    pdf.cell(40, 10, txt=f"-${total:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
     
     pdf_bytes = bytes(pdf.output())
     return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=Egresos_{mes}_{anio}.pdf"})
