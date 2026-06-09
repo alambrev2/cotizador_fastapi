@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page {
+            size: letter;
+            margin: 2cm;
+            @frame footer_frame {
+                -pdf-frame-content: footerContent;
+                bottom: 1cm;
+                margin-left: 2cm;
+                margin-right: 2cm;
+                height: 1cm;
+            }
+        }
+        body {
+            font-family: 'Helvetica Neue', Roboto, sans-serif;
+            font-size: 10pt;
+            color: #333;
+        }
+        .header-tbl { width: 100%; border-bottom: 2px solid {% if tipo_reporte == 'INGRESOS' %}#10b981{% else %}#ef4444{% endif %}; padding-bottom: 10px; margin-bottom: 20px; }
+        .header-tbl h1 { color: {% if tipo_reporte == 'INGRESOS' %}#10b981{% else %}#ef4444{% endif %}; font-size: 24pt; margin: 0; text-transform: uppercase; }
+        
+        table.info-table { width: 100%; margin-bottom: 25px; }
+        table.info-table td { line-height: 1.4; }
+
+        table.items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        table.items-table th { background-color: #f8fafc; color: #1e293b; font-weight: bold; padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1; }
+        table.items-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
+
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        
+        .monto-ingreso { color: #10b981; font-weight: bold; }
+        .monto-egreso { color: #ef4444; font-weight: bold; }
+
+        #footerContent { text-align: center; color: #94a3b8; font-size: 8pt; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <table class="header-tbl">
+        <tr>
+            <td width="60%">
+                <h1>HISTORIAL DE {{ tipo_reporte }}</h1>
+                <p style="margin-top: 5px; font-size: 10pt; color: #64748b;">
+                    <strong>SMART SITE COMPANY</strong><br>
+                    WhatsApp: 7225705637<br>
+                    Web: smartsitecompany.com
+                </p>
+            </td>
+            <td width="40%" class="text-right" valign="bottom">
+                <h2 style="color: {% if tipo_reporte == 'INGRESOS' %}#10b981{% else %}#ef4444{% endif %}; margin: 0; font-size: 16pt;">PERIODO: {{ mes }}/{{ anio }}</h2>
+            </td>
+        </tr>
+    </table>
+
+    <table class="info-table">
+        <tr>
+            <td width="50%" valign="top" style="padding-right: 20px;">
+                <strong>Documento:</strong> Reporte Financiero Mensual<br>
+                <strong>Tipo de Movimientos:</strong> {{ tipo_reporte }}<br>
+                <strong>Fecha de Emisión:</strong> {{ fecha_emision }}
+            </td>
+            <td width="50%" valign="top" align="right">
+                <table align="right" style="border-collapse: collapse;">
+                    <tr>
+                        <td style="border-left: 4px solid {% if tipo_reporte == 'INGRESOS' %}#10b981{% else %}#ef4444{% endif %}; padding-left: 12px; text-align: left;">
+                            <div style="font-size: 9pt; color: {% if tipo_reporte == 'INGRESOS' %}#10b981{% else %}#ef4444{% endif %}; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: bold;">TOTAL DEL PERIODO</div>
+                            <div style="font-size: 15pt; font-weight: bold; color: {% if tipo_reporte == 'INGRESOS' %}#10b981{% else %}#ef4444{% endif %};">{{ total }}</div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="items-table">
+        <thead>
+            <tr>
+                {% for col in columnas %}
+                <th {% if loop.last %}class="text-right"{% endif %}>{{ col }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for fila in filas %}
+            <tr>
+                <td>{{ fila[0] }}</td>
+                <td>{{ fila[1] }}</td>
+                <td>{{ fila[2] }}</td>
+                <td class="text-right {% if tipo_reporte == 'INGRESOS' %}monto-ingreso{% else %}monto-egreso{% endif %}">{{ fila[3] }}</td>
+            </tr>
+            {% endfor %}
+            {% if not filas %}
+            <tr>
+                <td colspan="4" class="text-center" style="padding: 20px; color: #94a3b8; font-style: italic;">
+                    No se encontraron registros para este periodo.
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div style="margin-top: 10px;">
+        <table style="width: 100%; margin-top: 15px;">
+            <tr>
+                <td width="100%" valign="top">
+                    <p style="color: #64748b; font-size: 9pt; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                        <em>Notas:</em><br>
+                        - Este reporte detalla los movimientos financieros registrados en el sistema durante el periodo indicado.<br>
+                        - Valores expresados en moneda nacional (MXN).
+                    </p>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="footerContent">
+        Documento generado electrónicamente por el Sistema Financiero Smart Site Company.
+    </div>
+</body>
+</html>
