@@ -118,9 +118,7 @@ async def dashboard(request: Request, current_user: User = Depends(get_current_u
     """Redirige al panel correcto según el rol del usuario autenticado."""
     if current_user.role == RoleEnum.Cliente:
         return RedirectResponse(url="/client-dashboard")
-    elif current_user.role == RoleEnum.Operativo:
-        return RedirectResponse(url="/projects")
-    else:  # ADMINISTRADOR
+    else:  # ADMINISTRADOR y OPERATIVO
         return templates.TemplateResponse(request, "quick_register.html", {
             "current_user": {"username": current_user.username, "role": current_user.role.value}
         })
