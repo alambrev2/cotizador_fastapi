@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-<div style="max-width: 1200px; margin: 0 auto;">
+<div style="max-width: 100%; margin: 0 auto; padding: 0 var(--space-4);">
 
     <!-- Alertas de 5 Días -->
     <div id="alert_box" class="alert alert-warning" style="display: none;">
@@ -15,107 +15,144 @@
         <ul id="alert_list" style="list-style: disc; margin-left: var(--space-6); margin-top: var(--space-2); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium);"></ul>
     </div>
 
-    <h2 style="text-align: center; margin-bottom: var(--space-8); color: var(--gray-800);">Resumen de Negocio</h2>
+    <h2 style="text-align: center; margin-bottom: var(--space-8); color: var(--gray-800); font-size: clamp(1.5rem, 5vw, 2rem); word-wrap: break-word; overflow-wrap: break-word; hyphens: auto; line-height: 1.3; padding: 0 1rem;">Resumen de Negocio</h2>
 
     <!-- Métricas del Dashboard -->
-    <div class="dashboard-metrics" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-6); margin-bottom: var(--space-8);">
+    <div class="dashboard-metrics grid-3-cols" style="gap: 1rem; margin-bottom: var(--space-8); padding: 0 1rem;">
 
         <!-- Card 1: Saldo por Cobrar -->
-        <div class="card d-flex flex-column justify-content-center" style="background: #0b1329; border: 1px solid rgba(255, 255, 255, 0.06); padding: var(--space-6); color: white; position: relative; overflow: hidden; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); min-height: 160px;">
-            <div style="position: absolute; right: -30px; top: -30px; width: 140px; height: 140px; background: radial-gradient(circle, rgba(239, 68, 68, 0.12) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
+        <div class="card d-flex flex-column justify-content-center" style="background: #0b1329; border: 1px solid rgba(255, 255, 255, 0.06); padding: 1.25rem; color: white; position: relative; overflow: hidden; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); min-height: 160px; width: 100%; align-items: flex-start; gap: 0.75rem;">
+            <div style="position: absolute; right: -20px; top: -20px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(239, 68, 68, 0.12) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
             
-            <p style="text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; color: var(--gray-400); margin: 0; font-weight: 700;">Saldo por Cobrar</p>
-            <h2 id="m-saldo" style="font-size: 2rem; margin: 0.5rem 0 0.25rem 0; color: #ef4444; font-weight: 800; letter-spacing: -0.02em;">Cargando...</h2>
-            <p style="font-weight: 700; font-size: 0.85rem; margin: 0; display: inline-flex; align-items: center; color: #ef4444;">
+            <p style="text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; color: var(--gray-400); margin: 0; font-weight: 700; word-wrap: break-word;">Saldo por Cobrar</p>
+            <h2 id="m-saldo" style="font-size: clamp(1.5rem, 5vw, 2rem); margin: 0; color: #ef4444; font-weight: 800; letter-spacing: -0.02em; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">Cargando...</h2>
+            <p style="font-weight: 700; font-size: 0.85rem; margin: 0; display: inline-flex; align-items: center; color: #ef4444; word-wrap: break-word;">
                 Cobranza Requerida 
-                <span style="background: #ef4444; color: white; border-radius: 4px; padding: 2px; font-size: 0.6rem; font-weight: bold; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px;"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                <span style="background: #ef4444; color: white; border-radius: 4px; padding: 2px; font-size: 0.6rem; font-weight: bold; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; width: fit-content; min-width: 18px; height: 18px;"><i class="bi bi-exclamation-triangle-fill"></i></span>
             </p>
         </div>
 
         <!-- Card 2: Cotizaciones en Borrador -->
-        <div class="card d-flex flex-column justify-content-center" style="background: #0b1329; border: 1px solid rgba(255, 255, 255, 0.06); padding: var(--space-6); color: white; position: relative; overflow: hidden; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); min-height: 160px;">
-            <div style="position: absolute; right: -30px; top: -30px; width: 140px; height: 140px; background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
+        <div class="card d-flex flex-column justify-content-center" style="background: #0b1329; border: 1px solid rgba(255, 255, 255, 0.06); padding: 1.25rem; color: white; position: relative; overflow: hidden; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); min-height: 160px; width: 100%; align-items: flex-start; gap: 0.75rem;">
+            <div style="position: absolute; right: -20px; top: -20px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
             
-            <p style="text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; color: var(--gray-400); margin: 0; font-weight: 700;">Cotizaciones en Borrador</p>
-            <h2 id="m-quotes" style="font-size: 2rem; margin: 0.5rem 0 0.25rem 0; color: #6366f1; font-weight: 800; letter-spacing: -0.02em;">Cargando...</h2>
-            <p style="font-weight: 700; font-size: 0.85rem; margin: 0; display: inline-flex; align-items: center; color: #6366f1;">
+            <p style="text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; color: var(--gray-400); margin: 0; font-weight: 700; word-wrap: break-word;">Cotizaciones en Borrador</p>
+            <h2 id="m-quotes" style="font-size: clamp(1.5rem, 5vw, 2rem); margin: 0; color: #6366f1; font-weight: 800; letter-spacing: -0.02em; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">Cargando...</h2>
+            <p style="font-weight: 700; font-size: 0.85rem; margin: 0; display: inline-flex; align-items: center; color: #6366f1; word-wrap: break-word;">
                 Pendiente de Envío 
-                <span style="background: #6366f1; color: white; border-radius: 4px; padding: 2px; font-size: 0.6rem; font-weight: bold; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px;"><i class="bi bi-clock-history"></i></span>
+                <span style="background: #6366f1; color: white; border-radius: 4px; padding: 2px; font-size: 0.6rem; font-weight: bold; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; width: fit-content; min-width: 18px; height: 18px;"><i class="bi bi-clock-history"></i></span>
             </p>
         </div>
 
         <!-- Card 3: Flujo de Caja Real -->
-        <div class="card d-flex flex-column justify-content-center" style="background: #0b1329; border: 1px solid rgba(255, 255, 255, 0.06); padding: var(--space-6); color: white; position: relative; overflow: hidden; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); min-height: 160px;">
-            <div style="position: absolute; right: -30px; top: -30px; width: 140px; height: 140px; background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
+        <div class="card d-flex flex-column justify-content-center" style="background: #0b1329; border: 1px solid rgba(255, 255, 255, 0.06); padding: 1.25rem; color: white; position: relative; overflow: hidden; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); min-height: 160px; width: 100%; align-items: flex-start; gap: 0.75rem;">
+            <div style="position: absolute; right: -20px; top: -20px; width: 80px; height: 80px; background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
             
-            <p style="text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; color: var(--gray-400); margin: 0; font-weight: 700;">Flujo de Caja Real</p>
-            <h2 id="m-flujo" style="font-size: 2rem; margin: 0.5rem 0 0.25rem 0; color: #10b981; font-weight: 800; letter-spacing: -0.02em;">Cargando...</h2>
-            <p style="font-weight: 700; font-size: 0.85rem; margin: 0; display: inline-flex; align-items: center; color: #10b981;">
+            <p style="text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; color: var(--gray-400); margin: 0; font-weight: 700; word-wrap: break-word;">Flujo de Caja Real</p>
+            <h2 id="m-flujo" style="font-size: clamp(1.5rem, 5vw, 2rem); margin: 0; color: #10b981; font-weight: 800; letter-spacing: -0.02em; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">Cargando...</h2>
+            <p style="font-weight: 700; font-size: 0.85rem; margin: 0; display: inline-flex; align-items: center; color: #10b981; word-wrap: break-word;">
                 Caja Saludable 
-                <span style="background: #10b981; color: white; border-radius: 4px; padding: 2px; font-size: 0.6rem; font-weight: bold; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px;"><i class="bi bi-check-lg"></i></span>
+                <span style="background: #10b981; color: white; border-radius: 4px; padding: 2px; font-size: 0.6rem; font-weight: bold; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; width: fit-content; min-width: 18px; height: 18px;"><i class="bi bi-check-lg"></i></span>
             </p>
         </div>
     </div>
 
     <!-- Gráfico Financiero -->
-    <div class="card" style="margin-bottom: var(--space-10);">
+    <div class="card" style="margin-bottom: var(--space-10); padding: 0 1rem;">
         <h4 style="color: var(--text-muted); font-size: var(--font-size-xs); text-transform: uppercase; margin: 0 0 var(--space-4) 0; font-weight: var(--font-weight-semibold);">Balance Financiero (Ingresos vs Egresos)</h4>
-        <div style="position: relative; height: 300px; width: 100%;">
+        <div style="position: relative; height: 250px; width: 100%; min-height: 200px;">
             <canvas id="financeChart"></canvas>
         </div>
     </div>
 
-    <!-- Módulo Calendario -->
-    <div class="card" style="margin-bottom: var(--space-10);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-3);">
-            <h3 style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--gray-800);">📅 Calendario de Egresos</h3>
-            <button onclick="document.getElementById('modal-egreso').style.display = 'flex'" class="btn btn-primary" style="width: auto;">+ Añadir Egreso Programado</button>
+    <!-- Módulo Calendario y Lista -->
+    <div class="card" style="margin-bottom: var(--space-10); padding: 0 1rem;">
+        <!-- Tabs Header -->
+        <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-3);">
+            <button onclick="switchTab('calendar')" id="tab-calendar" class="btn" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600;">📅 Calendario</button>
+            <button onclick="switchTab('list')" id="tab-list" class="btn" style="background: transparent; color: var(--gray-600); border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600;">📋 Lista</button>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2); margin-bottom: var(--space-2);">
-            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Dom</div>
-            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Lun</div>
-            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Mar</div>
-            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Mié</div>
-            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Jue</div>
-            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Vie</div>
-            <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Sáb</div>
+
+        <!-- Calendar View -->
+        <div id="view-calendar">
+            <div class="calendar-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-3);">
+                <h3 style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--gray-800); word-wrap: break-word; flex: 1;">Calendario de Egresos</h3>
+                <button onclick="document.getElementById('modal-egreso').style.display = 'flex'" class="btn btn-primary" style="width: fit-content; font-size: 0.85rem;">+ Añadir Egreso</button>
+            </div>
+            <div class="calendar-weekdays" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2); margin-bottom: var(--space-2);">
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Dom</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Lun</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Mar</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Mié</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Jue</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Vie</div>
+                <div style="text-align: center; font-weight: var(--font-weight-bold); color: var(--text-light); font-size: var(--font-size-sm);">Sáb</div>
+            </div>
+            <div id="calendar-grid" class="calendar-days" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2);">
+                <!-- Bloques generados dinámicamente -->
+            </div>
         </div>
-        <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-2);">
-            <!-- Bloques generados dinámicamente -->
+
+        <!-- List View -->
+        <div id="view-list" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-3);">
+                <h3 style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--gray-800); word-wrap: break-word; flex: 1;">Lista de Egresos</h3>
+                <button onclick="document.getElementById('modal-egreso').style.display = 'flex'" class="btn btn-primary" style="width: fit-content; font-size: 0.85rem;">+ Añadir Egreso</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+                    <thead>
+                        <tr style="background: var(--gray-100);">
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">CONCEPTO</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">VENCIMIENTO</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">FRECUENCIA</th>
+                            <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">MONTO</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">ESTADO</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenses-table-body">
+                        <!-- Filas generadas dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <!-- Modal -->
     <div id="modal-egreso" style="display: none; position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); overflow-y: auto; height: 100%; width: 100%; z-index: var(--z-modal); align-items: center; justify-content: center;">
-        <div style="display: flex; align-items: center; justify-content: center; min-height: 100%; width: 100%;">
-            <div class="card" style="max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; margin: 0; border-radius: var(--radius-xl); padding: var(--space-6); border: 1px solid var(--border-color); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
-                <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-3);">
-                    <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--danger-light); color: var(--danger); display: flex; align-items: center; justify-content: center; font-size: 1rem;">📅</div>
-                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--gray-800);">Programar Egreso</h3>
+        <div style="display: flex; align-items: center; justify-content: center; min-height: 100%; width: 100%; padding: 1rem;">
+            <div class="card" style="max-width: 500px; width: 100%; margin: 0; border-radius: 16px; padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--primary-light);">
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4);">📅</div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--gray-800);">Programar Egreso</h3>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--gray-500);">Agrega un nuevo pago programado</p>
+                    </div>
                 </div>
-                <form id="new-scheduled-form" style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <form id="new-scheduled-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label for="sch-desc" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Descripción <span style="color: var(--danger);">*</span></label>
-                        <input type="text" id="sch-desc" required placeholder="Ej. Pago de Internet corporativo" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.65rem 0.85rem;">
+                        <label for="sch-desc" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Descripción <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="sch-desc" required placeholder="Ej. Pago de Internet corporativo" style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="sch-monto" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Monto ($) <span style="color: var(--danger);">*</span></label>
-                            <div style="position: relative;">
-                                <span style="position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); color: var(--gray-400); font-weight: bold;">$</span>
-                                <input type="number" step="0.01" id="sch-monto" required placeholder="0.00" style="padding-left: 1.8rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding-top: 0.65rem; padding-bottom: 0.65rem;">
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%;">
+                        <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                            <label for="sch-monto" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Monto ($) <span style="color: var(--danger);">*</span></label>
+                            <div style="position: relative; width: 100%;">
+                                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--primary); font-weight: 700; font-size: 1rem;">$</span>
+                                <input type="number" step="0.01" id="sch-monto" required placeholder="0.00" style="padding-left: 2rem; border-radius: 10px; border: 2px solid var(--gray-200); padding-top: 0.75rem; padding-bottom: 0.75rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                             </div>
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label for="sch-fecha" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Vencimiento <span style="color: var(--danger);">*</span></label>
-                            <input type="date" id="sch-fecha" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.55rem 0.85rem; height: auto;">
+                            <label for="sch-fecha" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Vencimiento <span style="color: var(--danger);">*</span></label>
+                            <input type="date" id="sch-fecha" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         </div>
                     </div>
                     
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label for="sch-freq" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Frecuencia <span style="color: var(--danger);">*</span></label>
-                        <select id="sch-freq" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.55rem 0.85rem; width: 100%;">
+                        <label for="sch-freq" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Frecuencia <span style="color: var(--danger);">*</span></label>
+                        <select id="sch-freq" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
                             <option value="Único">Único</option>
                             <option value="Mensual">Mensual</option>
                             <option value="Bimestral">Bimestral</option>
@@ -124,9 +161,9 @@
                         </select>
                     </div>
                     
-                    <div style="display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-4); border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
-                        <button type="button" onclick="document.getElementById('modal-egreso').style.display = 'none'" class="btn btn-outline" style="width: auto; padding: 0.6rem 1.2rem; border-radius: var(--radius-md); font-weight: 600;">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" style="width: auto; padding: 0.6rem 1.5rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4);">✓ Programar</button>
+                    <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 0.5rem; padding-top: 1.25rem; border-top: 2px solid var(--primary-light);">
+                        <button type="button" onclick="document.getElementById('modal-egreso').style.display = 'none'" class="btn btn-outline" style="width: auto; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; border: 2px solid var(--gray-300); background: white; color: var(--gray-700); transition: all 0.2s;">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" style="width: auto; padding: 0.75rem 2rem; border-radius: 10px; font-weight: 600; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; border: none; box-shadow: 0 4px 12px -2px rgba(79, 70, 229, 0.5); transition: all 0.2s;">✓ Programar</button>
                     </div>
                 </form>
             </div>
@@ -135,37 +172,40 @@
 
     <!-- Modal Editar/Eliminar -->
     <div id="modal-editar-egreso" style="display: none; position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); overflow-y: auto; height: 100%; width: 100%; z-index: var(--z-modal); align-items: center; justify-content: center;">
-        <div style="display: flex; align-items: center; justify-content: center; min-height: 100%; width: 100%;">
-            <div class="card" style="max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; margin: 0; border-radius: var(--radius-xl); padding: var(--space-6); border: 1px solid var(--border-color); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
-                <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-3);">
-                    <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1rem;">✏️</div>
-                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--gray-800);">Editar Egreso</h3>
+        <div style="display: flex; align-items: center; justify-content: center; min-height: 100%; width: 100%; padding: 1rem;">
+            <div class="card" style="max-width: 500px; width: 100%; margin: 0; border-radius: 16px; padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--primary-light);">
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4);">✏️</div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--gray-800);">Editar Egreso</h3>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--gray-500);">Modifica los detalles del pago programado</p>
+                    </div>
                 </div>
-                <form id="edit-scheduled-form" style="display: flex; flex-direction: column; gap: var(--space-4);">
+                <form id="edit-scheduled-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
                     <input type="hidden" id="edit-sch-id">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label for="edit-sch-desc" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Descripción <span style="color: var(--danger);">*</span></label>
-                        <input type="text" id="edit-sch-desc" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.65rem 0.85rem;">
+                        <label for="edit-sch-desc" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Descripción <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="edit-sch-desc" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="edit-sch-monto" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Monto ($) <span style="color: var(--danger);">*</span></label>
-                            <div style="position: relative;">
-                                <span style="position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); color: var(--gray-400); font-weight: bold;">$</span>
-                                <input type="number" step="0.01" id="edit-sch-monto" required style="padding-left: 1.8rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding-top: 0.65rem; padding-bottom: 0.65rem;">
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%;">
+                        <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                            <label for="edit-sch-monto" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Monto ($) <span style="color: var(--danger);">*</span></label>
+                            <div style="position: relative; width: 100%;">
+                                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--primary); font-weight: 700; font-size: 1rem;">$</span>
+                                <input type="number" step="0.01" id="edit-sch-monto" required style="padding-left: 2rem; border-radius: 10px; border: 2px solid var(--gray-200); padding-top: 0.75rem; padding-bottom: 0.75rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                             </div>
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label for="edit-sch-fecha" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Vencimiento <span style="color: var(--danger);">*</span></label>
-                            <input type="date" id="edit-sch-fecha" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.55rem 0.85rem; height: auto;">
+                            <label for="edit-sch-fecha" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Vencimiento <span style="color: var(--danger);">*</span></label>
+                            <input type="date" id="edit-sch-fecha" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         </div>
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label for="edit-sch-freq" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Frecuencia <span style="color: var(--danger);">*</span></label>
-                            <select id="edit-sch-freq" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.55rem 0.85rem; width: 100%;">
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%;">
+                        <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                            <label for="edit-sch-freq" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Frecuencia <span style="color: var(--danger);">*</span></label>
+                            <select id="edit-sch-freq" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
                                 <option value="Único">Único</option>
                                 <option value="Mensual">Mensual</option>
                                 <option value="Bimestral">Bimestral</option>
@@ -174,19 +214,19 @@
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label for="edit-sch-estatus" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Estatus <span style="color: var(--danger);">*</span></label>
-                            <select id="edit-sch-estatus" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.55rem 0.85rem; width: 100%;">
+                            <label for="edit-sch-estatus" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Estatus <span style="color: var(--danger);">*</span></label>
+                            <select id="edit-sch-estatus" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
                                 <option value="Pendiente">Pendiente</option>
                                 <option value="Pagado">Pagado</option>
                             </select>
                         </div>
                     </div>
                     
-                    <div style="display: flex; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-4); border-top: 1px solid var(--border-color); padding-top: var(--space-4);">
-                        <button type="button" onclick="deleteScheduledExpense()" class="btn" style="background-color: var(--danger); color: white; width: auto; padding: 0.6rem 1.2rem; border-radius: var(--radius-md); font-weight: 600;">🗑️ Eliminar</button>
-                        <div style="display: flex; gap: var(--space-3);">
-                            <button type="button" onclick="document.getElementById('modal-editar-egreso').style.display = 'none'" class="btn btn-outline" style="width: auto; padding: 0.6rem 1.2rem; border-radius: var(--radius-md); font-weight: 600;">Cancelar</button>
-                            <button type="submit" class="btn btn-primary" style="width: auto; padding: 0.6rem 1.5rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4);">✓ Guardar Cambios</button>
+                    <div style="display: flex; justify-content: space-between; gap: 0.75rem; margin-top: 0.5rem; padding-top: 1.25rem; border-top: 2px solid var(--primary-light);">
+                        <button type="button" onclick="deleteScheduledExpense()" class="btn" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; width: auto; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; border: none; box-shadow: 0 4px 12px -2px rgba(239, 68, 68, 0.5); transition: all 0.2s;">🗑️ Eliminar</button>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <button type="button" onclick="document.getElementById('modal-editar-egreso').style.display = 'none'" class="btn btn-outline" style="width: auto; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; border: 2px solid var(--gray-300); background: white; color: var(--gray-700); transition: all 0.2s;">Cancelar</button>
+                            <button type="submit" class="btn btn-primary" style="width: auto; padding: 0.75rem 2rem; border-radius: 10px; font-weight: 600; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; border: none; box-shadow: 0 4px 12px -2px rgba(79, 70, 229, 0.5); transition: all 0.2s;">✓ Guardar</button>
                         </div>
                     </div>
                 </form>
@@ -194,10 +234,10 @@
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); margin-bottom: var(--space-10);">
+    <div class="quick-register-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); margin-bottom: var(--space-10);">
 
         <!-- Columna Clientes -->
-        <div class="card" style="border-top: 4px solid var(--primary); border-radius: var(--radius-lg); padding: var(--space-6); display: flex; flex-direction: column;">
+        <div class="card" style="border-top: 4px solid var(--primary); border-radius: var(--radius-lg); padding: var(--space-6); display: flex; flex-direction: column; width: 100%;">
             <div style="margin-bottom: var(--space-6); display: flex; align-items: center; gap: var(--space-3);">
                 <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">👤</div>
                 <div>
@@ -208,15 +248,15 @@
             <div id="customer-alert" class="alert" style="border-radius: var(--radius-md);"></div>
 
             <form id="customer-form" style="display: flex; flex-direction: column; gap: var(--space-4); flex-grow: 1;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="cust_nombre" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Nombre Completo <span style="color: var(--danger);">*</span></label>
-                    <input type="text" id="cust_nombre" name="nombre" required placeholder="Ej. Juan Pérez" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300);">
+                <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                    <label for="cust_nombre" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Nombre Completo <span style="color: var(--danger);">*</span></label>
+                    <input type="text" id="cust_nombre" name="nombre" required placeholder="Ej. Juan Pérez" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); width: 100%;">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="cust_email" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Correo Electrónico <span style="color: var(--danger);">*</span></label>
-                        <input type="email" id="cust_email" name="email" required placeholder="juan@ejemplo.com" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300);">
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); width: 100%;">
+                    <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                        <label for="cust_email" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Correo Electrónico <span style="color: var(--danger);">*</span></label>
+                        <input type="email" id="cust_email" name="email" required placeholder="juan@ejemplo.com" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); width: 100%;">
                     </div>
 
                     <div class="form-group" style="margin-bottom: 0;">
@@ -225,19 +265,19 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label for="cust_direccion" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Dirección</label>
-                    <textarea id="cust_direccion" name="direccion" rows="2" placeholder="Calle, Número, Colonia..." style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.5rem var(--space-3); resize: none;"></textarea>
-                </div>
+                    <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                        <label for="cust_direccion" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Dirección</label>
+                        <textarea id="cust_direccion" name="direccion" rows="2" placeholder="Calle, Número, Colonia..." style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.5rem var(--space-3); resize: none; width: 100%;"></textarea>
+                    </div>
 
                 <div style="background-color: var(--gray-50); padding: var(--space-5); border-radius: var(--radius-md); border: 1px solid var(--gray-200); margin-top: var(--space-2);">
                     <label style="font-size: 0.75rem; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: var(--space-3);">Saldos y Consumos Históricos</label>
                     
-                    <div class="form-group" style="margin-bottom: var(--space-4);">
-                        <label for="cust_saldo_inicial" style="font-weight: 600; color: var(--gray-700); font-size: 0.85rem;">Saldo Inicial ($)</label>
-                        <div style="position: relative;">
+                    <div class="form-group" style="margin-bottom: var(--space-4); width: 100%;">
+                        <label for="cust_saldo_inicial" style="font-weight: 600; color: var(--gray-700); font-size: 0.85rem; width: 100%;">Saldo Inicial ($)</label>
+                        <div style="position: relative; width: 100%;">
                             <span style="position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); color: var(--gray-400); font-weight: bold;">$</span>
-                            <input type="number" step="0.01" id="cust_saldo_inicial" name="saldo_inicial" value="0.00" style="padding-left: 1.8rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300);">
+                            <input type="number" step="0.01" id="cust_saldo_inicial" name="saldo_inicial" value="0.00" style="padding-left: 1.8rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); width: 100%;">
                         </div>
                     </div>
                     
@@ -282,32 +322,32 @@
                     </select>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="prod_precio_menudeo" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Precio Menudeo <span style="color: var(--danger);">*</span></label>
-                        <div style="position: relative;">
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); width: 100%;">
+                    <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                        <label for="prod_precio_menudeo" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Precio Menudeo <span style="color: var(--danger);">*</span></label>
+                        <div style="position: relative; width: 100%;">
                             <span style="position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); color: var(--gray-400); font-weight: bold;">$</span>
-                            <input type="number" step="0.01" id="prod_precio_menudeo" name="precio_menudeo" required placeholder="0.00" style="padding-left: 1.8rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300);">
+                            <input type="number" step="0.01" id="prod_precio_menudeo" name="precio_menudeo" required placeholder="0.00" style="padding-left: 1.8rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); width: 100%;">
                         </div>
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="prod_precio_mayoreo" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Precio Mayoreo <span style="color: var(--danger);">*</span></label>
-                        <div style="position: relative;">
+                    <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                        <label for="prod_precio_mayoreo" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Precio Mayoreo <span style="color: var(--danger);">*</span></label>
+                        <div style="position: relative; width: 100%;">
                             <span style="position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); color: var(--gray-400); font-weight: bold;">$</span>
-                            <input type="number" step="0.01" id="prod_precio_mayoreo" name="precio_mayoreo" required placeholder="0.00" style="padding-left: 1.8rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300);">
+                            <input type="number" step="0.01" id="prod_precio_mayoreo" name="precio_mayoreo" required placeholder="0.00" style="padding-left: 1.8rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); width: 100%;">
                         </div>
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="prod_min_mayoreo" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Min. Mayoreo</label>
-                        <input type="number" id="prod_min_mayoreo" name="cantidad_mayoreo" value="12" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300);">
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); width: 100%;">
+                    <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                        <label for="prod_min_mayoreo" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Min. Mayoreo</label>
+                        <input type="number" id="prod_min_mayoreo" name="cantidad_mayoreo" value="12" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); width: 100%;">
                     </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="prod_stock" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Stock Inicial</label>
-                        <input type="number" id="prod_stock" name="stock" value="0" min="0" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300);">
+                    <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                        <label for="prod_stock" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Stock Inicial</label>
+                        <input type="number" id="prod_stock" name="stock" value="0" min="0" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); width: 100%;">
                     </div>
                 </div>
 
@@ -513,6 +553,101 @@
         document.getElementById('modal-editar-egreso').style.display = 'flex';
     }
 
+    // Tab switching functionality
+    function switchTab(tab) {
+        const calendarView = document.getElementById('view-calendar');
+        const listView = document.getElementById('view-list');
+        const tabCalendar = document.getElementById('tab-calendar');
+        const tabList = document.getElementById('tab-list');
+
+        if (tab === 'calendar') {
+            calendarView.style.display = 'block';
+            listView.style.display = 'none';
+            tabCalendar.style.background = 'var(--primary)';
+            tabCalendar.style.color = 'white';
+            tabCalendar.style.border = 'none';
+            tabList.style.background = 'transparent';
+            tabList.style.color = 'var(--gray-600)';
+            tabList.style.border = '1px solid var(--border-color)';
+        } else {
+            calendarView.style.display = 'none';
+            listView.style.display = 'block';
+            tabList.style.background = 'var(--primary)';
+            tabList.style.color = 'white';
+            tabList.style.border = 'none';
+            tabCalendar.style.background = 'transparent';
+            tabCalendar.style.color = 'var(--gray-600)';
+            tabCalendar.style.border = '1px solid var(--border-color)';
+            renderExpensesList();
+        }
+    }
+
+    // Render expenses list - show only unique monthly payments
+    async function renderExpensesList() {
+        const tbody = document.getElementById('expenses-table-body');
+        tbody.innerHTML = '';
+
+        try {
+            const res = await fetch('/api/v1/scheduled-expenses/');
+            const expenses = await res.json();
+
+            // Filter to show only unique monthly payments (group by description)
+            const uniqueExpenses = {};
+            expenses.forEach(exp => {
+                // Keep only the most recent record for each description
+                if (!uniqueExpenses[exp.descripcion] || 
+                    new Date(exp.fecha_vencimiento) > new Date(uniqueExpenses[exp.descripcion].fecha_vencimiento)) {
+                    uniqueExpenses[exp.descripcion] = exp;
+                }
+            });
+
+            // Convert back to array
+            const filteredExpenses = Object.values(uniqueExpenses);
+
+            filteredExpenses.forEach(exp => {
+                const statusBadge = exp.estatus === 'Pendiente' 
+                    ? `<span style="background: #fee2e2; color: #dc2626; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">PENDIENTE</span>`
+                    : `<span style="background: #d1fae5; color: #059669; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 600;">PAGADO</span>`;
+
+                const formattedDate = new Date(exp.fecha_vencimiento + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+                const formattedAmount = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(exp.monto);
+
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid var(--border-color)';
+                row.innerHTML = `
+                    <td style="padding: 12px; font-size: 0.9rem; color: var(--gray-700);">${exp.descripcion}</td>
+                    <td style="padding: 12px; font-size: 0.9rem; color: var(--gray-700);">${formattedDate}</td>
+                    <td style="padding: 12px; font-size: 0.9rem; color: var(--gray-700);">${exp.frecuencia}</td>
+                    <td style="padding: 12px; text-align: right; font-size: 0.9rem; color: var(--gray-700); font-weight: 600;">${formattedAmount}</td>
+                    <td style="padding: 12px; text-align: center;">${statusBadge}</td>
+                    <td style="padding: 12px; text-align: center;">
+                        <button onclick="openEditModal(${exp.id})" style="background: var(--primary-light); color: var(--primary); border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; margin-right: 4px;" title="Editar">✏️</button>
+                        <button onclick="deleteExpense(${exp.id})" style="background: #fee2e2; color: #dc2626; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer;" title="Eliminar">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error loading expenses:', error);
+        }
+    }
+
+    // Delete expense
+    async function deleteExpense(id) {
+        if (!confirm('¿Estás seguro de eliminar este egreso?')) return;
+
+        try {
+            await fetch(`/api/v1/scheduled-expenses/${id}`, {
+                method: 'DELETE'
+            });
+            renderExpensesList();
+            loadDashboardMetrics(); // Refresh calendar
+        } catch (error) {
+            console.error('Error deleting expense:', error);
+            alert('Error al eliminar el egreso');
+        }
+    }
+
     document.getElementById('new-scheduled-form').addEventListener('submit', async function(e) {
         e.preventDefault();
         const payload = {
@@ -531,7 +666,11 @@
         if(res.ok) {
             document.getElementById('modal-egreso').style.display = 'none';
             this.reset();
-            loadDashboardMetrics(); // Recarga calendario y balance
+            loadDashboardMetrics(); // Refresh calendar
+            // If list view is active, refresh it
+            if (document.getElementById('view-list').style.display === 'block') {
+                renderExpensesList();
+            }
         } else {
             alert("Error al programar egreso.");
         }
@@ -555,7 +694,11 @@
         });
         if(res.ok) {
             document.getElementById('modal-editar-egreso').style.display = 'none';
-            loadDashboardMetrics(); 
+            loadDashboardMetrics();
+            // If list view is active, refresh it
+            if (document.getElementById('view-list').style.display === 'block') {
+                renderExpensesList();
+            }
         } else {
             alert("Error al actualizar egreso.");
         }

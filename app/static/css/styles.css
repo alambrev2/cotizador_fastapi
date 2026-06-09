@@ -1015,3 +1015,490 @@ tr:last-child td {
   overflow-x: auto !important;
   -webkit-overflow-scrolling: touch;
 }
+
+/* === RESPONSIVE DESIGN === */
+
+/* Mobile First - Extra Small Devices (< 576px) */
+@media (max-width: 575.98px) {
+  /* Sidebar - Hide by default on mobile */
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    z-index: var(--z-modal);
+  }
+
+  .sidebar.active {
+    transform: translateX(0);
+  }
+
+  /* Main Content - Full width on mobile with proper padding */
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding: 1rem;
+  }
+
+  /* Container with lateral padding */
+  .container {
+    padding: 0 1rem;
+  }
+
+  /* Header bar adjustments - Keep horizontal layout */
+  .header-bar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .page-title {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.3;
+  }
+
+  /* Cards - Maintain structure with proper padding */
+  .card {
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+
+  /* Grid - Single column on mobile with proper gap */
+  .grid-3-cols {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .grid-2-cols {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Force all multi-column containers to single column */
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*="grid-template-columns: 350px 1fr"],
+  [style*="grid-template-columns: 1fr 1fr 1fr"],
+  [style*="display: grid"][style*="1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Force flex row containers to column on mobile - but protect specific components */
+  .header-bar,
+  .btn-group,
+  .input-group,
+  .d-flex.align-items-center,
+  [style*="align-items: center"],
+  .d-flex.justify-content-between {
+    flex-direction: row !important;
+  }
+
+  /* Form inputs and selects - full width */
+  input:not([type="checkbox"]):not([type="radio"]), 
+  select, 
+  textarea, 
+  .form-control, 
+  .form-select {
+    width: 100% !important;
+  }
+
+  /* Form labels - full width */
+  label {
+    width: 100% !important;
+  }
+
+  /* Form groups - full width with proper gap */
+  .form-group, [style*="display: grid"][style*="gap"] {
+    width: 100% !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  /* KPI Cards - Clean internal structure */
+  .card.d-flex.flex-column {
+    align-items: flex-start;
+    padding: 1.25rem;
+    gap: 0.75rem;
+  }
+
+  /* Form adjustments */
+  .btn {
+    width: auto;
+  }
+
+  .btn.btn-primary, .btn.btn-indigo {
+    width: 100%;
+  }
+
+  /* Table adjustments */
+  th, td {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-xs);
+    white-space: normal;
+    word-wrap: break-word;
+  }
+
+  /* Modal adjustments */
+  .modal-dialog {
+    margin: var(--space-2);
+    max-width: 100%;
+    width: 95% !important;
+  }
+
+  .modal-content {
+    border-radius: var(--radius-lg);
+    width: 100% !important;
+  }
+
+  /* Utility adjustments */
+  .min-width-300 {
+    min-width: 100%;
+  }
+
+  .max-width-500 {
+    max-width: 100%;
+  }
+
+  /* Large numbers and metrics - Responsive font size */
+  h2, .font-size-3xl, .font-size-2xl {
+    font-size: clamp(1.25rem, 4vw, 1.5rem) !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }
+
+  /* Chart containers - maintain 100% width */
+  [style*="width: 320px"], [style*="width: 380px"], [style*="width: 480px"] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Badges and buttons - fit content */
+  .badge, [style*="width: 16px"] {
+    width: fit-content !important;
+    min-width: 18px !important;
+    height: 18px !important;
+  }
+}
+
+/* Mobile Devices (< 768px) - Calendar Responsive */
+@media screen and (max-width: 768px) {
+  /* Calendar container - prevent overflow on mobile */
+  .calendar-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    padding: 0 4px !important;
+  }
+
+  /* Force weekdays to horizontal grid on mobile */
+  .calendar-weekdays {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .calendar-weekdays > div {
+    width: auto !important;
+    text-align: center !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Force calendar body to grid on mobile */
+  .calendar-days,
+  #calendar-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    gap: 6px !important;
+  }
+
+  /* Pill/button style day cells on mobile */
+  .calendar-days > div,
+  #calendar-grid > div {
+    width: 100% !important;
+    height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    background-color: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Hide event text on mobile */
+  .calendar-days > div > div:not([style*="text-align: center"]),
+  #calendar-grid > div > div:not([style*="text-align: center"]),
+  [style*="font-size: 0.75rem"][style*="font-weight: 700"] {
+    display: none !important;
+  }
+
+  /* Day numbers - centered and styled */
+  .calendar-days > div > div,
+  #calendar-grid > div > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .calendar-days span,
+  #calendar-grid span {
+    font-size: 0.9rem !important;
+    font-weight: bold !important;
+  }
+
+  /* Calendar header - clean horizontal layout */
+  .calendar-header {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .calendar-header h3 {
+    font-size: clamp(1rem, 3vw, 1.25rem) !important;
+  }
+
+  .calendar-header .btn {
+    width: fit-content !important;
+    white-space: nowrap !important;
+    font-size: 0.8rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  @media (max-width: 350px) {
+    .calendar-header {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+    .calendar-header .btn {
+      width: 100% !important;
+      margin-top: 0.5rem !important;
+    }
+  }
+}
+
+/* Small Devices (576px - 767.98px) - Tablets portrait */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  /* Sidebar - Collapsed on small tablets */
+  .sidebar {
+    width: 240px;
+  }
+
+  .main-content {
+    margin-left: 240px;
+    width: calc(100% - 240px);
+    padding: var(--space-6);
+  }
+
+  /* Grid - 2 columns on small tablets */
+  .grid-3-cols {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .page-title {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+/* Medium Devices (768px - 991.98px) - Tablets landscape */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  /* Sidebar - Standard width */
+  .sidebar {
+    width: 260px;
+  }
+
+  .main-content {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+    padding: var(--space-6);
+  }
+
+  /* Grid - 2 columns on tablets */
+  .grid-3-cols {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Large Devices (992px - 1199.98px) - Desktops */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  /* Sidebar - Standard width */
+  .sidebar {
+    width: 270px;
+  }
+
+  .main-content {
+    margin-left: 270px;
+    width: calc(100% - 270px);
+  }
+}
+
+/* Extra Large Devices (>= 1200px) - Large Desktops */
+@media (min-width: 1200px) {
+  /* Sidebar - Full width */
+  .sidebar {
+    width: 280px;
+  }
+
+  .main-content {
+    margin-left: 280px;
+    width: calc(100% - 280px);
+  }
+}
+
+/* Mobile Menu Toggle Button */
+.mobile-menu-toggle {
+  display: none;
+  position: fixed;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: var(--z-modal);
+  background: var(--primary);
+  color: var(--text-white);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-base);
+}
+
+.mobile-menu-toggle:hover {
+  background: var(--primary-hover);
+  transform: scale(1.05);
+}
+
+.mobile-menu-toggle i {
+  font-size: 1.25rem;
+}
+
+/* Show mobile menu toggle only on mobile */
+@media (max-width: 575.98px) {
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Add top padding to main content when menu toggle is visible */
+  .main-content {
+    padding-top: var(--space-16);
+  }
+}
+
+/* Overlay for mobile sidebar */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: var(--z-modal-backdrop);
+  backdrop-filter: blur(4px);
+}
+
+@media (max-width: 575.98px) {
+  .sidebar-overlay.active {
+    display: block;
+  }
+}
+
+/* Responsive form grid */
+.form-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 576px) {
+  .form-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .form-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .form-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Responsive table improvements */
+@media (max-width: 767.98px) {
+  table {
+    font-size: var(--font-size-xs);
+  }
+
+  th {
+    white-space: normal;
+    font-size: var(--font-size-xs);
+  }
+
+  td {
+    white-space: normal;
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* Hide less important columns on very small screens */
+@media (max-width: 575.98px) {
+  .hide-mobile {
+    display: none;
+  }
+}
+
+/* Responsive buttons */
+@media (max-width: 575.98px) {
+  .btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-group .btn {
+    width: 100%;
+  }
+}
+
+/* Responsive modal */
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: 0;
+    max-width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .modal-content {
+    border-radius: 0;
+    height: 100%;
+    max-height: 100vh;
+  }
+}
+
+/* Responsive statistics cards */
+@media (max-width: 575.98px) {
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .stat-card .stat-icon {
+    margin-bottom: var(--space-3);
+  }
+}

@@ -24,12 +24,13 @@
             color: #f0f0f0;
         }
         .container {
-            max-width: 480px;
+            max-width: 100%;
+            width: 100%;
             padding: 40px 20px;
         }
         .icon-wrapper {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             background: rgba(255, 77, 109, 0.1);
             border: 2px solid rgba(255, 77, 109, 0.3);
             border-radius: 50%;
@@ -43,9 +44,9 @@
             0%, 100% { box-shadow: 0 0 0 0 rgba(255, 77, 109, 0.3); }
             50% { box-shadow: 0 0 0 16px rgba(255, 77, 109, 0); }
         }
-        .icon-wrapper i { font-size: 44px; color: var(--danger); }
-        h1 { font-size: 28px; font-weight: 700; margin-bottom: 12px; }
-        p { color: rgba(255,255,255,0.55); font-size: 15px; line-height: 1.6; margin-bottom: 32px; }
+        .icon-wrapper i { font-size: 36px; color: var(--danger); }
+        h1 { font-size: clamp(1.5rem, 5vw, 28px); font-weight: 700; margin-bottom: 12px; word-wrap: break-word; overflow-wrap: break-word; }
+        p { color: rgba(255,255,255,0.55); font-size: 14px; line-height: 1.6; margin-bottom: 32px; word-wrap: break-word; }
         .btn-back {
             display: inline-block;
             padding: 12px 28px;
@@ -59,7 +60,7 @@
         }
         .btn-back:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,128,0.4); }
         .error-code {
-            font-size: 100px;
+            font-size: clamp(60px, 15vw, 100px);
             font-weight: 800;
             color: rgba(255,77,109,0.08);
             letter-spacing: -4px;

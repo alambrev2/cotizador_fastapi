@@ -12,8 +12,16 @@
 </head>
 
 <body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="logo-text">SMART SITE COMPANY</div>
         </div>
@@ -189,9 +197,46 @@
             // Cargar menú según rol
             loadUserAndMenu();
 
+            // Mobile menu toggle functionality
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            function toggleMobileMenu() {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+                
+                // Change icon
+                const icon = mobileMenuToggle.querySelector('i');
+                if (sidebar.classList.contains('active')) {
+                    icon.classList.remove('bi-list');
+                    icon.classList.add('bi-x-lg');
+                } else {
+                    icon.classList.remove('bi-x-lg');
+                    icon.classList.add('bi-list');
+                }
+            }
+
+            if (mobileMenuToggle) {
+                mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', toggleMobileMenu);
+            }
+
+            // Close sidebar when clicking a nav link on mobile
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 575.98) {
+                        toggleMobileMenu();
+                    }
+                });
+            });
+
             // Marcar link activo
             const currentPath = window.location.pathname;
-            const navLinks = document.querySelectorAll('.nav-link');
             
             navLinks.forEach(link => {
                 if (link.getAttribute('href') === currentPath || 
@@ -203,7 +248,6 @@
             });
 
             // Restaurar scroll del sidebar
-            const sidebar = document.querySelector('.sidebar');
             if (sidebar) {
                 const savedScroll = localStorage.getItem('sidebar-scroll-pos');
                 if (savedScroll !== null) {
@@ -216,20 +260,17 @@
             }
 
             // Guardar scroll al navegar
-            const navLinksList = document.querySelectorAll('.nav-link');
-            navLinksList.forEach(link => {
+            navLinks.forEach(link => {
                 link.addEventListener('click', () => {
-                    const sidebarEl = document.querySelector('.sidebar');
-                    if (sidebarEl) {
-                        localStorage.setItem('sidebar-scroll-pos', sidebarEl.scrollTop);
+                    if (sidebar) {
+                        localStorage.setItem('sidebar-scroll-pos', sidebar.scrollTop);
                     }
                 });
             });
 
             window.addEventListener('beforeunload', () => {
-                const sidebarEl = document.querySelector('.sidebar');
-                if (sidebarEl) {
-                    localStorage.setItem('sidebar-scroll-pos', sidebarEl.scrollTop);
+                if (sidebar) {
+                    localStorage.setItem('sidebar-scroll-pos', sidebar.scrollTop);
                 }
             });
         });
