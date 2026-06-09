@@ -42,6 +42,11 @@ def create_customer(
     customer_in: CustomerCreate,
     current_user: User = Depends(get_current_active_admin)
 ):
+    # Verificar si el email ya existe
+    existing_customer = session.exec(select(Customer).where(Customer.email == customer_in.email)).first()
+    if existing_customer:
+        raise HTTPException(status_code=400, detail="El correo electrónico ya está registrado")
+    
     customer = Customer(
         nombre=customer_in.nombre,
         email=customer_in.email,
@@ -421,6 +426,12 @@ def update_customer(
     customer_data.pop("consumo_2025", None)
     customer_data.pop("consumo_2026", None)
     customer_data.pop("saldo_inicial", None)
+
+    # Verificar si el email ya existe (si se está actualizando el email)
+    if "email" in customer_data and customer_data["email"] != db_customer.email:
+        existing_customer = session.exec(select(Customer).where(Customer.email == customer_data["email"])).first()
+        if existing_customer:
+            raise HTTPException(status_code=400, detail="El correo electrónico ya está registrado")
 
     db_customer.sqlmodel_update(customer_data)
     session.add(db_customer)
