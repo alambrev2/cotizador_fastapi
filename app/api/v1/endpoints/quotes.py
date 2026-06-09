@@ -284,7 +284,7 @@ def generate_quote_pdf(
     if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
 
-    if current_user.role == RoleEnum.CLIENTE:
+    if current_user.role == RoleEnum.Cliente:
         if current_user.cliente_id != quote.cliente_id:
             raise HTTPException(status_code=403, detail="No tienes permiso para descargar esta cotización")
 

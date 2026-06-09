@@ -51,7 +51,7 @@ def get_current_user(
 def get_current_active_admin(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    if current_user.role != RoleEnum.ADMINISTRADOR:
+    if current_user.role != RoleEnum.Administrador:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not enough privileges"
         )
@@ -60,7 +60,7 @@ def get_current_active_admin(
 def get_current_active_operativo_or_admin(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    if current_user.role not in [RoleEnum.ADMINISTRADOR, RoleEnum.OPERATIVO]:
+    if current_user.role not in [RoleEnum.Administrador, RoleEnum.Operativo]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not enough privileges"
         )
@@ -70,7 +70,7 @@ def get_current_active_cliente(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Permite solo al perfil Cliente acceder a su dashboard simplificado."""
-    if current_user.role != RoleEnum.CLIENTE:
+    if current_user.role != RoleEnum.Cliente:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not enough privileges"
         )
@@ -126,7 +126,7 @@ def get_admin_only_page(
 ) -> User:
     """Para paginas exclusivas de Administrador: redirige a /login o /unauthorized."""
     user = get_current_user_pages(request, db)
-    if user.role != RoleEnum.ADMINISTRADOR:
+    if user.role != RoleEnum.Administrador:
         raise HTTPException(
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
             headers={"Location": "/unauthorized"}
@@ -140,7 +140,7 @@ def get_operativo_or_admin_page(
 ) -> User:
     """Para paginas de Operativo o Admin."""
     user = get_current_user_pages(request, db)
-    if user.role not in [RoleEnum.ADMINISTRADOR, RoleEnum.OPERATIVO]:
+    if user.role not in [RoleEnum.Administrador, RoleEnum.Operativo]:
         raise HTTPException(
             status_code=status.HTTP_307_TEMPORARY_REDIRECT,
             headers={"Location": "/unauthorized"}

@@ -116,9 +116,9 @@ def read_root(request: Request):
 @app.get("/dashboard", include_in_schema=False)
 async def dashboard(request: Request, current_user: User = Depends(get_current_user_pages)):
     """Redirige al panel correcto según el rol del usuario autenticado."""
-    if current_user.role == RoleEnum.CLIENTE:
+    if current_user.role == RoleEnum.Cliente:
         return RedirectResponse(url="/client-dashboard")
-    elif current_user.role == RoleEnum.OPERATIVO:
+    elif current_user.role == RoleEnum.Operativo:
         return RedirectResponse(url="/projects")
     else:  # ADMINISTRADOR
         return templates.TemplateResponse(request, "quick_register.html", {
@@ -131,7 +131,7 @@ async def dashboard(request: Request, current_user: User = Depends(get_current_u
 @app.get("/client-dashboard", include_in_schema=False)
 async def client_dashboard(request: Request, current_user: User = Depends(get_current_user_pages)):
     """Panel simplificado para clientes: solo ven su estado de cuenta."""
-    if current_user.role not in [RoleEnum.CLIENTE]:
+    if current_user.role not in [RoleEnum.Cliente]:
         # Admin y Operativo que accedan aquí van al dashboard normal
         return RedirectResponse(url="/dashboard")
 

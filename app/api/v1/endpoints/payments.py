@@ -154,10 +154,10 @@ def get_customer_statement(
 ):
     """Obtiene estado de cuenta consolidado de un cliente."""
     # El cliente solo puede ver su propio estado
-    if current_user.role == RoleEnum.CLIENTE:
+    if current_user.role == RoleEnum.Cliente:
         if current_user.cliente_id != customer_id:
             raise HTTPException(status_code=403, detail="Solo puedes ver tu propio estado de cuenta")
-    elif current_user.role == RoleEnum.OPERATIVO:
+    elif current_user.role == RoleEnum.Operativo:
         raise HTTPException(status_code=403, detail="No tienes permisos para esta acción")
     # 1. Obtener cliente
     from app.models import Customer
@@ -273,10 +273,10 @@ def get_customer_statement_pdf(
 ):
     """Genera estado de cuenta en PDF. Cliente solo puede ver el suyo."""
     # El cliente solo puede descargar su propio PDF
-    if current_user.role == RoleEnum.CLIENTE:
+    if current_user.role == RoleEnum.Cliente:
         if current_user.cliente_id != customer_id:
             raise HTTPException(status_code=403, detail="Solo puedes descargar tu propio estado de cuenta")
-    elif current_user.role == RoleEnum.OPERATIVO:
+    elif current_user.role == RoleEnum.Operativo:
         raise HTTPException(status_code=403, detail="No tienes permisos para esta acción")
     from app.models import Customer, AccountCharge
     from datetime import datetime
@@ -356,8 +356,8 @@ def get_customer_statement_pdf(
     # Sort chronological
     movements.sort(key=lambda x: x["raw_date"])
 
-    if not full and len(movements) > 10:
-        movements = movements[-10:]
+    if not full and len(movements) > 9:
+        movements = movements[-9:]
 
     try:
         html_content = templates.get_template("pdf/statement.html").render(

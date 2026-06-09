@@ -20,21 +20,21 @@ def create_users():
         admin = User(
             username="admin",
             email="admin@example.com",
-            role=RoleEnum.ADMINISTRADOR,
+            role=RoleEnum.Administrador,
             hashed_password=get_password_hash("admin123")
         )
         
         operativo = User(
             username="operativo",
             email="operativo@example.com",
-            role=RoleEnum.OPERATIVO,
+            role=RoleEnum.Operativo,
             hashed_password=get_password_hash("operativo123")
         )
         
         cliente = User(
             username="cliente",
             email="cliente@example.com",
-            role=RoleEnum.CLIENTE,
+            role=RoleEnum.Cliente,
             hashed_password=get_password_hash("cliente123")
         )
         

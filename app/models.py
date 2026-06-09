@@ -6,9 +6,11 @@ from pydantic import EmailStr
 from enum import Enum
 
 class RoleEnum(str, Enum):
-    ADMINISTRADOR = "Administrador"
-    OPERATIVO = "Operativo"
-    CLIENTE = "Cliente"# --- Modelos Base ---
+    Administrador = "Administrador"
+    Operativo = "Operativo"
+    Cliente = "Cliente"
+
+# --- Modelos Base ---
 
 
 class CustomerBase(SQLModel):
@@ -117,7 +119,7 @@ class AccountChargeBase(SQLModel):
 class UserBase(SQLModel):
     username: str = Field(unique=True, index=True, nullable=False)
     email: EmailStr = Field(unique=True, index=True, nullable=False)
-    role: RoleEnum = Field(default=RoleEnum.CLIENTE)
+    role: RoleEnum = Field(default=RoleEnum.Cliente)
     is_active: bool = Field(default=True)
     cliente_id: Optional[int] = Field(default=None, foreign_key="customer.id")
 

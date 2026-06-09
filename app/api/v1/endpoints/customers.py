@@ -63,7 +63,7 @@ def create_customer(
         new_user = User(
             username=customer_in.username,
             email=customer_in.email,
-            role=RoleEnum.CLIENTE,
+            role=RoleEnum.Cliente,
             hashed_password=get_password_hash(customer_in.password),
             cliente_id=customer.id
         )
@@ -448,7 +448,7 @@ def update_customer(
             new_user = User(
                 username=username,
                 email=db_customer.email,
-                role=RoleEnum.CLIENTE,
+                role=RoleEnum.Cliente,
                 hashed_password=get_password_hash(password),
                 cliente_id=db_customer.id
             )

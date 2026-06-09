@@ -37,7 +37,7 @@ class UserAdminCreate(SQLModel):
     username: str
     email: str
     password: str
-    role: RoleEnum = RoleEnum.OPERATIVO
+    role: RoleEnum = RoleEnum.Operativo
     is_active: bool = True
     cliente_id: Optional[int] = None
 

@@ -29,7 +29,7 @@ def sync_users():
                 new_user = User(
                     username=username,
                     email=customer.email,
-                    role=RoleEnum.CLIENTE,
+                    role=RoleEnum.Cliente,
                     hashed_password=get_password_hash("cliente123"),
                     cliente_id=customer.id
                 )
