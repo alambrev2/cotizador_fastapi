@@ -3,8 +3,12 @@ from datetime import datetime, date
 from sqlmodel import Field, SQLModel, Relationship
 from decimal import Decimal
 from pydantic import EmailStr
+from enum import Enum
 
-# --- Modelos Base ---
+class RoleEnum(str, Enum):
+    ADMINISTRADOR = "Administrador"
+    OPERATIVO = "Operativo"
+    CLIENTE = "Cliente"# --- Modelos Base ---
 
 
 class CustomerBase(SQLModel):
@@ -18,6 +22,8 @@ class CustomerBase(SQLModel):
     consumo_2022: Decimal = Field(default=0, max_digits=10, decimal_places=2)
     consumo_2023: Decimal = Field(default=0, max_digits=10, decimal_places=2)
     consumo_2024: Decimal = Field(default=0, max_digits=10, decimal_places=2)
+    consumo_2025: Decimal = Field(default=0, max_digits=10, decimal_places=2)
+    consumo_2026: Decimal = Field(default=0, max_digits=10, decimal_places=2)
 
 
 class ProductBase(SQLModel):
@@ -46,7 +52,7 @@ class ExpenseBase(SQLModel):
 
 
 class QuoteBase(SQLModel):
-    estado: str = "Borrador"  # Borrador, Enviada, Aceptada, Rechazada, Pendiente, Cobranza Requerida (Solo 'Pendiente' y 'Cobranza Requerida' son cobrables para deuda activa)
+    estado: str = "Borrador"  # Borrador, Enviada, Aceptada, Rechazada
     cliente_id: Optional[int] = Field(default=None, foreign_key="customer.id")
 
     # Contabilidad e Impuestos
@@ -108,6 +114,14 @@ class AccountChargeBase(SQLModel):
     estatus: str = Field(default="Pendiente")
 
 
+class UserBase(SQLModel):
+    username: str = Field(unique=True, index=True, nullable=False)
+    email: EmailStr = Field(unique=True, index=True, nullable=False)
+    role: RoleEnum = Field(default=RoleEnum.CLIENTE)
+    is_active: bool = Field(default=True)
+    cliente_id: Optional[int] = Field(default=None, foreign_key="customer.id")
+
+
 # --- Modelos de Tabla ---
 
 
@@ -117,6 +131,7 @@ class Customer(CustomerBase, table=True):
     cotizaciones: List["Quote"] = Relationship(back_populates="cliente")
     pagos: List["Payment"] = Relationship(back_populates="cliente")
     cargos: List["AccountCharge"] = Relationship(back_populates="cliente")
+    usuarios: List["User"] = Relationship(back_populates="cliente_vinculado")
 
 
 class AccountCharge(AccountChargeBase, table=True):
@@ -194,4 +209,10 @@ class ScheduledExpenseBase(SQLModel):
 
 class ScheduledExpense(ScheduledExpenseBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+
+class User(UserBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    hashed_password: str = Field(nullable=False)
+
+    cliente_vinculado: Optional[Customer] = Relationship(back_populates="usuarios")
 

@@ -5,12 +5,19 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFi
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models import Quote, QuoteItem, Product, Customer
+from app.models import Quote, QuoteItem, Product, Customer, User
 from app.schemas import QuoteCreate, QuoteRead, QuoteUpdate
-from app.core.pdf import generate_pdf_bytes, clean_filename
+from app.core.pdf import generate_pdf_bytes
 from sqlalchemy.orm import selectinload
 from decimal import Decimal
 from datetime import datetime
+from app.api.deps import (
+    get_current_user,
+    get_current_active_admin,
+    get_current_active_operativo_or_admin,
+    require_role,
+)
+from app.models import RoleEnum
 
 # Obtener el directorio base del proyecto
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
@@ -46,7 +53,12 @@ def get_next_quote_folio(session: Session) -> str:
 
 
 @router.post("/", response_model=Quote)
-def create_quote(*, session: Session = Depends(get_session), quote_in: QuoteCreate):
+def create_quote(
+    *,
+    session: Session = Depends(get_session),
+    quote_in: QuoteCreate,
+    current_user: User = Depends(get_current_active_admin)
+):
     # 1. Validar cliente
     cliente = session.get(Customer, quote_in.cliente_id)
     if not cliente:
@@ -134,17 +146,18 @@ def create_quote(*, session: Session = Depends(get_session), quote_in: QuoteCrea
         session.add(db_item)
 
     # 4. Actualizar total y utilidades de la cotización
-    if quote_in.total_venta_override is not None:
-        db_quote.total = quote_in.total_venta_override
+    if quote_in.total_manual is not None and quote_in.total_manual > 0:
+        db_quote.total = Decimal(str(quote_in.total_manual))
         if quote_in.requiere_factura:
             db_quote.subtotal = db_quote.total / Decimal('1.16')
             db_quote.iva = db_quote.total - db_quote.subtotal
         else:
             db_quote.subtotal = db_quote.total
             db_quote.iva = Decimal('0')
-        # La utilidad es el subtotal menos el costo de todos los items
-        costo_total_items = Decimal(str(total_cotizacion)) - Decimal(str(utilidad_acumulada))
-        db_quote.utilidad_total = db_quote.subtotal - costo_total_items
+            
+        # Recalcular utilidad: Subtotal - Costo Total de los productos
+        costo_total = sum((item.cantidad * session.get(Product, item.producto_id).costo) for item in quote_in.items)
+        db_quote.utilidad_total = db_quote.subtotal - costo_total
     else:
         db_quote.subtotal = Decimal(str(total_cotizacion))
         db_quote.iva = db_quote.subtotal * Decimal('0.16') if quote_in.requiere_factura else Decimal('0')
@@ -183,6 +196,7 @@ def read_quotes(
     limit: int = Query(default=100, le=100),
     search: str = None,
     estado: str = None,
+    current_user: User = Depends(get_current_active_operativo_or_admin),
 ):
     query = select(Quote).options(selectinload(Quote.cliente)).order_by(Quote.id.desc())
     if estado:
@@ -201,7 +215,12 @@ def read_quotes(
 
 
 @router.get("/{quote_id}", response_model=QuoteRead)
-def read_quote(*, session: Session = Depends(get_session), quote_id: int):
+def read_quote(
+    *,
+    session: Session = Depends(get_session),
+    quote_id: int,
+    current_user: User = Depends(get_current_active_operativo_or_admin)
+):
     # Usamos selectinload para traer los items y el producto
     query = select(Quote).where(Quote.id == quote_id).options(selectinload(Quote.items), selectinload(Quote.cliente))
     quote = session.exec(query).first()
@@ -212,7 +231,8 @@ def read_quote(*, session: Session = Depends(get_session), quote_id: int):
 
 @router.patch("/{quote_id}", response_model=Quote)
 def update_quote(
-    *, session: Session = Depends(get_session), quote_id: int, quote_in: QuoteUpdate
+    *, session: Session = Depends(get_session), quote_id: int, quote_in: QuoteUpdate,
+    current_user: User = Depends(get_current_active_admin)
 ):
     db_quote = session.get(Quote, quote_id)
     if not db_quote:
@@ -254,7 +274,12 @@ def update_quote(
 
 
 @router.get("/{quote_id}/pdf")
-def generate_quote_pdf(*, session: Session = Depends(get_session), quote_id: int):
+def generate_quote_pdf(
+    *,
+    session: Session = Depends(get_session),
+    quote_id: int,
+    current_user: User = Depends(get_current_active_operativo_or_admin)
+):
     quote = session.get(Quote, quote_id)
     if not quote:
         raise HTTPException(status_code=404, detail="Quote not found")
@@ -267,15 +292,11 @@ def generate_quote_pdf(*, session: Session = Depends(get_session), quote_id: int
         pdf_bytes = generate_pdf_bytes(html_content)
 
         # Retornar como archivo descargable
-        cliente_nombre = quote.cliente.nombre if quote.cliente else "general"
-        folio = quote.folio_cotizacion or f"ID{quote.id}"
-        filename = f"Cotizacion_{folio}_{clean_filename(cliente_nombre)}.pdf"
-        
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="{filename}"'
+                "Content-Disposition": f"attachment; filename=cotizacion_{quote_id}.pdf"
             },
         )
     except Exception as e:
@@ -287,7 +308,11 @@ def generate_quote_pdf(*, session: Session = Depends(get_session), quote_id: int
 
 @router.post("/{quote_id}/report", response_model=QuoteRead)
 async def upload_operative_report(
-    *, session: Session = Depends(get_session), quote_id: int, file: UploadFile = File(...)
+    *,
+    session: Session = Depends(get_session),
+    quote_id: int,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_operativo_or_admin)
 ):
     db_quote = session.get(Quote, quote_id)
     if not db_quote:

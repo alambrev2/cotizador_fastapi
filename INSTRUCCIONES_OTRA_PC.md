@@ -16,7 +16,7 @@
 ## Paso 1: Descargar el proyecto desde GitHub
 
 ### Opción A: Descargar como ZIP
-1. Ir a: https://github.com/alambrev2/cotizador_fastapi
+1. Ir a: https://github.com/al222410908-ctrl/cotizador_fastapi-main
 2. Hacer clic en el botón verde "Code"
 3. Seleccionar "Download ZIP"
 4. Descomprimir el archivo en una carpeta (ej: `C:\Users\TuUsuario\Desktop\cotizador_fastapi-main`)
@@ -25,7 +25,7 @@
 ```bash
 # Abrir terminal o PowerShell
 cd C:\Users\TuUsuario\Desktop
-git clone https://github.com/alambrev2/cotizador_fastapi.git
+git clone https://github.com/al222410908-ctrl/cotizador_fastapi-main.git
 cd cotizador_fastapi-main
 ```
 
@@ -191,7 +191,7 @@ Si ya tienes el proyecto configurado y hay cambios nuevos:
 # 1. Detener el servidor (presionar CTRL+C en la terminal)
 
 # 2. Descargar los cambios
-git pull origin main
+git pull origin master
 
 # 3. Si hay nuevas dependencias en requirements.txt
 pip install -r requirements.txt
@@ -281,14 +281,14 @@ Si haces cambios en una computadora y quieres verlos en la otra:
    ```bash
    git add data/database.db
    git commit -m "Actualizar base de datos con nuevos datos"
-   git push origin main
+   git push origin master
    ```
 
 #### En la otra computadora:
 1. Asegúrate de detener el servidor de FastAPI (`Ctrl + C`).
 2. Descarga la base de datos actualizada desde GitHub ejecutando:
    ```bash
-   git pull origin main
+   git pull origin master
    ```
 3. Vuelve a iniciar el servidor:
    ```bash

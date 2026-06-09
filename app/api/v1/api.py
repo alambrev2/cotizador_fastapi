@@ -8,10 +8,12 @@ from app.api.v1.endpoints import (
     incomes,
     dashboard,
     scheduled_expenses,
+    auth,
 )
 
 api_router = APIRouter()
 
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(customers.router, prefix="/customers", tags=["customers"])
 api_router.include_router(products.router, prefix="/products", tags=["products"])
 api_router.include_router(quotes.router, prefix="/quotes", tags=["quotes"])

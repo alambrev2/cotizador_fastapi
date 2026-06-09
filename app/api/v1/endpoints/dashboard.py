@@ -45,7 +45,7 @@ def export_ingresos_pdf(mes: int, anio: int, session: Session = Depends(get_sess
     pdf.cell(40, 10, text=f"${total:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
     
     pdf_bytes = bytes(pdf.output())
-    return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="Ingresos_{mes}_{anio}.pdf"'})
+    return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=Ingresos_{mes}_{anio}.pdf"})
 
 @router.get("/export/egresos")
 def export_egresos_pdf(mes: int, anio: int, session: Session = Depends(get_session)):
@@ -86,7 +86,7 @@ def export_egresos_pdf(mes: int, anio: int, session: Session = Depends(get_sessi
     pdf.cell(40, 10, text=f"-${total:,.2f}", border=1, new_x='LMARGIN', new_y='NEXT', align='R')
     
     pdf_bytes = bytes(pdf.output())
-    return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="Egresos_{mes}_{anio}.pdf"'})
+    return Response(content=pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=Egresos_{mes}_{anio}.pdf"})
 
 @router.get("/summary")
 def get_dashboard_summary(*, session: Session = Depends(get_session), response: Response):
@@ -132,10 +132,10 @@ def get_dashboard_summary(*, session: Session = Depends(get_session), response: 
     
     saldo_neto = ingresos_mes - egresos_mes
 
-    # Egresos Programados (Calendario - Todos)
-    scheduled_query = select(ScheduledExpense)
+    # Egresos Programados Pendientes (Calendario)
+    scheduled_query = select(ScheduledExpense).where(ScheduledExpense.estatus == 'Pendiente')
     scheduled_expenses = session.exec(scheduled_query).all()
-    total_scheduled = sum([float(s.monto) for s in scheduled_expenses if s.estatus == 'Pendiente'])
+    total_scheduled = sum([float(s.monto) for s in scheduled_expenses])
     flujo_caja_real = saldo_por_cobrar - total_scheduled
 
     import datetime as dt

@@ -8,7 +8,7 @@ Esta guía detalla los pasos y mejores prácticas para que tú y tu equipo colab
 
 Para que tus compañeros puedan subir cambios, debes darles permisos de colaborador en tu repositorio de GitHub:
 
-1. Ve a tu repositorio en GitHub: `https://github.com/alambrev2/cotizador_fastapi` (o la URL de tu repositorio).
+1. Ve a tu repositorio en GitHub: `https://github.com/al222410908-ctrl/cotizador_fastapi-main` (o la URL de tu repositorio).
 2. Haz clic en la pestaña **Settings** (Configuración) en la barra superior.
 3. En el menú lateral izquierdo, haz clic en **Collaborators** (Colaboradores).
 4. Haz clic en el botón verde **Add people** (Añadir personas).
@@ -23,7 +23,7 @@ Cada integrante del equipo debe seguir estos pasos para tener el proyecto corrie
 
 ### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/alambrev2/cotizador_fastapi.git
+git clone https://github.com/al222410908-ctrl/cotizador_fastapi-main.git
 cd cotizador_fastapi-main
 ```
 
@@ -59,8 +59,8 @@ Para evitar que dos personas editen el mismo archivo a la vez y rompan la rama p
 ### 1. Actualizar siempre tu repositorio local
 Antes de empezar a programar cualquier cosa, asegúrate de estar en `master` y tener lo último:
 ```bash
-git checkout main
-git pull origin main
+git checkout master
+git pull origin master
 ```
 
 ### 2. Crear una nueva rama para tu tarea

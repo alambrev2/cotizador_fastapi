@@ -2,8 +2,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models import Customer
+from app.models import Customer, User
 from fastapi import UploadFile, File, Response
+from app.api.deps import get_current_active_admin, get_current_active_operativo_or_admin
 import pandas as pd
 from io import BytesIO
 from openpyxl.styles import Font
@@ -32,14 +33,22 @@ router = APIRouter()
 
 
 @router.post("/", response_model=Customer)
-def create_customer(*, session: Session = Depends(get_session), customer: Customer):
+def create_customer(
+    *,
+    session: Session = Depends(get_session),
+    customer: Customer,
+    current_user: User = Depends(get_current_active_admin)
+):
     session.add(customer)
     session.commit()
     session.refresh(customer)
     return customer
 
 @router.get("/export")
-def export_excel_route(session: Session = Depends(get_session)):
+def export_excel_route(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_admin)
+):
     customers = session.exec(select(Customer)).all()
     data = [{
         "Nombre Completo": c.nombre,
@@ -50,6 +59,8 @@ def export_excel_route(session: Session = Depends(get_session)):
         "Consumo Total 2022": float(c.consumo_2022 or 0),
         "Consumo Total 2023": float(c.consumo_2023 or 0),
         "Consumo Total 2024": float(c.consumo_2024 or 0),
+        "Consumo Total 2025": float(c.consumo_2025 or 0),
+        "Consumo Total 2026": float(c.consumo_2026 or 0),
     } for c in customers]
     
     df = pd.DataFrame(data)
@@ -64,7 +75,9 @@ def export_excel_route(session: Session = Depends(get_session)):
     return Response(content=io.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={'Content-Disposition': 'attachment; filename="clientes.xlsx"'})
 
 @router.get("/template")
-def export_template_route():
+def export_template_route(
+    current_user: User = Depends(get_current_active_admin)
+):
     data = [{
         "Nombre Completo": "Juan Perez",
         "Correo Electrónico": "juan@ejemplo.com",
@@ -74,6 +87,8 @@ def export_template_route():
         "Consumo Total 2022": 5000.0,
         "Consumo Total 2023": 15000.0,
         "Consumo Total 2024": 30000.0,
+        "Consumo Total 2025": 40000.0,
+        "Consumo Total 2026": 50000.0,
     }]
     df = pd.DataFrame(data)
     io = BytesIO()
@@ -87,7 +102,12 @@ def export_template_route():
     return Response(content=io.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={'Content-Disposition': 'attachment; filename="plantilla_clientes.xlsx"'})
 
 @router.post("/import")
-def import_excel_route(dry_run: bool = False, session: Session = Depends(get_session), file: UploadFile = File(...)):
+def import_excel_route(
+    dry_run: bool = False,
+    session: Session = Depends(get_session),
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_admin)
+):
     # Asegurar que el directorio de logs exista
     os.makedirs('logs', exist_ok=True)
     
@@ -114,7 +134,9 @@ def import_excel_route(dry_run: bool = False, session: Session = Depends(get_ses
             'Saldo Pendiente Actual (Saldo Inicial)',
             'Consumo Total 2022',
             'Consumo Total 2023',
-            'Consumo Total 2024'
+            'Consumo Total 2024',
+            'Consumo Total 2025',
+            'Consumo Total 2026'
         ]
         
         columnas_faltantes = [col for col in columnas_requeridas if col not in df.columns]
@@ -185,6 +207,22 @@ def import_excel_route(dry_run: bool = False, session: Session = Depends(get_ses
                         logger.error(error_msg)
                         error_row = row_number
                         raise ValueError(error_msg)
+                        
+                    try:
+                        c_25 = float(row.get('Consumo Total 2025', 0) or 0)
+                    except (ValueError, TypeError):
+                        error_msg = f"Error en fila {row_number}: 'Consumo Total 2025' debe ser un número válido. Valor: {row.get('Consumo Total 2025')}"
+                        logger.error(error_msg)
+                        error_row = row_number
+                        raise ValueError(error_msg)
+                        
+                    try:
+                        c_26 = float(row.get('Consumo Total 2026', 0) or 0)
+                    except (ValueError, TypeError):
+                        error_msg = f"Error en fila {row_number}: 'Consumo Total 2026' debe ser un número válido. Valor: {row.get('Consumo Total 2026')}"
+                        logger.error(error_msg)
+                        error_row = row_number
+                        raise ValueError(error_msg)
                     
                     existing = session.exec(select(Customer).where(Customer.email == email)).first()
                     if existing:
@@ -196,6 +234,8 @@ def import_excel_route(dry_run: bool = False, session: Session = Depends(get_ses
                             existing.consumo_2022 = c_22
                             existing.consumo_2023 = c_23
                             existing.consumo_2024 = c_24
+                            existing.consumo_2025 = c_25
+                            existing.consumo_2026 = c_26
                             session.add(existing)
                         count_updated += 1
                     else:
@@ -208,7 +248,9 @@ def import_excel_route(dry_run: bool = False, session: Session = Depends(get_ses
                                 saldo_inicial=saldo,
                                 consumo_2022=c_22,
                                 consumo_2023=c_23,
-                                consumo_2024=c_24
+                                consumo_2024=c_24,
+                                consumo_2025=c_25,
+                                consumo_2026=c_26
                             )
                             session.add(new_c)
                         count_new += 1
@@ -264,6 +306,7 @@ def read_customers(
     offset: int = 0,
     limit: int = Query(default=100, le=100),
     search: str = None,
+    current_user: User = Depends(get_current_active_admin),
 ):
     from app.models import Quote
     from sqlalchemy.orm import selectinload
@@ -283,7 +326,7 @@ def read_customers(
     results = []
     for c in customers:
         # Usar las relaciones precargadas para eficiencia
-        system_total_comprado = sum([float(q.total) for q in c.cotizaciones])
+        system_total_comprado = sum([float(q.total) for q in c.cotizaciones if q.estado in ['Pendiente', 'Cobranza Requerida']])
         system_total_pagado = sum([float(p.monto) for p in c.pagos])
         system_total_cargos = sum([float(cg.monto) for cg in c.cargos])
 
@@ -292,6 +335,8 @@ def read_customers(
             float(c.consumo_2022 or 0)
             + float(c.consumo_2023 or 0)
             + float(c.consumo_2024 or 0)
+            + float(c.consumo_2025 or 0)
+            + float(c.consumo_2026 or 0)
         )
         total_acumulado = total_historico + system_total_comprado + system_total_cargos
 
@@ -310,7 +355,12 @@ def read_customers(
 
 
 @router.get("/{customer_id}", response_model=Customer)
-def read_customer(*, session: Session = Depends(get_session), customer_id: int):
+def read_customer(
+    *,
+    session: Session = Depends(get_session),
+    customer_id: int,
+    current_user: User = Depends(get_current_active_admin)
+):
     customer = session.get(Customer, customer_id)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -323,6 +373,7 @@ def update_customer(
     session: Session = Depends(get_session),
     customer_id: int,
     customer_update: Customer,
+    current_user: User = Depends(get_current_active_admin),
 ):
     db_customer = session.get(Customer, customer_id)
     if not db_customer:
@@ -330,10 +381,15 @@ def update_customer(
 
     # Exclude unset fields from the update data
     customer_data = customer_update.model_dump(exclude_unset=True)
-    # Evitar que campos históricos de consumo y saldo inicial sean sobreescritos
-    for field in ["consumo_2022", "consumo_2023", "consumo_2024", "saldo_inicial"]:
-        customer_data.pop(field, None)
-        
+    
+    # Prevent historical fields from being updated via standard operations
+    customer_data.pop("consumo_2022", None)
+    customer_data.pop("consumo_2023", None)
+    customer_data.pop("consumo_2024", None)
+    customer_data.pop("consumo_2025", None)
+    customer_data.pop("consumo_2026", None)
+    customer_data.pop("saldo_inicial", None)
+
     db_customer.sqlmodel_update(customer_data)
 
     session.add(db_customer)
@@ -343,7 +399,12 @@ def update_customer(
 
 
 @router.delete("/{customer_id}")
-def delete_customer(*, session: Session = Depends(get_session), customer_id: int):
+def delete_customer(
+    *,
+    session: Session = Depends(get_session),
+    customer_id: int,
+    current_user: User = Depends(get_current_active_admin)
+):
     customer = session.get(Customer, customer_id)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")

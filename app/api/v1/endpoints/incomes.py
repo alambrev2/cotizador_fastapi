@@ -2,14 +2,16 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models import OtherIncome
+from app.models import OtherIncome, User
+from app.api.deps import get_current_active_admin
 
 router = APIRouter()
 
 
 @router.post("/", response_model=OtherIncome)
 def create_other_income(
-    *, session: Session = Depends(get_session), income: OtherIncome
+    *, session: Session = Depends(get_session), income: OtherIncome,
+    current_user: User = Depends(get_current_active_admin)
 ):
     session.add(income)
     session.commit()
@@ -23,6 +25,7 @@ def read_other_incomes(
     session: Session = Depends(get_session),
     offset: int = 0,
     limit: int = Query(default=100, le=100),
+    current_user: User = Depends(get_current_active_admin),
 ):
     query = select(OtherIncome).order_by(OtherIncome.fecha.desc())
     incomes = session.exec(query.offset(offset).limit(limit)).all()
@@ -30,7 +33,12 @@ def read_other_incomes(
 
 
 @router.delete("/{income_id}")
-def delete_other_income(*, session: Session = Depends(get_session), income_id: int):
+def delete_other_income(
+    *,
+    session: Session = Depends(get_session),
+    income_id: int,
+    current_user: User = Depends(get_current_active_admin)
+):
     income = session.get(OtherIncome, income_id)
     if not income:
         raise HTTPException(status_code=404, detail="Other income not found")

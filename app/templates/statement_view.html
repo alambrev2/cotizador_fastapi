@@ -364,7 +364,7 @@
             currentStatementData = data; // Guardar datos globalmente para evitar bugs de parsing
             renderCustomerStatement(data);
         } catch (error) {
-            showToast(error.message, 'error');
+            alert(error.message);
             hideDetail(); // Use hideDetail to go back to list and reload
         } finally {
             document.getElementById('loading').style.display = 'none';
@@ -461,7 +461,7 @@
                     <td class="text-center py-3">
                         ${c.saldo <= 0.1 ? '<span style="background: var(--success-light); color: var(--success-dark); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">Pagado</span>' : '<span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">Pendiente</span>'}
                         ${(c.documentado || c.estatus === 'Remisión Emitida') ? `<br><span style="display: inline-block; background: var(--gray-200); color: var(--gray-700); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; margin-top: 4px;">${c.estatus || 'Remisión Emitida'}</span>` : ''}
-                        ${c.folio_nota ? '<br><a href="/api/v1/payments/remission/' + c.folio_nota + '/pdf" target="_blank" class="btn btn-sm btn-outline-secondary" style="font-size: 0.7rem; padding: 2px 6px; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white; margin-top: 4px; color: var(--gray-700);" title="Descargar PDF Remisión"><i class="bi bi-file-pdf text-danger"></i> ' + c.folio_nota + '</a>' : ''}
+                        ${c.folio_nota ? `<br><small style="color: var(--gray-500); font-weight: bold; font-size: 0.7rem; display: block; margin-top: 4px;">${c.folio_nota}</small>` : ''}
                     </td>
                     <td class="text-end pe-4 py-3">
                         <small style="color: var(--gray-500); display: block; font-size: 0.8rem;">Abonado: $${parseFloat(c.pagado).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</small>
@@ -530,7 +530,7 @@
     document.getElementById('payment-form').addEventListener('submit', async function (e) {
         e.preventDefault();
         const quoteVal = document.getElementById('pay-quote-select').value;
-        if (!quoteVal) { showToast("Selecciona a qué vincular el pago (Folio o N/A).", "warning"); return; }
+        if (!quoteVal) { alert("Selecciona a qué vincular el pago (Folio o N/A)."); return; }
 
         const payload = {
             monto: parseFloat(document.getElementById('pay-amount').value),
@@ -557,17 +557,9 @@
             }
         }
 
-        const msg = `¿Aplicar abono de $${payload.monto.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${targetName}?`;
+        const msg = `¿Aplicar abono de $${payload.monto.toLocaleString()} ${targetName}?`;
 
-        const confirmed = await showConfirm({
-            title: 'Confirmar Abono',
-            message: msg,
-            confirmText: 'Aplicar Abono',
-            cancelText: 'Cancelar',
-            type: 'info'
-        });
-
-        if (confirmed) {
+        if (confirm(msg)) {
             try {
                 const response = await fetch('/api/v1/payments/', {
                     method: 'POST',
@@ -576,7 +568,7 @@
                 });
 
                 if (response.ok) {
-                    showToast('Pago registrado con éxito', 'success');
+                    alert('Pago registrado con éxito');
                     document.getElementById('payment-form').reset();
                     if (lastLoadedCustomerId) {
                         loadCustomerStatement(lastLoadedCustomerId);
@@ -584,11 +576,11 @@
                     loadActiveAccounts();
                 } else {
                     const errorData = await response.json();
-                    showToast('Error al procesar el pago: ' + (errorData.detail || 'Verifica los datos.'), 'error');
+                    alert('Error al procesar el pago: ' + (errorData.detail || 'Verifica los datos.'));
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Sin conexión al servidor. Intenta de nuevo.', 'error');
+                alert('Sin conexión al servidor. Intenta de nuevo.');
             }
         }
     });
@@ -613,7 +605,7 @@
             });
             document.getElementById('newChargeModal').classList.add('show');
         } catch(e) {
-            showToast("No se pudo cargar la lista de clientes", "error");
+            alert("No se pudo cargar la lista de clientes");
         }
     }
 
@@ -631,16 +623,16 @@
                 body: JSON.stringify(payload)
             });
             if(resp.ok) {
-                showToast("Cargo registrado y guardado exitosamente.", "success");
+                alert("Cargo registrado y guardado exitosamente en database.db.");
                 document.getElementById('newChargeModal').classList.remove('show');
                 document.getElementById('new-charge-form').reset();
                 
                 // Return to Finanzas completely and refresh table
                 hideDetail();
             } else {
-                showToast("Error al guardar el cargo.", "error");
+                alert("Error al guardar el cargo.");
             }
-        } catch(e) { showToast("Error de red al registrar cargo", "error"); }
+        } catch(e) { alert("Error de red"); }
     });
 
     function checkRemissionBtn() {
@@ -680,14 +672,14 @@
             a.click();
             window.URL.revokeObjectURL(url);
 
-            // Mostrar el folio al usuario con la notificación estética
-            showToast(`Nota de remisión ${folio} generada con éxito.`, 'success');
+            // Mostrar el folio al usuario
+            alert(`Nota de remisión ${folio} generada con éxito.`);
 
             // Refrescar para que salgan como documentados
             loadCustomerStatement(lastLoadedCustomerId);
             loadActiveAccounts();
         } catch(e) {
-            showToast(e.message || "Error al generar la remisión", "error");
+            alert(e.message || "Error generacional");
         } finally {
             btn.innerHTML = origContent;
             btn.disabled = false;
@@ -696,7 +688,7 @@
 
     function downloadStatementPDF() {
         if (!lastLoadedCustomerId) {
-            showToast('Debe seleccionar a un cliente para generar su estado de cuenta.', 'warning');
+            alert('Debe seleccionar a un cliente para generar su estado de cuenta.');
             return;
         }
         window.open(`/api/v1/payments/statement/customer/${lastLoadedCustomerId}/pdf`, '_blank');

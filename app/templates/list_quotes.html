@@ -61,8 +61,6 @@
                 <option value="Borrador">Borrador</option>
                 <option value="Enviada">Enviada</option>
                 <option value="Aprobada">Aprobada</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Cobranza Requerida">Cobranza Requerida</option>
                 <option value="Rechazada">Rechazada</option>
                 <option value="Sustituida">Sustituida</option>
             </select>
@@ -161,7 +159,7 @@
         // Actualizar métricas de resumen basadas en la selección activa
         document.getElementById('summary-total-quotes').textContent = quotes.length;
         
-        const approvedQuotes = quotes.filter(q => ['Aprobada', 'Pendiente', 'Cobranza Requerida'].includes(q.estado));
+        const approvedQuotes = quotes.filter(q => q.estado === 'Aprobada');
         const approvedAmount = approvedQuotes.reduce((sum, q) => sum + parseFloat(q.total || 0), 0);
         document.getElementById('summary-approved-amount').textContent = `$${approvedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         
@@ -243,8 +241,6 @@
                             <option value="Borrador" ${q.estado === 'Borrador' ? 'selected' : ''}>Borrador</option>
                             <option value="Enviada" ${q.estado === 'Enviada' ? 'selected' : ''}>Enviada</option>
                             <option value="Aprobada" ${q.estado === 'Aprobada' ? 'selected' : ''}>Aprobada</option>
-                            <option value="Pendiente" ${q.estado === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
-                            <option value="Cobranza Requerida" ${q.estado === 'Cobranza Requerida' ? 'selected' : ''}>Cobranza Requerida</option>
                             <option value="Rechazada" ${q.estado === 'Rechazada' ? 'selected' : ''}>Rechazada</option>
                             ${isSustituida ? `<option value="Sustituida" selected>Sustituida</option>` : ''}
                         </select>
@@ -270,8 +266,6 @@
             case 'Rechazada': return 'var(--danger)';
             case 'Enviada': return 'var(--primary)';
             case 'Sustituida': return 'var(--gray-500)';
-            case 'Pendiente': return '#eab308'; // Amber/Warning
-            case 'Cobranza Requerida': return '#ea580c'; // Orange/Cobranza
             default: return 'var(--gray-400)';
         }
     }
@@ -291,13 +285,12 @@
                     allQuotes[qIdx].estado = newStatus;
                 }
                 applyFilters();
-                showToast("Estado actualizado correctamente", "success");
             } else {
-                showToast("Error actualizando estatus", "error");
+                alert("Error actualizando estatus");
             }
         } catch (e) {
             console.error(e);
-            showToast("Error de conexión", "error");
+            alert("Error de conexión");
         }
     }
 

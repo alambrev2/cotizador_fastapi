@@ -4,7 +4,8 @@ import pandas as pd
 from io import BytesIO
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models import Product
+from app.models import Product, User
+from app.api.deps import get_current_active_admin
 from openpyxl.styles import Font
 import logging
 import os
@@ -30,14 +31,22 @@ router = APIRouter()
 
 
 @router.post("/", response_model=Product)
-def create_product(*, session: Session = Depends(get_session), product: Product):
+def create_product(
+    *,
+    session: Session = Depends(get_session),
+    product: Product,
+    current_user: User = Depends(get_current_active_admin)
+):
     session.add(product)
     session.commit()
     session.refresh(product)
     return product
 
 @router.get("/export")
-def export_excel_route(session: Session = Depends(get_session)):
+def export_excel_route(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_admin)
+):
     products = session.exec(select(Product)).all()
     data = [{
         "Nombre del Producto": p.nombre,
@@ -103,7 +112,11 @@ def export_template_route():
     )
 
 @router.post("/import")
-def import_excel_route(session: Session = Depends(get_session), file: UploadFile = File(...)):
+def import_excel_route(
+    session: Session = Depends(get_session),
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_admin)
+):
     # Asegurar que el directorio de logs exista
     os.makedirs('logs', exist_ok=True)
     
@@ -311,6 +324,7 @@ def read_products(
     limit: int = Query(default=100, le=100),
     search: str = None,
     brand: str = None,
+    current_user: User = Depends(get_current_active_admin),
 ):
     query = select(Product).order_by(Product.id.desc())
     if search:
@@ -327,7 +341,12 @@ def read_products(
 
 
 @router.get("/{product_id}", response_model=Product)
-def read_product(*, session: Session = Depends(get_session), product_id: int):
+def read_product(
+    *,
+    session: Session = Depends(get_session),
+    product_id: int,
+    current_user: User = Depends(get_current_active_admin)
+):
     product = session.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -340,6 +359,7 @@ def update_product(
     session: Session = Depends(get_session),
     product_id: int,
     product_update: Product,
+    current_user: User = Depends(get_current_active_admin),
 ):
     db_product = session.get(Product, product_id)
     if not db_product:
@@ -355,7 +375,12 @@ def update_product(
 
 
 @router.delete("/{product_id}")
-def delete_product(*, session: Session = Depends(get_session), product_id: int):
+def delete_product(
+    *,
+    session: Session = Depends(get_session),
+    product_id: int,
+    current_user: User = Depends(get_current_active_admin)
+):
     product = session.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")

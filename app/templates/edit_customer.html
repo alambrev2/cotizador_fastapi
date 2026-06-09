@@ -60,7 +60,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);">
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-4);">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="consumo_2022" style="font-weight: 600; color: var(--gray-600); font-size: 0.85rem;">Consumo 2022</label>
                         <div style="position: relative;">
@@ -80,6 +80,20 @@
                         <div style="position: relative;">
                             <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--gray-400);">$</span>
                             <input type="number" step="0.01" id="consumo_2024" name="consumo_2024" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.5rem 0.5rem 0.5rem 1.5rem; background: white;">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="consumo_2025" style="font-weight: 600; color: var(--gray-600); font-size: 0.85rem;">Consumo 2025</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--gray-400);">$</span>
+                            <input type="number" step="0.01" id="consumo_2025" name="consumo_2025" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.5rem 0.5rem 0.5rem 1.5rem; background: white;">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="consumo_2026" style="font-weight: 600; color: var(--gray-600); font-size: 0.85rem;">Consumo 2026</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--gray-400);">$</span>
+                            <input type="number" step="0.01" id="consumo_2026" name="consumo_2026" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.5rem 0.5rem 0.5rem 1.5rem; background: white;">
                         </div>
                     </div>
                 </div>
@@ -119,6 +133,8 @@
             document.getElementById('consumo_2022').value = customer.consumo_2022 || 0;
             document.getElementById('consumo_2023').value = customer.consumo_2023 || 0;
             document.getElementById('consumo_2024').value = customer.consumo_2024 || 0;
+            document.getElementById('consumo_2025').value = customer.consumo_2025 || 0;
+            document.getElementById('consumo_2026').value = customer.consumo_2026 || 0;
 
         } catch (error) {
             alert('Error cargando cliente: ' + error.message);
@@ -139,7 +155,9 @@
             saldo_inicial: parseFloat(formData.get('saldo_inicial') || 0),
             consumo_2022: parseFloat(formData.get('consumo_2022') || 0),
             consumo_2023: parseFloat(formData.get('consumo_2023') || 0),
-            consumo_2024: parseFloat(formData.get('consumo_2024') || 0)
+            consumo_2024: parseFloat(formData.get('consumo_2024') || 0),
+            consumo_2025: parseFloat(formData.get('consumo_2025') || 0),
+            consumo_2026: parseFloat(formData.get('consumo_2026') || 0)
         };
 
         try {

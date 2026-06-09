@@ -3,51 +3,40 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models import Payment, Quote, AccountCharge
+from app.models import Payment, Quote, AccountCharge, User
 from app.schemas import PaymentCreate, AccountChargeCreate
 from pydantic import BaseModel
 from fastapi import Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import selectinload
-from app.core.pdf import generate_pdf_bytes, clean_filename
-import os
+from app.core.pdf import generate_pdf_bytes
+from app.api.deps import (
+    get_current_user,
+    get_current_active_admin,
+    get_current_active_operativo_or_admin,
+)
+from app.models import RoleEnum
 
-# Buscar la carpeta 'templates' subiendo en la jerarquía de directorios de manera segura
-_current_dir = os.path.dirname(os.path.abspath(__file__))
-_templates_dir = None
-while True:
-    _possible_templates = os.path.join(_current_dir, "templates")
-    if os.path.isdir(_possible_templates):
-        _templates_dir = _possible_templates
-        break
-    _possible_app_templates = os.path.join(_current_dir, "app", "templates")
-    if os.path.isdir(_possible_app_templates):
-        _templates_dir = _possible_app_templates
-        break
-    _parent = os.path.dirname(_current_dir)
-    if _parent == _current_dir:
-        break
-    _current_dir = _parent
-
-if not _templates_dir:
-    _templates_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates")
-
-templates = Jinja2Templates(directory=_templates_dir)
+templates = Jinja2Templates(directory="app/templates")
 
 router = APIRouter()
 
-ESTADOS_COBRABLES = ['Pendiente', 'Cobranza Requerida']
-
 
 @router.get("/active")
-def read_active_statements(session: Session = Depends(get_session)):
-    # Obtener cotizaciones con total > 0 que estén en estados cobrables
+def read_active_statements(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_admin)
+):
+    # Obtener cotizaciones con total > 0 que NO estén rechazadas o en borrador (opcional, pero asumimos que solo 'Enviada'/'Aprobada' cuentan)
+    # Por lealtad al usuario, mostraremos todas las que tengan saldo, independientemente del estado,
+    # aunque logico seria solo Aprobada. Vamos filtrar solo Aprobada para ser más limpios, o todas.
+    # El usuario pidio "todos los estados activos". Asumiremos todas las cotizaciones con deuda.
+
     query = (
         select(Quote)
         .options(selectinload(Quote.pagos))
         .options(selectinload(Quote.cliente))
-        .where(Quote.total > 0)
-        .where(Quote.estado.in_(ESTADOS_COBRABLES))
+        .where(Quote.estado.in_(['Pendiente', 'Cobranza Requerida']))
         .order_by(Quote.id.desc())
     )
     quotes = session.exec(query).all()
@@ -74,7 +63,10 @@ def read_active_statements(session: Session = Depends(get_session)):
 
 
 @router.get("/active-customers")
-def read_active_customers(session: Session = Depends(get_session)):
+def read_active_customers(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_admin)
+):
     """Obtiene lista de clientes con deuda activa (saldo inicial + cotizaciones - pagos)."""
     from app.models import Customer
 
@@ -91,9 +83,8 @@ def read_active_customers(session: Session = Depends(get_session)):
     for c in customers:
         active_counts = 0
 
-        # Deuda de cotizaciones activas (con saldo pendiente post-abonos directos)
         for q in c.cotizaciones:
-            if q.estado not in ESTADOS_COBRABLES:
+            if q.estado not in ['Pendiente', 'Cobranza Requerida']:
                 continue
             pagado_q = sum([float(p.monto) for p in q.pagos])
             saldo_q = float(q.total) - pagado_q
@@ -123,7 +114,7 @@ def read_active_customers(session: Session = Depends(get_session)):
 
         # Cálculos Económicos Exactos (Sin saldo_inicial estático)
         total_pagado_cliente = sum([float(p.monto) for p in c.pagos])
-        total_comprado_sistema = sum([float(q.total) for q in c.cotizaciones if q.estado in ESTADOS_COBRABLES])
+        total_comprado_sistema = sum([float(q.total) for q in c.cotizaciones if q.estado in ['Pendiente', 'Cobranza Requerida']])
         total_cargos_extra = sum([float(cg.monto) for cg in c.cargos])
 
         # Deuda Histórica = Suma de todo lo cobrable + saldo inicial
@@ -148,9 +139,16 @@ def read_active_customers(session: Session = Depends(get_session)):
 
 @router.get("/statement/customer/{customer_id}")
 def get_customer_statement(
-    *, session: Session = Depends(get_session), customer_id: int
+    *, session: Session = Depends(get_session), customer_id: int,
+    current_user: User = Depends(get_current_user)
 ):
     """Obtiene estado de cuenta consolidado de un cliente."""
+    # El cliente solo puede ver su propio estado
+    if current_user.role == RoleEnum.CLIENTE:
+        if current_user.cliente_id != customer_id:
+            raise HTTPException(status_code=403, detail="Solo puedes ver tu propio estado de cuenta")
+    elif current_user.role == RoleEnum.OPERATIVO:
+        raise HTTPException(status_code=403, detail="No tienes permisos para esta acción")
     # 1. Obtener cliente
     from app.models import Customer
 
@@ -158,11 +156,11 @@ def get_customer_statement(
     if not customer:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
 
-    # 2. Obtener todas sus cotizaciones con estados cobrables
+    # 2. Obtener todas sus cotizaciones aprobadas
     query = (
         select(Quote)
         .where(Quote.cliente_id == customer_id)
-        .where(Quote.estado.in_(ESTADOS_COBRABLES))
+        .where(Quote.estado.in_(['Pendiente', 'Cobranza Requerida']))
         .options(selectinload(Quote.pagos))
         .order_by(Quote.fecha_creacion.desc())
     )
@@ -258,8 +256,17 @@ def get_customer_statement(
 
 
 @router.get("/statement/customer/{customer_id}/pdf")
-def get_customer_statement_pdf(*, session: Session = Depends(get_session), customer_id: int):
-    """Genera estado de cuenta en PDF listando movimientos cronológicos."""
+def get_customer_statement_pdf(
+    *, session: Session = Depends(get_session), customer_id: int,
+    current_user: User = Depends(get_current_user)
+):
+    """Genera estado de cuenta en PDF. Cliente solo puede ver el suyo."""
+    # El cliente solo puede descargar su propio PDF
+    if current_user.role == RoleEnum.CLIENTE:
+        if current_user.cliente_id != customer_id:
+            raise HTTPException(status_code=403, detail="Solo puedes descargar tu propio estado de cuenta")
+    elif current_user.role == RoleEnum.OPERATIVO:
+        raise HTTPException(status_code=403, detail="No tienes permisos para esta acción")
     from app.models import Customer, AccountCharge
     from datetime import datetime
 
@@ -267,10 +274,10 @@ def get_customer_statement_pdf(*, session: Session = Depends(get_session), custo
     if not customer:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
 
-    # Obtener cotizaciones con estados cobrables
+    # Obtener cotizaciones aprobadas
     quotes_query = select(Quote).where(
         Quote.cliente_id == customer_id,
-        Quote.estado.in_(ESTADOS_COBRABLES)
+        Quote.estado.in_(['Pendiente', 'Cobranza Requerida'])
     ).options(selectinload(Quote.pagos))
     quotes = session.exec(quotes_query).all()
 
@@ -354,7 +361,7 @@ def get_customer_statement_pdf(*, session: Session = Depends(get_session), custo
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="Estado_Cuenta_CLI{customer.id:04d}_{clean_filename(customer.nombre)}.pdf"'}
+            headers={"Content-Disposition": f"attachment; filename=estado_cuenta_{customer.id}.pdf"}
         )
     except Exception as e:
         import traceback
@@ -363,7 +370,12 @@ def get_customer_statement_pdf(*, session: Session = Depends(get_session), custo
 
 
 @router.post("/charges", response_model=AccountCharge)
-def create_charge(*, session: Session = Depends(get_session), charge_in: AccountChargeCreate):
+def create_charge(
+    *,
+    session: Session = Depends(get_session),
+    charge_in: AccountChargeCreate,
+    current_user: User = Depends(get_current_active_admin)
+):
     from app.models import Customer
     if not charge_in.cliente_id:
         raise HTTPException(status_code=400, detail="Debe vincular el cargo a un cliente.")
@@ -383,7 +395,12 @@ class RemissionRequest(BaseModel):
     charge_ids: List[int]
 
 @router.post("/remission")
-def generate_charge_remission(*, session: Session = Depends(get_session), req: RemissionRequest):
+def generate_charge_remission(
+    *,
+    session: Session = Depends(get_session),
+    req: RemissionRequest,
+    current_user: User = Depends(get_current_active_admin)
+):
     if not req.charge_ids:
         raise HTTPException(status_code=400, detail="Debe enviar al menos un cargo.")
 
@@ -414,23 +431,6 @@ def generate_charge_remission(*, session: Session = Depends(get_session), req: R
                 
     nuevo_folio = f"{prefix}{(max_num + 1):04d}"
     
-    total_remission = sum([float(c.monto) for c in cargos])
-
-    # Generar PDF primero para no corromper la base de datos si falla
-    try:
-        html_content = templates.get_template("pdf/remission.html").render(
-            cliente=cliente,
-            cargos=cargos,
-            total=total_remission,
-            folio=nuevo_folio
-        )
-        pdf_bytes = generate_pdf_bytes(html_content)
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error generando PDF: {str(e)}")
-
-    # Si se generó con éxito, guardamos en la base de datos
     for c in cargos:
         c.documentado = True
         c.folio_nota = nuevo_folio
@@ -439,41 +439,24 @@ def generate_charge_remission(*, session: Session = Depends(get_session), req: R
         
     session.commit()
 
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="Remision_{nuevo_folio}_{clean_filename(cliente.nombre)}.pdf"',
-            "X-Folio-Nota": nuevo_folio,
-            "Access-Control-Expose-Headers": "X-Folio-Nota"
-        }
-    )
-
-
-@router.get("/remission/{folio}/pdf")
-def get_remission_pdf_by_folio(*, session: Session = Depends(get_session), folio: str):
-    cargos = session.exec(select(AccountCharge).where(AccountCharge.folio_nota == folio)).all()
-    if not cargos:
-        raise HTTPException(status_code=404, detail=f"No se encontraron cargos con el folio {folio}.")
-    
-    cliente = cargos[0].cliente
     total_remission = sum([float(c.monto) for c in cargos])
-    
+
+    # Generar PDF
     try:
         html_content = templates.get_template("pdf/remission.html").render(
             cliente=cliente,
             cargos=cargos,
             total=total_remission,
-            folio=folio
+            folio=nuevo_folio
         )
         pdf_bytes = generate_pdf_bytes(html_content)
-        cliente_nombre = cliente.nombre if cliente else "general"
-        filename = f"Remision_{folio}_{clean_filename(cliente_nombre)}.pdf"
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="{filename}"'
+                "Content-Disposition": f'attachment; filename="remision_{nuevo_folio}.pdf"',
+                "X-Folio-Nota": nuevo_folio,
+                "Access-Control-Expose-Headers": "X-Folio-Nota"
             }
         )
     except Exception as e:
@@ -484,7 +467,8 @@ def get_remission_pdf_by_folio(*, session: Session = Depends(get_session), folio
 
 @router.post("/", response_model=Payment)
 def create_payment(
-    *, session: Session = Depends(get_session), payment_in: PaymentCreate
+    *, session: Session = Depends(get_session), payment_in: PaymentCreate,
+    current_user: User = Depends(get_current_active_admin)
 ):
     if not payment_in.quote_id and not payment_in.cliente_id and not payment_in.cargo_id:
         raise HTTPException(
@@ -510,7 +494,12 @@ def create_payment(
 
 
 @router.get("/by-quote/{quote_id}", response_model=List[Payment])
-def read_payments_by_quote(*, session: Session = Depends(get_session), quote_id: int):
+def read_payments_by_quote(
+    *,
+    session: Session = Depends(get_session),
+    quote_id: int,
+    current_user: User = Depends(get_current_active_admin)
+):
     query = (
         select(Payment)
         .where(Payment.quote_id == quote_id)
@@ -521,7 +510,11 @@ def read_payments_by_quote(*, session: Session = Depends(get_session), quote_id:
 
 
 @router.get("/", response_model=List[Payment])
-def read_payments(*, session: Session = Depends(get_session)):
+def read_payments(
+    *,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_admin)
+):
     query = (
         select(Payment)
         .options(selectinload(Payment.cliente))

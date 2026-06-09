@@ -3,16 +3,6 @@
 {% block title %}Nueva Cotización - Cotizador{% endblock %}
 
 {% block content %}
-<style>
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-.spin {
-    display: inline-block;
-    animation: spin 1s linear infinite;
-}
-</style>
 <div style="max-width: 1000px; margin: 0 auto;">
     <div style="text-align: center; margin-bottom: var(--space-8);">
         <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--indigo-light) 0%, #e0e7ff 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4); border: 4px solid white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
@@ -105,9 +95,9 @@
                 <div style="height: 1px; background: var(--gray-300); width: 100%; margin: 4px 0;"></div>
                 <div style="font-size: 1.4rem; font-weight: 800; color: var(--gray-800); width: 100%; display: flex; justify-content: space-between; align-items: center;">
                     <span>Total Venta:</span>
-                    <div style="position: relative;">
-                        <span style="position: absolute; left: 0.5rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: var(--gray-500);">$</span>
-                        <input type="number" id="grand-total" step="0.01" value="0.00" onchange="recalculateFromTotal()" onkeyup="recalculateFromTotal()" style="width: 140px; padding: 0.25rem 0.5rem 0.25rem 1.5rem; font-size: 1.2rem; font-weight: 800; text-align: right; border-radius: var(--radius-sm); border: 1px dashed var(--gray-400); color: var(--gray-800); background: white; outline: none;">
+                    <div style="display: flex; align-items: center; background: white; padding: 2px 8px; border-radius: var(--radius-md); border: 2px solid var(--indigo-light); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); cursor: text;" onclick="document.getElementById('grand-total-input').focus()">
+                        <span style="color: var(--gray-500); font-size: 1.1rem; margin-right: 4px;">$</span>
+                        <input type="number" id="grand-total-input" step="0.01" onchange="calculateFromTotal()" onkeyup="calculateFromTotal()" style="width: 140px; text-align: right; font-size: 1.4rem; font-weight: 800; color: var(--gray-800); border: none; background: transparent; outline: none; margin: 0; padding: 0;">
                     </div>
                 </div>
                 <div style="font-size: 0.95rem; color: var(--success); font-weight: 700; width: 100%; display: flex; justify-content: space-between; margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--success-light);">
@@ -188,7 +178,7 @@
 
             <div style="display: flex; justify-content: flex-end; gap: var(--space-4);">
                 <a href="/quotes" class="btn" style="background: white; border: 1px solid var(--border-color); color: var(--gray-700); padding: 0.75rem 1.5rem; border-radius: var(--radius-md); font-weight: 600; text-decoration: none; display: flex; align-items: center;">Volver al Historial</a>
-                <button type="submit" id="submit-btn" class="btn btn-indigo" style="padding: 0.75rem 2.5rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.5); font-size: 1.05rem;">
+                <button type="submit" class="btn btn-indigo" style="padding: 0.75rem 2.5rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.5); font-size: 1.05rem;">
                     <i class="bi bi-file-earmark-check me-2"></i> Crear Cotización
                 </button>
             </div>
@@ -202,6 +192,7 @@
     let productsList = [];
     let isEditing = false;
     let editId = null;
+    let isManualTotal = false;
 
     async function init() {
         try {
@@ -232,7 +223,7 @@
                     document.getElementById('folio-edit-display').textContent = quoteLoad.folio_cotizacion || ('#' + quoteLoad.id);
                     hydrateForm(quoteLoad);
                 } else {
-                    showToast('Error cargando cotización original. Iniciando en blanco.', 'error');
+                    alert('Error cargando cotización original. Iniciando en blanco.');
                     addItemRow();
                 }
             } else {
@@ -240,7 +231,7 @@
             }
         } catch (err) {
             console.error(err);
-            showToast('Error cargando datos', 'error');
+            alert('Error cargando datos');
         }
     }
 
@@ -340,11 +331,13 @@
         const row = document.getElementById(`row-${id}`);
         if (document.querySelectorAll('#items-container tr').length > 1) {
             row.remove();
+            isManualTotal = false; // Reset manual override
             calculateGrandTotal();
         }
     }
 
     window.updateRow = function (id) {
+        isManualTotal = false; // Reset manual override on item change
         const row = document.getElementById(`row-${id}`);
         const select = row.querySelector('.product-select');
         const selectedOpt = select.selectedOptions[0];
@@ -359,44 +352,45 @@
         const qtyInput = row.querySelector('.qty-input');
         const qty = parseInt(qtyInput.value || 0);
 
+        // Lógica de inyección de precio dinámico si el usuario acaba de cambiar producto o cantidad
         const priceInput = row.querySelector('.price-input');
+        const currentPrice = parseFloat(priceInput.value || 0);
         
-        let suggestedPrice = qty >= minMayoreo ? priceMayoreo : priceMenudeo;
+        let priceLabel = 'Ajuste manual';
+        let suggestedPrice = priceMenudeo;
+        if (qty >= minMayoreo) {
+            suggestedPrice = priceMayoreo;
+            priceLabel = 'Tarifa Mayoreo';
+        }
 
-        // Si es un producto nuevo, inicializamos
+        let shouldUpdatePrice = false;
         if (priceInput.dataset.lastProduct !== selectedOpt.value) {
-            priceInput.value = suggestedPrice.toFixed(2);
-            priceInput.dataset.lastProduct = selectedOpt.value;
-            priceInput.dataset.isManual = "false";
-            priceInput.dataset.lastAutoPrice = suggestedPrice.toFixed(2);
+            shouldUpdatePrice = true;
         } else {
-            // Verificar si el usuario ha ingresado un precio manualmente
-            const currentValueStr = parseFloat(priceInput.value || 0).toFixed(2);
-            const lastAutoPriceStr = parseFloat(priceInput.dataset.lastAutoPrice || 0).toFixed(2);
+            const isMenudeo = Math.abs(currentPrice - priceMenudeo) < 0.01;
+            const isMayoreo = Math.abs(currentPrice - priceMayoreo) < 0.01;
             
-            if (currentValueStr !== lastAutoPriceStr) {
-                priceInput.dataset.isManual = "true";
-            }
-            
-            // Si no es manual y la cantidad cambió el precio sugerido, lo actualizamos automáticamente
-            if (priceInput.dataset.isManual !== "true") {
-                priceInput.value = suggestedPrice.toFixed(2);
-                priceInput.dataset.lastAutoPrice = suggestedPrice.toFixed(2);
+            if (isMenudeo && qty >= minMayoreo) {
+                shouldUpdatePrice = true;
+            } else if (isMayoreo && qty < minMayoreo) {
+                shouldUpdatePrice = true;
             }
         }
 
+        if (shouldUpdatePrice) {
+            priceInput.value = suggestedPrice.toFixed(2);
+            priceInput.dataset.lastProduct = selectedOpt.value;
+        }
+
         const finalPrice = parseFloat(priceInput.value || 0);
-        let priceLabel = 'Ajuste manual';
 
         if (finalPrice <= cost && finalPrice > 0) {
             row.querySelector('.price-type-badge').style.color = '#ef4444';
             priceLabel = '¡ADVERTENCIA: Por debajo del costo!';
-        } else if (priceInput.dataset.isManual === "true") {
-            row.querySelector('.price-type-badge').style.color = '#eab308';
-            priceLabel = 'Ajuste manual';
+        } else if (finalPrice == suggestedPrice) {
+            row.querySelector('.price-type-badge').style.color = '#166534'; 
         } else {
-            row.querySelector('.price-type-badge').style.color = '#166534';
-            priceLabel = qty >= minMayoreo ? 'Tarifa Mayoreo' : 'Tarifa Menudeo';
+            row.querySelector('.price-type-badge').style.color = '#eab308'; 
         }
 
         row.querySelector('.price-type-badge').textContent = priceLabel;
@@ -413,78 +407,75 @@
     function calculateGrandTotal(autoSuggestFinance = false) {
         let subtotal = 0;
         let totalUtility = 0;
+        let totalCost = 0;
         document.querySelectorAll('#items-container tr').forEach(row => {
             const qty = parseInt(row.querySelector('.qty-input').value || 0);
             const price = parseFloat(row.dataset.effectivePrice || 0);
             const cost = parseFloat(row.dataset.costPrice || 0);
             
             subtotal += price * qty;
+            totalCost += cost * qty;
             totalUtility += (price - cost) * qty;
         });
         
         const requiereFactura = document.getElementById('requiere_factura').checked;
-        const iva = requiereFactura ? (subtotal * 0.16) : 0;
-        const total = subtotal + iva;
-
-        document.getElementById('calc-subtotal').textContent = subtotal.toFixed(2);
         
-        const ivaRow = document.getElementById('iva-row');
-        if (requiereFactura) {
-            ivaRow.style.display = 'block';
-            document.getElementById('calc-iva').textContent = iva.toFixed(2);
+        if (isManualTotal) {
+            const customTotal = parseFloat(document.getElementById('grand-total-input').value || 0);
+            let calcSubtotal = 0;
+            let calcIva = 0;
+            
+            if (requiereFactura) {
+                calcSubtotal = customTotal / 1.16;
+                calcIva = customTotal - calcSubtotal;
+            } else {
+                calcSubtotal = customTotal;
+            }
+            
+            document.getElementById('calc-subtotal').textContent = calcSubtotal.toFixed(2);
+            
+            const ivaRow = document.getElementById('iva-row');
+            if (requiereFactura) {
+                ivaRow.style.display = 'block';
+                document.getElementById('calc-iva').textContent = calcIva.toFixed(2);
+            } else {
+                ivaRow.style.display = 'none';
+            }
+            
+            const manualUtility = calcSubtotal - totalCost;
+            const utilEl = document.getElementById('estimated-utility');
+            if (utilEl) utilEl.textContent = manualUtility.toFixed(2);
+            
         } else {
-            ivaRow.style.display = 'none';
-        }
+            const iva = requiereFactura ? (subtotal * 0.16) : 0;
+            const total = subtotal + iva;
 
-        document.getElementById('grand-total').value = total.toFixed(2);
-        
-        const utilEl = document.getElementById('estimated-utility');
-        if (utilEl) utilEl.textContent = totalUtility.toFixed(2);
+            document.getElementById('calc-subtotal').textContent = subtotal.toFixed(2);
+            
+            const ivaRow = document.getElementById('iva-row');
+            if (requiereFactura) {
+                ivaRow.style.display = 'block';
+                document.getElementById('calc-iva').textContent = iva.toFixed(2);
+            } else {
+                ivaRow.style.display = 'none';
+            }
+
+            document.getElementById('grand-total-input').value = total.toFixed(2);
+            
+            const utilEl = document.getElementById('estimated-utility');
+            if (utilEl) utilEl.textContent = totalUtility.toFixed(2);
+        }
         
         calculateFinance(autoSuggestFinance); 
     }
 
-    function recalculateFromTotal() {
-        const total = parseFloat(document.getElementById('grand-total').value) || 0;
-        const requiereFactura = document.getElementById('requiere_factura').checked;
-        
-        let subtotal = 0;
-        let iva = 0;
-        
-        if (requiereFactura) {
-            subtotal = total / 1.16;
-            iva = total - subtotal;
-        } else {
-            subtotal = total;
-            iva = 0;
-        }
-        
-        document.getElementById('calc-subtotal').textContent = subtotal.toFixed(2);
-        
-        const ivaRow = document.getElementById('iva-row');
-        if (requiereFactura) {
-            ivaRow.style.display = 'block';
-            document.getElementById('calc-iva').textContent = iva.toFixed(2);
-        } else {
-            ivaRow.style.display = 'none';
-        }
-        
-        let totalCost = 0;
-        document.querySelectorAll('#items-container tr').forEach(row => {
-            const qty = parseInt(row.querySelector('.qty-input').value || 0);
-            const cost = parseFloat(row.dataset.costPrice || 0);
-            totalCost += cost * qty;
-        });
-        
-        const totalUtility = subtotal - totalCost;
-        const utilEl = document.getElementById('estimated-utility');
-        if (utilEl) utilEl.textContent = totalUtility.toFixed(2);
-        
-        calculateFinance(false);
+    function calculateFromTotal() {
+        isManualTotal = true;
+        calculateGrandTotal(true);
     }
 
     function setAnticipoPct(pct) {
-        const total = parseFloat(document.getElementById('grand-total').value) || 0;
+        const total = parseFloat(document.getElementById('grand-total-input').value) || 0;
         const anticipoVal = total * pct;
         document.getElementById('anticipo').value = anticipoVal.toFixed(2);
         calculateFinance(true);
@@ -504,7 +495,7 @@
         const type = document.getElementById('tipo_pago').value;
         if (type !== 'Semanal') return;
 
-        const total = parseFloat(document.getElementById('grand-total').value) || 0;
+        const total = parseFloat(document.getElementById('grand-total-input').value) || 0;
         const anticipo = parseFloat(document.getElementById('anticipo').value) || 0;
         const saldo = total - anticipo;
 
@@ -557,14 +548,9 @@
         });
 
         if (items.length === 0) {
-            showToast('Agrega al menos un producto', 'warning');
+            alert('Agrega al menos un producto');
             return;
         }
-
-        const submitBtn = document.getElementById('submit-btn');
-        const originalBtnHTML = submitBtn.innerHTML;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<i class="bi bi-arrow-repeat spin me-2"></i> Procesando...`;
 
         const payload = {
             cliente_id: parseInt(clienteId),
@@ -581,7 +567,7 @@
             monto_semanal: parseFloat(document.getElementById('weekly-amount').textContent) || 0,
             padre_id: isEditing ? parseInt(editId) : null,
             motivo_edicion: isEditing ? document.getElementById('motivo_edicion').value : null,
-            total_venta_override: parseFloat(document.getElementById('grand-total').value) || null
+            total_manual: isManualTotal ? parseFloat(document.getElementById('grand-total-input').value) : null
         };
 
         try {
@@ -593,7 +579,6 @@
 
             if (response.ok) {
                 const result = await response.json();
-                showToast('¡Cotización creada con éxito!', 'success');
 
                 // Mensaje de éxito
                 const totalFormatted = parseFloat(result.total).toFixed(2);
@@ -620,24 +605,20 @@
                     addItemRow(); // Restaurar una fila vacía
                 }
                 
-                document.getElementById('grand-total').value = '0.00';
+                document.getElementById('grand-total-input').value = '0.00';
+                isManualTotal = false;
 
             } else {
                 const error = await response.json();
-                showToast(`Error: ${error.detail}`, 'error');
                 alertBox.textContent = `Error: ${error.detail}`;
                 alertBox.className = 'alert alert-error';
                 alertBox.style.display = 'block';
             }
         } catch (err) {
             console.error(err);
-            showToast('Error inesperado al guardar cotización', 'error');
             alertBox.innerHTML = `<strong>Error inesperado:</strong><br>${err.message}`;
             alertBox.className = 'alert alert-error';
             alertBox.style.display = 'block';
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnHTML;
         }
     });
 

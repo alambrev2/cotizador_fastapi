@@ -278,15 +278,7 @@
                 loading.style.display = 'none';
                 const msg = `Se detectaron ${dataVal.creados} clientes NUEVOS y ${dataVal.actualizados} a ACTUALIZAR. ¿Deseas aplicar estos cambios irreversiblemente?`;
                 
-                const confirmed = await showConfirm({
-                    title: 'Confirmar Importación',
-                    message: msg,
-                    confirmText: 'Importar',
-                    cancelText: 'Cancelar',
-                    type: 'info'
-                });
-                
-                if (confirmed) {
+                if (confirm(msg)) {
                     loading.style.display = 'block';
                     loading.textContent = 'Guardando clientes en base de datos...';
                     
@@ -297,43 +289,17 @@
                     const dataReal = await resReal.json();
                     
                     if (resReal.ok) {
-                        showToast(`¡Éxito! Base de datos sincronizada.`, 'success');
+                        alert(`¡Éxito! Base de datos sincronizada.`);
                         fetchCustomers();
                     } else {
-                        let errorMsg = "Error al guardar los clientes.";
-                        if (dataReal && dataReal.detail) {
-                            if (typeof dataReal.detail === 'string') {
-                                errorMsg = dataReal.detail;
-                            } else if (Array.isArray(dataReal.detail)) {
-                                errorMsg = dataReal.detail.map(err => {
-                                    const field = err.loc ? err.loc.join('.') : '';
-                                    return `${field ? field + ': ' : ''}${err.msg}`;
-                                }).join(', ');
-                            } else {
-                                errorMsg = JSON.stringify(dataReal.detail);
-                            }
-                        }
-                        showToast(errorMsg, 'error');
+                        alert("Error al guardar: " + JSON.stringify(dataReal));
                     }
                 }
             } else {
-                let errorMsg = "Error al leer Excel.";
-                if (dataVal && dataVal.detail) {
-                    if (typeof dataVal.detail === 'string') {
-                        errorMsg = dataVal.detail;
-                    } else if (Array.isArray(dataVal.detail)) {
-                        errorMsg = dataVal.detail.map(err => {
-                            const field = err.loc ? err.loc.join('.') : '';
-                            return `${field ? field + ': ' : ''}${err.msg}`;
-                        }).join(', ');
-                    } else {
-                        errorMsg = JSON.stringify(dataVal.detail);
-                    }
-                }
-                showToast(errorMsg, 'error');
+                alert("Error al leer Excel: " + JSON.stringify(dataVal));
             }
         } catch (e) {
-            showToast("Error de conexión al cargar el archivo.", 'error');
+            alert("Error de conexión al cargar el archivo.");
             console.error(e);
         } finally {
             importInput.value = '';
