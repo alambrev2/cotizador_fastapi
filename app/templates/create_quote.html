@@ -220,7 +220,7 @@
                     document.getElementById('folio-edit-display').textContent = quoteLoad.folio_cotizacion || ('#' + quoteLoad.id);
                     hydrateForm(quoteLoad);
                 } else {
-                    alert('Error cargando cotización original. Iniciando en blanco.');
+                    showNotification('Error cargando cotización original. Iniciando en blanco.', "error");
                     addItemRow();
                 }
             } else {
@@ -228,7 +228,7 @@
             }
         } catch (err) {
             console.error(err);
-            alert('Error cargando datos');
+            showNotification('Error cargando datos', "error");
         }
     }
 
@@ -545,7 +545,7 @@
         });
 
         if (items.length === 0) {
-            alert('Agrega al menos un producto');
+            showNotification('Agrega al menos un producto');
             return;
         }
 

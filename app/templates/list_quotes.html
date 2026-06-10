@@ -155,6 +155,8 @@
         renderTable(filtered);
     }
 
+    let quotesTable;
+
     function renderTable(quotes) {
         // Actualizar métricas de resumen basadas en la selección activa
         document.getElementById('summary-total-quotes').textContent = quotes.length;
@@ -165,6 +167,10 @@
         
         const approvedUtility = approvedQuotes.reduce((sum, q) => sum + parseFloat(q.utilidad_total || 0), 0);
         document.getElementById('summary-approved-utility').textContent = `$${approvedUtility.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        if ($.fn.DataTable.isDataTable('#quotes-table')) {
+            $('#quotes-table').DataTable().destroy();
+        }
 
         if (quotes.length === 0) {
             tableBody.innerHTML = `
@@ -227,16 +233,16 @@
                             </div>
                         </div>
                     </td>
-                    <td style="padding: 0.55rem 0.5rem; text-align: right; font-weight: 500; color: var(--gray-600); font-size: 0.85rem; white-space: nowrap;">
+                    <td style="padding: 0.55rem 0.5rem; text-align: right; font-weight: 500; color: var(--gray-600); font-size: 0.85rem; white-space: nowrap;" data-order="${q.anticipo || 0}">
                         $${(q.anticipo || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td style="padding: 0.55rem 0.5rem; text-align: right; font-weight: 700; color: var(--text-main); font-size: 0.85rem; white-space: nowrap;">
+                    <td style="padding: 0.55rem 0.5rem; text-align: right; font-weight: 700; color: var(--text-main); font-size: 0.85rem; white-space: nowrap;" data-order="${q.total}">
                         $${q.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td style="padding: 0.55rem 0.5rem; text-align: right; font-weight: 700; color: var(--success); font-size: 0.85rem; white-space: nowrap;">
+                    <td style="padding: 0.55rem 0.5rem; text-align: right; font-weight: 700; color: var(--success); font-size: 0.85rem; white-space: nowrap;" data-order="${q.utilidad_total || 0}">
                         $${(q.utilidad_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td style="padding: 0.55rem 0.5rem; text-align: center;">
+                    <td style="padding: 0.55rem 0.5rem; text-align: center;" data-order="${q.estado}">
                         <select onchange="updateStatus(${q.id}, this.value)" ${isSustituida ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; border: 1px solid transparent; background: ${getStatusColor(q.estado)}; color: var(--text-white); cursor: pointer; transition: all 0.2s; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 110px; text-align-last: center;">
                             <option value="Borrador" ${q.estado === 'Borrador' ? 'selected' : ''}>Borrador</option>
                             <option value="Enviada" ${q.estado === 'Enviada' ? 'selected' : ''}>Enviada</option>
@@ -250,6 +256,14 @@
                             <a href="/api/v1/quotes/${q.id}/pdf" target="_blank" class="btn btn-outline" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white;" title="Ver PDF">
                                 <i class="bi bi-file-pdf text-danger"></i> PDF
                             </a>
+                            <button onclick="sendEmail(${q.id}, this)" class="btn btn-outline" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white; color: var(--indigo);" title="Enviar al cliente por Correo">
+                                <i class="bi bi-envelope"></i>
+                            </button>
+                            ${q.cliente && q.cliente.telefono ? `
+                            <a href="https://wa.me/52${q.cliente.telefono.replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(clientName)},%20adjunto%20el%20link%20de%20tu%20cotizaci%C3%B3n%20${folioText}%20por%20un%20total%20de%20$${q.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.%20Saludos!" target="_blank" class="btn btn-outline" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: #dcf8c6; color: #075e54;" title="Enviar por WhatsApp">
+                                <i class="bi bi-whatsapp"></i>
+                            </a>
+                            ` : ''}
                             <a href="/new-quote?edit_id=${q.id}" class="btn btn-indigo" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; color: white;" title="Crear nueva versión basada en esta">
                                 <i class="bi bi-pencil-square"></i> Editar
                             </a>
@@ -258,6 +272,17 @@
                 </tr>
             `;
         }).join('');
+
+        // Initialize DataTable
+        quotesTable = $('#quotes-table').DataTable({
+            pageLength: 10,
+            language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+            order: [], // no default sort
+            dom: '<"top">rt<"bottom"ip><"clear">', // hide default search
+            columnDefs: [
+                { orderable: false, targets: [7] } // disable sorting on Acciones column
+            ]
+        });
     }
 
     function getStatusColor(status) {
@@ -286,18 +311,52 @@
                 }
                 applyFilters();
             } else {
-                alert("Error actualizando estatus");
+                Swal.fire('Error', 'No se pudo actualizar el estado', 'error');
+            }
+        } catch (error) {
+            console.error("Error updating status:", error);
+            Swal.fire('Error', 'Error de conexión', 'error');
+        }
+    }
+
+    async function sendEmail(quoteId, btnElem) {
+        const originalHtml = btnElem.innerHTML;
+        btnElem.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+        btnElem.disabled = true;
+
+        try {
+            const response = await fetch(`/api/v1/quotes/${quoteId}/send-email`, {
+                method: 'POST'
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Correo Enviado',
+                    text: data.message,
+                    toast: true,
+                    position: 'bottom-end',
+                    showConfirmButton: false,
+                    timer: 4000
+                });
+                fetchQuotes(); // Refrescar para ver cambio de estado si pasó a Enviada
+            } else {
+                showNotification("Error actualizando estatus", "error");
             }
         } catch (e) {
             console.error(e);
-            alert("Error de conexión");
+            showNotification("Error de conexión", "error");
         }
     }
 
     fetchQuotes();
 
-    searchInput.addEventListener('input', debounce(() => {
-        applyFilters();
-    }));
+    searchInput.addEventListener('input', function(e) {
+        if (quotesTable) {
+            quotesTable.search(e.target.value).draw();
+        }
+    });
 </script>
 {% endblock %}

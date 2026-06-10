@@ -131,7 +131,7 @@
             document.getElementById('activo').checked = product.activo;
 
         } catch (error) {
-            alert('Error cargando producto: ' + error.message);
+            showNotification('Error cargando producto: ' + error.message);
             window.location.href = '/products';
         }
     }

@@ -46,6 +46,37 @@
     </div>
 </div>
 
+<!-- Notificaciones -->
+<div id="success-notification" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; animation: slideIn 0.5s ease-out;">
+    <div style="background: var(--success); color: white; padding: 0.75rem 1rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 0.75rem; min-width: 280px;">
+        <div style="width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i class="bi bi-check-lg" style="font-size: 1rem; font-weight: bold;"></i>
+        </div>
+        <div>
+            <div style="font-weight: 600; font-size: 0.9rem;">¡Éxito!</div>
+            <div id="success-message" style="font-size: 0.8rem; opacity: 0.9;">Operación completada</div>
+        </div>
+        <button onclick="hideSuccessNotification()" style="background: none; border: none; color: white; cursor: pointer; padding: 0.25rem; margin-left: auto; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+            <i class="bi bi-x-lg" style="font-size: 0.9rem;"></i>
+        </button>
+    </div>
+</div>
+
+<div id="error-notification" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; animation: slideIn 0.5s ease-out;">
+    <div style="background: var(--danger); color: white; padding: 0.75rem 1rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 0.75rem; min-width: 280px;">
+        <div style="width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i class="bi bi-exclamation-lg" style="font-size: 1rem; font-weight: bold;"></i>
+        </div>
+        <div>
+            <div style="font-weight: 600; font-size: 0.9rem;">¡Error!</div>
+            <div id="error-message" style="font-size: 0.8rem; opacity: 0.9;">Ocurrió un error</div>
+        </div>
+        <button onclick="hideErrorNotification()" style="background: none; border: none; color: white; cursor: pointer; padding: 0.25rem; margin-left: auto; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+            <i class="bi bi-x-lg" style="font-size: 0.9rem;"></i>
+        </button>
+    </div>
+</div>
+
 <!-- Toolbar Row -->
 <div class="card" style="border-radius: var(--radius-xl); padding: var(--space-5); margin-bottom: var(--space-6); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap;">
     <!-- Búsqueda con Icono -->
@@ -94,7 +125,45 @@
 {% endblock %}
 
 {% block scripts %}
+<style>
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+</style>
 <script>
+    function hideSuccessNotification() {
+        const notification = document.getElementById('success-notification');
+        notification.style.animation = 'slideOut 0.5s ease-out';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 500);
+    }
+
+    function hideErrorNotification() {
+        const notification = document.getElementById('error-notification');
+        notification.style.animation = 'slideOut 0.5s ease-out';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 500);
+    }
+
     const searchInput = document.getElementById('search-input');
     const tableBody = document.getElementById('table-body');
     const loading = document.getElementById('loading');
@@ -108,16 +177,17 @@
         };
     }
 
-    async function fetchCustomers(query = '') {
+    let customersTable;
+
+    async function fetchCustomers() {
         loading.style.display = 'block';
+        if ($.fn.DataTable.isDataTable('#customers-table')) {
+            $('#customers-table').DataTable().destroy();
+        }
         tableBody.innerHTML = '';
 
         try {
             let url = '/api/v1/customers/';
-            if (query) {
-                url += `?search=${encodeURIComponent(query)}`;
-            }
-
             const response = await fetch(url);
             const customers = await response.json();
 
@@ -158,22 +228,19 @@
             const saldo = c.saldo_pendiente || 0;
             const percentage = Math.min((total / maxConsumo) * 100, 100);
 
-            // Iniciales del avatar (máximo 2 caracteres)
             const initials = c.nombre.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
             
-            // Colores vibrantes y modernos para los avatares
             const colors = [
-                'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)', // Indigo
-                'linear-gradient(135deg, #10b981 0%, #047857 100%)', // Green
-                'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)', // Orange
-                'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', // Cyan
-                'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', // Pink
-                'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'  // Purple
+                'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)',
+                'linear-gradient(135deg, #10b981 0%, #047857 100%)',
+                'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+                'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                'linear-gradient(135deg, #ec4899 0%, #be185d 100%)',
+                'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'
             ];
             const colorIdx = c.nombre.charCodeAt(0) % colors.length;
             const avatarBg = colors[colorIdx];
 
-            // Badge Estatus Deuda / Cuenta
             const tieneDeuda = saldo > 0.1;
             let statusBadge = '';
             if (tieneDeuda) {
@@ -192,7 +259,6 @@
                 `;
             }
 
-            // Color dinámico de barra basado en volumen
             let barColor = 'var(--primary)';
             if (percentage > 85) barColor = 'var(--indigo)';
             if (percentage < 25) barColor = 'var(--gray-400)';
@@ -219,7 +285,7 @@
                     <td style="padding: var(--space-4);">
                         ${statusBadge}
                     </td>
-                    <td style="padding: var(--space-4);">
+                    <td style="padding: var(--space-4);" data-order="${total}">
                         <div style="display: flex; flex-direction: column; gap: 6px; min-width: 170px; max-width: 250px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);">
@@ -239,20 +305,36 @@
                             <a href="/customers/${c.id}/edit" class="btn btn-indigo" style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; color: white;">
                                 <i class="bi bi-pencil"></i> Editar
                             </a>
+                            <button onclick="generateCustomerUser(${c.id})" class="btn btn-outline-primary" style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; background: white;" title="Generar Acceso Web">
+                                <i class="bi bi-person-badge"></i> Acceso
+                            </button>
                         </div>
                     </td>
                 </tr>
             `;
         }).join('');
+
+        // Initialize DataTable
+        customersTable = $('#customers-table').DataTable({
+            pageLength: 10,
+            language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+            order: [], // no default sort
+            dom: '<"top">rt<"bottom"ip><"clear">', // hide default search
+            columnDefs: [
+                { orderable: false, targets: [4] } // disable sorting on Acciones column
+            ]
+        });
     }
 
     // Initial load
     fetchCustomers();
 
-    // Search listener
-    searchInput.addEventListener('input', debounce((e) => {
-        fetchCustomers(e.target.value);
-    }));
+    // Search listener linked to DataTables
+    searchInput.addEventListener('input', function(e) {
+        if (customersTable) {
+            customersTable.search(e.target.value).draw();
+        }
+    });
 
     // --- IMPORTACIÓN MASIVA EXCEL (DRY RUN LOGIC) ---
     const importInput = document.getElementById('import-file');
@@ -278,7 +360,7 @@
                 loading.style.display = 'none';
                 const msg = `Se detectaron ${dataVal.creados} clientes NUEVOS y ${dataVal.actualizados} a ACTUALIZAR. ¿Deseas aplicar estos cambios irreversiblemente?`;
                 
-                if (confirm(msg)) {
+                if (await showConfirmDialog(msg)) {
                     loading.style.display = 'block';
                     loading.textContent = 'Guardando clientes en base de datos...';
                     
@@ -289,22 +371,62 @@
                     const dataReal = await resReal.json();
                     
                     if (resReal.ok) {
-                        alert(`¡Éxito! Base de datos sincronizada.`);
+                        showSuccessNotification(`¡Éxito! Base de datos sincronizada.`);
                         fetchCustomers();
                     } else {
-                        alert("Error al guardar: " + JSON.stringify(dataReal));
+                        let errorMsgReal = dataReal.detail || JSON.stringify(dataReal);
+                        if (Array.isArray(dataReal.detail)) {
+                            errorMsgReal = dataReal.detail.map(e => e.msg).join(', ');
+                        }
+                        showErrorNotification("Error al guardar: " + errorMsgReal);
                     }
                 }
             } else {
-                alert("Error al leer Excel: " + JSON.stringify(dataVal));
+                let errorMsgVal = dataVal.detail || JSON.stringify(dataVal);
+                if (Array.isArray(dataVal.detail)) {
+                    errorMsgVal = dataVal.detail.map(e => e.msg).join(', ');
+                }
+                showErrorNotification("Error al leer Excel: " + errorMsgVal);
             }
-        } catch (e) {
-            alert("Error de conexión al cargar el archivo.");
-            console.error(e);
-        } finally {
-            importInput.value = '';
+        } catch (error) {
+            console.error(error);
             loading.style.display = 'none';
+            document.getElementById('error-message').textContent = 'Ocurrió un error al comunicarse con el servidor.';
+            document.getElementById('error-notification').style.display = 'flex';
         }
     });
+
+    async function generateCustomerUser(customerId) {
+        try {
+            const response = await fetch(`/api/v1/users/generar-cuenta-cliente/${customerId}`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Show success modal with credentials
+                let html = `<div style="text-align: left; padding: 10px;">
+                    <p><b>Usuario:</b> ${data.username}</p>`;
+                if (data.password) {
+                    html += `<p><b>Contraseña Temporal:</b> ${data.password}</p>
+                            <p class="text-danger small"><i class="bi bi-exclamation-triangle"></i> Guarda esta contraseña, no se volverá a mostrar.</p>`;
+                } else {
+                    html += `<p class="text-info small">Esta cuenta ya estaba generada anteriormente.</p>`;
+                }
+                html += `</div>`;
+                
+                Swal.fire({
+                    title: 'Acceso Web Generado',
+                    html: html,
+                    icon: 'success',
+                    confirmButtonText: 'Entendido'
+                });
+            } else {
+                Swal.fire('Error', data.detail || 'No se pudo generar el acceso', 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Problema de conexión', 'error');
+        }
+    }
 </script>
 {% endblock %}

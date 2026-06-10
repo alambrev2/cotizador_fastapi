@@ -10,20 +10,33 @@
     </div>
 
     <div class="card" style="border-radius: var(--radius-xl); padding: var(--space-8); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01); border: 1px solid var(--border-color);">
-        <div id="alert-box" class="alert" style="border-radius: var(--radius-md);"></div>
-
-        <!-- Notificación de éxito -->
+        <!-- Notificaciones -->
         <div id="success-notification" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; animation: slideIn 0.5s ease-out;">
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 1.5rem 2rem; border-radius: var(--radius-xl); box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4); display: flex; align-items: center; gap: 1rem; min-width: 350px;">
-                <div style="width: 48px; height: 48px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    <i class="bi bi-check-lg" style="font-size: 1.5rem; font-weight: bold;"></i>
+            <div style="background: var(--success); color: white; padding: 0.75rem 1rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 0.75rem; min-width: 280px;">
+                <div style="width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="bi bi-check-lg" style="font-size: 1rem; font-weight: bold;"></i>
                 </div>
                 <div>
-                    <div style="font-weight: 800; font-size: 1.1rem; margin-bottom: 0.25rem;">¡Cliente Creado!</div>
-                    <div id="success-message" style="font-size: 0.9rem; opacity: 0.95;">Cliente creado adecuadamente</div>
+                    <div style="font-weight: 600; font-size: 0.9rem;">¡Éxito!</div>
+                    <div id="success-message" style="font-size: 0.8rem; opacity: 0.9;">Operación completada</div>
                 </div>
-                <button onclick="hideSuccessNotification()" style="background: none; border: none; color: white; cursor: pointer; padding: 0.5rem; margin-left: auto; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                    <i class="bi bi-x-lg" style="font-size: 1.2rem;"></i>
+                <button onclick="hideSuccessNotification()" style="background: none; border: none; color: white; cursor: pointer; padding: 0.25rem; margin-left: auto; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                    <i class="bi bi-x-lg" style="font-size: 0.9rem;"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="error-notification" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; animation: slideIn 0.5s ease-out;">
+            <div style="background: var(--danger); color: white; padding: 0.75rem 1rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 0.75rem; min-width: 280px;">
+                <div style="width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="bi bi-exclamation-lg" style="font-size: 1rem; font-weight: bold;"></i>
+                </div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.9rem;">¡Error!</div>
+                    <div id="error-message" style="font-size: 0.8rem; opacity: 0.9;">Ocurrió un error</div>
+                </div>
+                <button onclick="hideErrorNotification()" style="background: none; border: none; color: white; cursor: pointer; padding: 0.25rem; margin-left: auto; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+                    <i class="bi bi-x-lg" style="font-size: 0.9rem;"></i>
                 </button>
             </div>
         </div>
@@ -171,21 +184,16 @@
 }
 </style>
 <script>
-    function showSuccessNotification(message) {
-        const notification = document.getElementById('success-notification');
-        const messageEl = document.getElementById('success-message');
-        messageEl.textContent = message || 'Cliente creado adecuadamente';
-        notification.style.display = 'block';
-        notification.style.animation = 'slideIn 0.5s ease-out';
-        
-        // Auto ocultar después de 4 segundos
-        setTimeout(() => {
-            hideSuccessNotification();
-        }, 4000);
-    }
-
     function hideSuccessNotification() {
         const notification = document.getElementById('success-notification');
+        notification.style.animation = 'slideOut 0.5s ease-out';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 500);
+    }
+
+    function hideErrorNotification() {
+        const notification = document.getElementById('error-notification');
         notification.style.animation = 'slideOut 0.5s ease-out';
         setTimeout(() => {
             notification.style.display = 'none';
@@ -253,11 +261,9 @@
             data.username = username;
             data.password = password;
         } else if (username || password) {
-            alert('Para habilitar el acceso al portal, debes proporcionar tanto nombre de usuario como contraseña.');
+            showErrorNotification('Para habilitar el acceso al portal, debes proporcionar tanto nombre de usuario como contraseña.');
             return;
         }
-        
-        const alertBox = document.getElementById('alert-box');
 
         try {
             const response = await fetch('/api/v1/customers/', {
@@ -274,14 +280,10 @@
                 this.reset();
             } else {
                 const error = await response.json();
-                alertBox.textContent = `Error: ${error.detail || 'No se pudo crear el cliente'}`;
-                alertBox.className = 'alert alert-error';
-                alertBox.style.display = 'block';
+                showErrorNotification(`Error: ${error.detail || 'No se pudo crear el cliente'}`);
             }
         } catch (err) {
-            alertBox.textContent = 'Error de conexión';
-            alertBox.className = 'alert alert-error';
-            alertBox.style.display = 'block';
+            showErrorNotification('Error de conexión');
         }
     });
 </script>

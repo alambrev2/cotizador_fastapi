@@ -153,6 +153,52 @@ def generar_cuentas_clientes(
     }
 
 
+@router.post("/generar-cuenta-cliente/{cliente_id}")
+def generar_cuenta_cliente_individual(
+    cliente_id: int,
+    db: Session = Depends(get_session),
+    _admin: User = Depends(get_current_active_admin),
+):
+    """
+    Genera automáticamente cuenta de acceso (rol Cliente) para un cliente específico.
+    """
+    cliente = db.get(Customer, cliente_id)
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+        
+    if not cliente.email:
+        raise HTTPException(status_code=400, detail="El cliente debe tener un correo electrónico para generar su cuenta")
+
+    existing = db.exec(select(User).where(User.email == cliente.email)).first()
+    if existing:
+        if not existing.cliente_id:
+            existing.cliente_id = cliente.id
+            db.add(existing)
+            db.commit()
+            return {"detail": "Cuenta existente vinculada al cliente", "username": existing.username}
+        raise HTTPException(status_code=400, detail="El cliente ya tiene una cuenta o el correo está en uso por otra persona")
+
+    username = _generar_username(cliente.email, cliente.nombre, db)
+    password = _generar_contrasena()
+
+    nuevo = User(
+        username=username,
+        email=cliente.email,
+        role=RoleEnum.Cliente,
+        hashed_password=get_password_hash(password),
+        cliente_id=cliente.id,
+        is_active=True,
+    )
+    db.add(nuevo)
+    db.commit()
+
+    return {
+        "detail": "Cuenta creada exitosamente",
+        "username": username,
+        "password": password
+    }
+
+
 
 
 # ── CREATE ────────────────────────────────────────────────────────────────────

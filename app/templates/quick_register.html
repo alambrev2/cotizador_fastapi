@@ -4,18 +4,45 @@
 
 {% block head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    @keyframes bellRing {
+        0% { transform: rotate(0); }
+        10% { transform: rotate(15deg); }
+        20% { transform: rotate(-10deg); }
+        30% { transform: rotate(5deg); }
+        40% { transform: rotate(-5deg); }
+        50% { transform: rotate(0); }
+        100% { transform: rotate(0); }
+    }
+    @keyframes badgePulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .has-notifications .bi-bell-fill {
+        animation: bellRing 2s infinite ease-in-out;
+        color: white;
+    }
+    .has-notifications {
+        background-color: var(--danger) !important;
+        border-color: var(--danger) !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div style="max-width: 100%; margin: 0 auto; padding: 0 var(--space-4);">
+<div style="max-width: 100%; margin: 0 auto; padding: 0 var(--space-4); position: relative;">
 
-    <!-- Alertas de 5 Días -->
-    <div id="alert_box" class="alert alert-warning" style="display: none;">
-        <p style="font-weight: var(--font-weight-semibold); display: flex; align-items: center; gap: var(--space-2);"><span style="font-size: var(--font-size-xl);">⚠️</span> ¡Atención! Egresos próximos a vencer (menos de 5 días)</p>
-        <ul id="alert_list" style="list-style: disc; margin-left: var(--space-6); margin-top: var(--space-2); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium);"></ul>
+    <!-- Notification Button (Top Right) -->
+    <button id="btn-notificaciones" class="btn btn-outline" style="position: absolute; top: -10px; right: var(--space-4); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; padding: 0; z-index: 50; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: white; border: 2px solid var(--border-color);" onclick="abrirNotificaciones()" onmouseover="this.style.transform='scale(1.1) translateY(-2px)'" onmouseout="this.style.transform='scale(1) translateY(0)'">
+        <i class="bi bi-bell-fill" style="font-size: 1.4rem; color: var(--gray-600); transition: color 0.3s ease;"></i>
+        <span id="badge-notificaciones" style="display: none; position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; font-size: 0.75rem; font-weight: bold; padding: 3px 7px; border-radius: 12px; border: 2px solid white; animation: badgePulse 2s infinite;">0</span>
+    </button>
+
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: var(--space-10);">
+        <h2 style="text-align: center; color: var(--gray-800); font-size: clamp(1.5rem, 5vw, 2rem); margin: 0; line-height: 1.3;">Resumen de Negocio</h2>
     </div>
-
-    <h2 style="text-align: center; margin-bottom: var(--space-10); color: var(--gray-800); font-size: clamp(1.5rem, 5vw, 2rem); word-wrap: break-word; overflow-wrap: break-word; hyphens: auto; line-height: 1.3; padding: 0 1rem;">Resumen de Negocio</h2>
 
     <!-- Métricas del Dashboard -->
     <div class="dashboard-metrics grid-3-cols" style="gap: 1rem; margin-bottom: var(--space-8); padding: 0 1rem;">
@@ -57,11 +84,22 @@
         </div>
     </div>
 
-    <!-- Gráfico Financiero -->
-    <div class="card" style="margin-bottom: var(--space-10); padding: 0 1rem;">
-        <h4 style="color: var(--text-muted); font-size: var(--font-size-xs); text-transform: uppercase; margin: 0 0 var(--space-4) 0; font-weight: var(--font-weight-semibold);">Balance Financiero (Ingresos vs Egresos)</h4>
-        <div style="position: relative; height: 250px; width: 100%; min-height: 200px;">
-            <canvas id="financeChart"></canvas>
+    <!-- Analíticas de Negocio -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-10);">
+        <!-- Gráfico Financiero -->
+        <div class="card" style="margin-bottom: 0; padding: 1rem;">
+            <h4 style="color: var(--text-muted); font-size: var(--font-size-xs); text-transform: uppercase; margin: 0 0 var(--space-4) 0; font-weight: var(--font-weight-semibold);">Balance Financiero (Mes Actual)</h4>
+            <div style="position: relative; height: 250px; width: 100%; min-height: 200px;">
+                <canvas id="financeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Funnel de Cotizaciones -->
+        <div class="card" style="margin-bottom: 0; padding: 1rem;">
+            <h4 style="color: var(--text-muted); font-size: var(--font-size-xs); text-transform: uppercase; margin: 0 0 var(--space-4) 0; font-weight: var(--font-weight-semibold);">Embudo de Conversión (Cotizaciones)</h4>
+            <div style="position: relative; height: 250px; width: 100%; min-height: 200px;">
+                <canvas id="funnelChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -235,15 +273,96 @@
         </div>
     </div>
 
+    <!-- Modal de Notificaciones -->
+    <div id="modal-notificaciones" style="display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div style="background: white; border-radius: var(--radius-xl); width: 90%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: var(--shadow-xl); transform: translateY(-20px); transition: transform 0.3s ease;" id="modal-notificaciones-content">
+            <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--gray-800);">Centro de Notificaciones</h3>
+                <button onclick="cerrarNotificaciones()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray-500);"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div style="padding: 1.5rem; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+                
+                <!-- Alertas de 5 Días -->
+                <div id="alert_box" class="alert alert-warning" style="display: none; margin: 0;">
+                    <p style="font-weight: var(--font-weight-semibold); display: flex; align-items: center; gap: var(--space-2); margin:0;"><span style="font-size: var(--font-size-xl);">⚠️</span> Egresos próximos a vencer</p>
+                    <ul id="alert_list" style="list-style: disc; margin-left: var(--space-6); margin-top: var(--space-2); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium);"></ul>
+                </div>
 
+                <!-- Alerta de Bajo Stock -->
+                <div id="stock_alert_box" class="alert alert-danger" style="display: none; background: #fee2e2; border-left: 4px solid #ef4444; padding: var(--space-4); border-radius: var(--radius-md); margin: 0;">
+                    <p style="font-weight: var(--font-weight-semibold); color: #991b1b; display: flex; align-items: center; gap: var(--space-2); margin: 0;"><span style="font-size: var(--font-size-xl);">🚨</span> Inventario crítico</p>
+                    <ul id="stock_alert_list" style="list-style: disc; margin-left: var(--space-6); margin-top: var(--space-2); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: #7f1d1d;"></ul>
+                </div>
 
+                <!-- Alerta de Cobranza (Cartera Vencida) -->
+                <div id="cobranza_alert_box" class="alert alert-danger" style="display: none; background: #fee2e2; border-left: 4px solid #b91c1c; padding: var(--space-4); border-radius: var(--radius-md); margin: 0;">
+                    <p style="font-weight: var(--font-weight-semibold); color: #7f1d1d; display: flex; align-items: center; gap: var(--space-2); margin: 0;"><span style="font-size: var(--font-size-xl);">💸</span> Cartera vencida (>30 días)</p>
+                    <ul id="cobranza_alert_list" style="list-style: disc; margin-left: var(--space-6); margin-top: var(--space-2); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: #7f1d1d;"></ul>
+                </div>
+
+                <div id="no-notificaciones" style="text-align: center; color: var(--gray-500); padding: 2rem 0; display: none;">
+                    <i class="bi bi-bell-slash" style="font-size: 2rem; display: block; margin-bottom: 0.5rem; color: var(--gray-300);"></i>
+                    No tienes notificaciones pendientes.
+                </div>
+            </div>
+        </div>
+    </div>
 
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // --- Lógica del Resumen Financiero ---
+    function actualizarBadgeNotificaciones() {
+        let count = 0;
+        if(document.getElementById('alert_box').style.display !== 'none') count++;
+        if(document.getElementById('stock_alert_box').style.display !== 'none') count++;
+        if(document.getElementById('cobranza_alert_box').style.display !== 'none') count++;
+        
+        const badge = document.getElementById('badge-notificaciones');
+        const emptyState = document.getElementById('no-notificaciones');
+        if(count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'block';
+            emptyState.style.display = 'none';
+            document.getElementById('btn-notificaciones').classList.add('has-notifications');
+            document.getElementById('btn-notificaciones').classList.remove('btn-outline');
+            document.getElementById('btn-notificaciones').querySelector('.bi-bell-fill').style.color = 'white';
+        } else {
+            badge.style.display = 'none';
+            emptyState.style.display = 'block';
+            document.getElementById('btn-notificaciones').classList.remove('has-notifications');
+            document.getElementById('btn-notificaciones').classList.add('btn-outline');
+            document.getElementById('btn-notificaciones').querySelector('.bi-bell-fill').style.color = 'var(--gray-600)';
+        }
+    }
+
+    function abrirNotificaciones() {
+        const modal = document.getElementById('modal-notificaciones');
+        const content = document.getElementById('modal-notificaciones-content');
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            content.style.transform = 'translateY(0)';
+        }, 10);
+    }
+
+    function cerrarNotificaciones() {
+        const modal = document.getElementById('modal-notificaciones');
+        const content = document.getElementById('modal-notificaciones-content');
+        modal.style.opacity = '0';
+        content.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
+    }
+
+    document.getElementById('modal-notificaciones').addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarNotificaciones();
+        }
+    });
+
     async function loadDashboardMetrics() {
         try {
             const res = await fetch('/api/v1/dashboard/summary', { cache: 'no-store' });
@@ -263,13 +382,87 @@
                 const alertBox = document.getElementById('alert_box');
                 const alertList = document.getElementById('alert_list');
                 if (data.alertas_proximas && data.alertas_proximas.length > 0) {
-                    alertBox.classList.remove('hidden');
+                    alertBox.style.display = 'block';
                     alertList.innerHTML = data.alertas_proximas.map(a => `<li>${a.descripcion} - Vence: ${a.fecha_vencimiento} ($${a.monto})</li>`).join('');
                 } else {
-                    alertBox.classList.add('hidden');
+                    alertBox.style.display = 'none';
                 }
 
                 renderCalendar(data.scheduled_expenses || []);
+                
+                // --- Analíticas Avanzadas ---
+                const analiticasRes = await fetch('/api/v1/dashboard/analytics', { cache: 'no-store' });
+                if (analiticasRes.ok) {
+                    const analiticas = await analiticasRes.json();
+                    
+                    // Render Alertas de Stock
+                    const stockAlertBox = document.getElementById('stock_alert_box');
+                    const stockAlertList = document.getElementById('stock_alert_list');
+                    if (analiticas.alertas_stock && analiticas.alertas_stock.length > 0) {
+                        stockAlertBox.style.display = 'block';
+                        stockAlertList.innerHTML = analiticas.alertas_stock.map(p => `<li>${p.nombre} - Stock actual: <strong>${p.stock}</strong> (Mínimo: ${p.stock_minimo})</li>`).join('');
+                    } else {
+                        stockAlertBox.style.display = 'none';
+                    }
+
+                    // Render Alertas de Cobranza
+                    const cobranzaAlertBox = document.getElementById('cobranza_alert_box');
+                    const cobranzaAlertList = document.getElementById('cobranza_alert_list');
+                    if (analiticas.alertas_cobranza && analiticas.alertas_cobranza.length > 0) {
+                        cobranzaAlertBox.style.display = 'block';
+                        cobranzaAlertList.innerHTML = analiticas.alertas_cobranza.map(c => `<li>${c.cliente} - ${c.detalle} ($${c.monto.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}) <span style="color: #991b1b; font-weight: bold;">(Atraso: ${c.dias_retraso} días)</span></li>`).join('');
+                    } else {
+                        cobranzaAlertBox.style.display = 'none';
+                    }
+
+                    // Configurar y renderizar la gráfica de Embudo (Funnel)
+                    const conversion = analiticas.conversion_metrics || {};
+                    const ctxFunnel = document.getElementById('funnelChart').getContext('2d');
+                    new Chart(ctxFunnel, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Borrador', 'Enviada', 'Aprobada', 'Rechazada/Cancelada'],
+                            datasets: [{
+                                label: 'Cantidad de Cotizaciones',
+                                data: [
+                                    conversion['Borrador'] || 0,
+                                    conversion['Enviada'] || 0,
+                                    conversion['Aprobada'] || 0,
+                                    (conversion['Rechazada'] || 0) + (conversion['Cancelada'] || 0)
+                                ],
+                                backgroundColor: [
+                                    'rgba(99, 102, 241, 0.6)',   // Borrador (Azul/Indigo)
+                                    'rgba(245, 158, 11, 0.6)',   // Enviada (Naranja)
+                                    'rgba(16, 185, 129, 0.6)',   // Aprobada (Verde)
+                                    'rgba(239, 68, 68, 0.6)'     // Rechazada (Rojo)
+                                ],
+                                borderColor: [
+                                    '#6366f1',
+                                    '#f59e0b',
+                                    '#10b981',
+                                    '#ef4444'
+                                ],
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { stepSize: 1 }
+                                }
+                            }
+                        }
+                    });
+                    
+                    actualizarBadgeNotificaciones();
+                }
                 
                 // Configurar y renderizar la gráfica de barras
                 const ctx = document.getElementById('financeChart').getContext('2d');
@@ -510,7 +703,7 @@
 
     // Delete expense
     async function deleteExpense(id) {
-        if (!confirm('¿Estás seguro de eliminar este egreso?')) return;
+        if (!(await showConfirmDialog('¿Estás seguro de eliminar este egreso?'))) return;
 
         try {
             await fetch(`/api/v1/scheduled-expenses/${id}`, {
@@ -520,7 +713,7 @@
             loadDashboardMetrics(); // Refresh calendar
         } catch (error) {
             console.error('Error deleting expense:', error);
-            alert('Error al eliminar el egreso');
+            showNotification('Error al eliminar el egreso', "error");
         }
     }
 
@@ -548,7 +741,7 @@
                 renderExpensesList();
             }
         } else {
-            alert("Error al programar egreso.");
+            showNotification("Error al programar egreso.", "error");
         }
     });
 
@@ -576,12 +769,12 @@
                 renderExpensesList();
             }
         } else {
-            alert("Error al actualizar egreso.");
+            showNotification("Error al actualizar egreso.", "error");
         }
     });
 
     async function deleteScheduledExpense() {
-        if(!confirm("¿Estás seguro de que deseas eliminar este evento programado?")) return;
+        if(!(await showConfirmDialog("¿Estás seguro de que deseas eliminar este evento programado?"))) return;
         
         const id = document.getElementById('edit-sch-id').value;
         const res = await fetch(`/api/v1/scheduled-expenses/${id}`, { method: 'DELETE' });
@@ -589,7 +782,7 @@
             document.getElementById('modal-editar-egreso').style.display = 'none';
             loadDashboardMetrics(); 
         } else {
-            alert("Error al eliminar egreso.");
+            showNotification("Error al eliminar egreso.", "error");
         }
     }
 

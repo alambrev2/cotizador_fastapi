@@ -486,7 +486,7 @@ async function toggleUser(userId, isActive) {
     showConfirmModal(title, msg, type, actionCap, async () => {
         const res = await fetch(`/api/v1/users/${userId}/toggle`, { method: 'PUT' });
         if (res.ok) loadUsers();
-        else { const d = await res.json(); alert(d.detail || 'Error.'); }
+        else { const d = await res.json(); showNotification(d.detail || 'Error.'); }
     });
 }
 
@@ -494,7 +494,7 @@ async function deleteUser(userId, username) {
     showConfirmModal('Eliminar usuario', `¿Eliminar permanentemente al usuario "${username}"? Esta acción no se puede deshacer y borrará sus datos.`, 'danger', 'Eliminar permanentemente', async () => {
         const res = await fetch(`/api/v1/users/${userId}`, { method: 'DELETE' });
         if (res.ok) loadUsers();
-        else { const d = await res.json(); alert(d.detail || 'Error al eliminar.'); }
+        else { const d = await res.json(); showNotification(d.detail || 'Error al eliminar.'); }
     });
 }
 
@@ -517,7 +517,7 @@ async function submitReset() {
         method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ password: pwd })
     });
     const data = await res.json();
-    if (res.ok) { closeResetModal(); alert('✅ Contraseña actualizada correctamente.'); }
+    if (res.ok) { closeResetModal(); showNotification('✅ Contraseña actualizada correctamente.'); }
     else { errEl.textContent = data.detail || 'Error.'; errEl.style.display = 'block'; }
 }
 
@@ -621,7 +621,7 @@ async function ejecutarGenerarCuentas() {
         document.getElementById('generar-estado-inicial').style.display = 'block';
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-magic"></i> Generar ahora';
-        alert('Error: ' + err.message);
+        showNotification('Error: ' + err.message);
     }
 }
 

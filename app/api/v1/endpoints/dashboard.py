@@ -149,3 +149,95 @@ def get_dashboard_summary(*, session: Session = Depends(get_session), response: 
         "scheduled_expenses": scheduled_expenses,
         "alertas_proximas": alertas_proximas
     }
+
+@router.get("/analytics")
+def get_dashboard_analytics(*, session: Session = Depends(get_session), response: Response):
+    # Disable caching
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, proxy-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    
+    from app.models import Product, AccountCharge, Customer
+    from sqlalchemy import func
+    import datetime as dt
+    
+    # 1. Métricas de Conversión (Embudo de cotizaciones)
+    quotes = session.exec(select(Quote.estado, func.count(Quote.id)).group_by(Quote.estado)).all()
+    conversion_metrics = {estado: count for estado, count in quotes}
+    
+    # 2. Alertas de Inventario Bajo
+    # Asegurarse de que el stock_minimo sea respetado
+    low_stock_products = session.exec(select(Product).where(Product.stock <= Product.stock_minimo, Product.activo == True)).all()
+    alertas_stock = [
+        {"id": p.id, "nombre": p.nombre, "stock": p.stock, "stock_minimo": p.stock_minimo}
+        for p in low_stock_products
+    ]
+
+    # 3. Alertas de Cobranza (>30 días)
+    limite_cobranza = dt.datetime.utcnow() - dt.timedelta(days=30)
+    cargos_atrasados = session.exec(
+        select(AccountCharge)
+        .where(AccountCharge.estatus == "Pendiente")
+        .where(AccountCharge.fecha < limite_cobranza)
+    ).all()
+
+    alertas_cobranza = []
+    for cargo in cargos_atrasados:
+        dias_retraso = (dt.datetime.utcnow() - cargo.fecha).days
+        cliente = session.get(Customer, cargo.cliente_id)
+        if cliente:
+            alertas_cobranza.append({
+                "cliente": cliente.nombre,
+                "detalle": cargo.detalle,
+                "monto": float(cargo.monto),
+                "dias_retraso": dias_retraso
+            })
+    
+    return {
+        "conversion_metrics": conversion_metrics,
+        "alertas_stock": alertas_stock,
+        "alertas_cobranza": alertas_cobranza
+    }
+
+@router.get("/pnl")
+def get_pnl(anio: int = None, session: Session = Depends(get_session)):
+    if not anio:
+        anio = datetime.now().year
+    
+    # We want to return data for each month (1 to 12)
+    meses = []
+    
+    from app.models import OtherIncome
+    
+    for mes in range(1, 13):
+        first_day = dt.date(anio, mes, 1)
+        last_day = dt.date(anio, mes, monthrange(anio, mes)[1])
+        
+        # Ingresos: Suma de pagos + Incomes extras
+        pagos = session.exec(select(Payment).where(Payment.fecha_pago >= first_day, Payment.fecha_pago <= last_day)).all()
+        ingresos_pagos = sum([float(p.monto) for p in pagos])
+        
+        incomes = session.exec(select(OtherIncome).where(OtherIncome.fecha >= first_day, OtherIncome.fecha <= last_day)).all()
+        ingresos_extras = sum([float(i.monto) for i in incomes])
+        
+        total_ingresos = ingresos_pagos + ingresos_extras
+        
+        # Egresos: 
+        egresos = session.exec(select(Expense).where(Expense.fecha >= first_day, Expense.fecha <= last_day)).all()
+        
+        # Clasificar egresos
+        cat_materiales = ["materiales", "insumos", "proveedores", "compras", "equipo"]
+        
+        costos_materiales = sum([float(e.monto) for e in egresos if e.categoria and e.categoria.lower() in cat_materiales])
+        egresos_operativos = sum([float(e.monto) for e in egresos if not e.categoria or e.categoria.lower() not in cat_materiales])
+        
+        meses.append({
+            "mes": mes,
+            "ingresos": total_ingresos,
+            "costos_materiales": costos_materiales,
+            "egresos_operativos": egresos_operativos,
+            "utilidad_bruta": total_ingresos - costos_materiales,
+            "utilidad_neta": total_ingresos - costos_materiales - egresos_operativos
+        })
+        
+    return {"anio": anio, "pnl": meses}

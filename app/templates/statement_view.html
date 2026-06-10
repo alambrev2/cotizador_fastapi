@@ -233,6 +233,31 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Historial de Pagos / Abonos -->
+        <div class="card shadow-sm mt-4" style="border-radius: var(--radius-lg); overflow: hidden; padding: 0; border: 1px solid var(--border-color);">
+            <div class="card-header bg-white py-4 px-4 border-bottom" style="background: var(--gray-50);">
+                <h5 class="card-title mb-0 fw-bold" style="color: var(--gray-800); font-size: 1.1rem;"><i class="bi bi-clock-history me-2 text-primary"></i>Historial de Pagos y Abonos</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="margin: 0;">
+                    <thead style="background: white;">
+                        <tr>
+                            <th class="ps-4 py-3" style="color: var(--gray-500);">ID</th>
+                            <th class="py-3" style="color: var(--gray-500);">Fecha</th>
+                            <th class="py-3" style="color: var(--gray-500);">Vinculado a</th>
+                            <th class="py-3" style="color: var(--gray-500);">Método/Ref</th>
+                            <th class="text-end py-3" style="color: var(--gray-500);">Monto</th>
+                            <th class="text-center pe-4 py-3" style="color: var(--gray-500);">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="client-payments-body">
+                        <!-- JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
     </div>
 </div>
 
@@ -349,7 +374,7 @@
 
         } catch (e) {
             console.error("Error en loadAllCustomersCatalog:", e);
-            alert("No se pudo cargar el catálogo.");
+            showNotification("No se pudo cargar el catálogo.");
         } finally {
             document.getElementById('loading').style.display = 'none';
         }
@@ -395,7 +420,7 @@
             currentStatementData = data; // Guardar datos globalmente para evitar bugs de parsing
             renderCustomerStatement(data);
         } catch (error) {
-            alert(error.message);
+            showNotification(error.message);
             hideDetail(); // Use hideDetail to go back to list and reload
         } finally {
             document.getElementById('loading').style.display = 'none';
@@ -447,6 +472,35 @@
         }
 
         tbody.innerHTML = quotesHtml;
+        
+        // Historial de todos los pagos
+        const paymentsBody = document.getElementById('client-payments-body');
+        if(data.todos_los_pagos && data.todos_los_pagos.length > 0) {
+            paymentsBody.innerHTML = data.todos_los_pagos.map(p => `
+                <tr>
+                    <td class="ps-4 py-3 fw-bold text-secondary">#${p.id}</td>
+                    <td class="py-3">
+                        <div style="font-size: 0.9rem; color: var(--gray-600);">${new Date(p.fecha).toLocaleString()}</div>
+                    </td>
+                    <td class="py-3">
+                        ${p.quote_id ? `<span class="badge bg-primary">Cot. #${p.quote_id}</span>` : (p.cargo_id ? `<span class="badge bg-warning text-dark">Servicio #${p.cargo_id}</span>` : `<span class="badge bg-info">Abono Global</span>`)}
+                    </td>
+                    <td class="py-3" style="color: var(--gray-600);">
+                        ${p.metodo} <br><small class="text-muted">${p.ref || ''}</small>
+                    </td>
+                    <td class="text-end py-3 fw-bold text-success">
+                        +$${parseFloat(p.monto).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td class="text-center pe-4 py-3">
+                        <button onclick="deletePayment(${p.id})" class="btn btn-sm btn-outline-danger" title="Eliminar Pago">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            paymentsBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No hay pagos registrados.</td></tr>';
+        }
 
         const select = document.getElementById('pay-quote-select');
         select.innerHTML = '<option value="">Selecciona folio...</option>';
@@ -580,7 +634,7 @@
     document.getElementById('payment-form').addEventListener('submit', async function (e) {
         e.preventDefault();
         const quoteVal = document.getElementById('pay-quote-select').value;
-        if (!quoteVal) { alert("Selecciona a qué vincular el pago (Folio o N/A)."); return; }
+        if (!quoteVal) { showNotification("Selecciona a qué vincular el pago (Folio o N/A)."); return; }
 
         const payload = {
             monto: parseFloat(document.getElementById('pay-amount').value),
@@ -609,7 +663,7 @@
 
         const msg = `¿Aplicar abono de $${payload.monto.toLocaleString()} ${targetName}?`;
 
-        if (confirm(msg)) {
+        if (await showConfirmDialog(msg)) {
             try {
                 const response = await fetch('/api/v1/payments/', {
                     method: 'POST',
@@ -618,7 +672,7 @@
                 });
 
                 if (response.ok) {
-                    alert('Pago registrado con éxito');
+                    showNotification('Pago registrado con éxito', 'success');
                     document.getElementById('payment-form').reset();
                     if (lastLoadedCustomerId) {
                         loadCustomerStatement(lastLoadedCustomerId);
@@ -626,14 +680,32 @@
                     loadActiveAccounts();
                 } else {
                     const errorData = await response.json();
-                    alert('Error al procesar el pago: ' + (errorData.detail || 'Verifica los datos.'));
+                    showNotification('Error al procesar el pago: ' + (errorData.detail || 'Verifica los datos.'), "error");
                 }
             } catch (err) {
                 console.error(err);
-                alert('Sin conexión al servidor. Intenta de nuevo.');
+                showNotification('Sin conexión al servidor. Intenta de nuevo.', 'error');
             }
         }
     });
+
+    async function deletePayment(id) {
+        if (!(await showConfirmDialog('¿Estás seguro de eliminar este pago? Esta acción no se puede deshacer y el saldo pendiente aumentará.'))) return;
+        try {
+            const response = await fetch(`/api/v1/payments/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                showNotification('Pago eliminado correctamente', 'success');
+                if (lastLoadedCustomerId) {
+                    loadCustomerStatement(lastLoadedCustomerId);
+                }
+            } else {
+                const err = await response.json();
+                showNotification(err.detail || 'Error al eliminar', 'error');
+            }
+        } catch (error) {
+            showNotification('Error de conexión', 'error');
+        }
+    }
 
     // ======== New Logics for Charges and Remissions ========
     async function openChargeModal() {
@@ -655,7 +727,7 @@
             });
             document.getElementById('newChargeModal').classList.add('show');
         } catch(e) {
-            alert("No se pudo cargar la lista de clientes");
+            showNotification("No se pudo cargar la lista de clientes");
         }
     }
 
@@ -673,16 +745,16 @@
                 body: JSON.stringify(payload)
             });
             if(resp.ok) {
-                alert("Cargo registrado y guardado exitosamente en database.db.");
+                showNotification("Cargo registrado y guardado exitosamente en database.db.");
                 document.getElementById('newChargeModal').classList.remove('show');
                 document.getElementById('new-charge-form').reset();
                 
                 // Return to Finanzas completely and refresh table
                 hideDetail();
             } else {
-                alert("Error al guardar el cargo.");
+                showNotification("Error al guardar el cargo.", "error");
             }
-        } catch(e) { alert("Error de red"); }
+        } catch(e) { showNotification("Error de red", "error"); }
     });
 
     function checkRemissionBtn() {

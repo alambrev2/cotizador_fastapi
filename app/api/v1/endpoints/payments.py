@@ -223,6 +223,10 @@ def get_customer_statement(
     deuda_historica = float(customer.saldo_inicial or 0) + total_comprado + total_cargos
     total_pagado = total_pagado_quotes + total_abonos_directos
     saldo_global = deuda_historica - total_pagado
+    
+    # Todos los pagos para el historial
+    all_payments_query = select(Payment).where(Payment.cliente_id == customer_id).order_by(Payment.fecha_pago.desc())
+    all_payments = session.exec(all_payments_query).all()
 
     return {
         "cliente": {
@@ -261,6 +265,18 @@ def get_customer_statement(
                 "ref": p.referencia,
             }
             for p in direct_payments
+        ],
+        "todos_los_pagos": [
+            {
+                "id": p.id,
+                "fecha": p.fecha_pago,
+                "monto": float(p.monto),
+                "metodo": p.metodo_pago,
+                "ref": p.referencia,
+                "quote_id": p.quote_id,
+                "cargo_id": p.cargo_id
+            }
+            for p in all_payments
         ],
     }
 
@@ -648,3 +664,17 @@ def get_account_statement(*, session: Session = Depends(get_session), quote_id: 
         "progreso": round(progreso, 1),
         "pagos": payments,
     }
+
+
+@router.delete("/{payment_id}", status_code=204)
+def delete_payment(
+    *, session: Session = Depends(get_session), payment_id: int,
+    current_user: User = Depends(get_current_active_admin)
+):
+    payment = session.get(Payment, payment_id)
+    if not payment:
+        raise HTTPException(status_code=404, detail="Pago no encontrado")
+        
+    session.delete(payment)
+    session.commit()
+    return Response(status_code=204)
