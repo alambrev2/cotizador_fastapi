@@ -285,40 +285,52 @@ def delete_user(
         raise HTTPException(status_code=400, detail="No puedes eliminarte a ti mismo")
     user = _get_user_or_404(user_id, db)
     
-    # Eliminación en cascada si es un usuario Cliente
-    if user.role == RoleEnum.Cliente and user.cliente_id:
-        from app.models import Customer, Quote, QuoteItem, Payment, AccountCharge
-        customer = db.get(Customer, user.cliente_id)
-        if customer:
-            # 1. Eliminar Quotes y QuoteItems asociados
-            quotes = db.exec(select(Quote).where(Quote.cliente_id == customer.id)).all()
-            for q in quotes:
-                items = db.exec(select(QuoteItem).where(QuoteItem.cotizacion_id == q.id)).all()
-                for item in items:
-                    db.delete(item)
-                # Eliminar pagos ligados a la cotización
-                pagos_quote = db.exec(select(Payment).where(Payment.quote_id == q.id)).all()
-                for pq in pagos_quote:
-                    db.delete(pq)
-                db.delete(q)
-            
-            # 2. Eliminar Pagos directos del cliente
-            pagos = db.exec(select(Payment).where(Payment.cliente_id == customer.id)).all()
-            for p in pagos:
-                db.delete(p)
-                
-            # 3. Eliminar Cargos
-            cargos = db.exec(select(AccountCharge).where(AccountCharge.cliente_id == customer.id)).all()
-            for c in cargos:
-                db.delete(c)
-                
-            # 4. Eliminar el Customer
-            db.delete(customer)
-
-    try:
-        db.delete(user)
-    except:
-        pass # Por si la base de datos lo borró automáticamente por cascade
+    is_client = user.role == RoleEnum.Cliente or user.role == "Cliente"
+    customer_id = user.cliente_id
     
-    db.commit()
-    return {"detail": "Usuario eliminado"}
+    try:
+        # 1. Eliminar al usuario primero y guardar para evitar restricciones de llave foránea
+        db.delete(user)
+        db.commit()
+        
+        # 2. Eliminación en cascada si es un usuario Cliente
+        if is_client and customer_id:
+            from app.models import Customer, Quote, QuoteItem, Payment, AccountCharge
+            customer = db.get(Customer, customer_id)
+            if customer:
+                # Eliminar Quotes y QuoteItems asociados
+                quotes = db.exec(select(Quote).where(Quote.cliente_id == customer.id)).all()
+                for q in quotes:
+                    items = db.exec(select(QuoteItem).where(QuoteItem.cotizacion_id == q.id)).all()
+                    for item in items:
+                        db.delete(item)
+                    # Eliminar pagos ligados a la cotización
+                    pagos_quote = db.exec(select(Payment).where(Payment.quote_id == q.id)).all()
+                    for pq in pagos_quote:
+                        db.delete(pq)
+                    db.delete(q)
+                
+                # Eliminar Pagos directos del cliente
+                pagos = db.exec(select(Payment).where(Payment.cliente_id == customer.id)).all()
+                for p in pagos:
+                    db.delete(p)
+                    
+                # Eliminar Cargos
+                cargos = db.exec(select(AccountCharge).where(AccountCharge.cliente_id == customer.id)).all()
+                for c in cargos:
+                    db.delete(c)
+                    
+                # Eliminar todos los usuarios (cuentas) asociados al cliente
+                usuarios = db.exec(select(User).where(User.cliente_id == customer.id)).all()
+                for u in usuarios:
+                    if u.id != user.id: # El usuario actual ya está marcado para borrar
+                        db.delete(u)
+                    
+                # Eliminar el Customer
+                db.delete(customer)
+
+        db.commit()
+        return {"detail": "Usuario eliminado exitosamente"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
