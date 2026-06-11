@@ -1474,36 +1474,30 @@ tr:last-child td {
   .calendar-days > div,
   #calendar-grid > div {
     width: 100% !important;
-    height: 42px !important;
+    height: 52px !important;
     display: flex !important;
+    flex-direction: column !important;
     align-items: center !important;
-    justify-content: center !important;
-    border-radius: 12px !important;
+    justify-content: flex-start !important;
+    border-radius: 10px !important;
     border: 1px solid #e2e8f0 !important;
     background-color: #ffffff !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 6px 2px 4px !important;
     box-sizing: border-box !important;
+    overflow: hidden !important;
+    gap: 3px !important;
   }
 
-  /* Hide event text on mobile */
-  .calendar-days > div > div:not([style*="text-align: center"]),
-  #calendar-grid > div > div:not([style*="text-align: center"]),
-  [style*="font-size: 0.75rem"][style*="font-weight: 700"] {
+  /* Hide original event badge text on mobile */
+  .calendar-days > div > div > div,
+  #calendar-grid > div > div > div {
     display: none !important;
-  }
-
-  /* Day numbers - centered and styled */
-  .calendar-days > div > div,
-  #calendar-grid > div > div {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
   }
 
   .calendar-days span,
   #calendar-grid span {
-    font-size: 0.9rem !important;
+    font-size: 0.8rem !important;
     font-weight: bold !important;
   }
 
@@ -1648,14 +1642,17 @@ tr:last-child td {
     left: 0;
     right: 0;
     height: 60px;
-    background-color: var(--card-bg); /* White background */
+    background-color: var(--card-bg);
     border-bottom: 1px solid var(--border-color);
     padding: 0 var(--space-4);
-    z-index: 1000; /* Stays fixed at the top, below sidebar overlay but above content */
+    z-index: 1000;
     box-shadow: var(--shadow-sm);
   }
 
   .mobile-header-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1665,10 +1662,7 @@ tr:last-child td {
     letter-spacing: 0.03em;
     text-transform: uppercase;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: calc(100% - 100px); /* Leave room for menu button and spacer */
-    text-align: center;
+    pointer-events: none;
   }
 
   .mobile-header-logo i {
@@ -1681,7 +1675,7 @@ tr:last-child td {
   }
 
   .mobile-header-spacer {
-    width: 44px; /* Matches toggle button width to center the logo */
+    display: none;
   }
 
   .mobile-menu-toggle {
