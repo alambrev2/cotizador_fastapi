@@ -11,8 +11,14 @@
         <button id="btn-generar" onclick="abrirModalGenerar()" class="btn" style="width:auto;padding:0.65rem 1.5rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;box-shadow:0 4px 6px rgba(16,185,129,0.3);transition:all 0.2s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 12px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 6px rgba(16,185,129,0.3)'">
             <i class="bi bi-magic"></i> Generar Cuentas Clientes
         </button>
-        <button id="btn-nuevo" onclick="openModal('create')" class="btn btn-indigo" style="width:auto;padding:0.65rem 1.5rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;">
-            <i class="bi bi-person-plus-fill"></i> Nuevo Usuario
+        <a href="/new-customer" class="btn btn-indigo" style="width:auto;padding:0.65rem 1.5rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;text-decoration:none;background:#3b82f6;">
+            <i class="bi bi-person-check-fill"></i> Nuevo Cliente
+        </a>
+        <button onclick="openModal('create', 'Operativo')" class="btn btn-indigo" style="width:auto;padding:0.65rem 1.5rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;background:#f59e0b;">
+            <i class="bi bi-person-gear"></i> Nuevo Operativo
+        </button>
+        <button onclick="openModal('create', 'Administrador')" class="btn btn-indigo" style="width:auto;padding:0.65rem 1.5rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;background:#8b5cf6;">
+            <i class="bi bi-person-badge-fill"></i> Nuevo Administrador
         </button>
     </div>
 </div>
@@ -99,14 +105,7 @@
                     <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">Contraseña *</label>
                     <input id="f-password" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:0.65rem 1rem;font-size:0.95rem;box-sizing:border-box;">
                 </div>
-                <div>
-                    <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">Rol *</label>
-                    <select id="f-role" required style="width:100%;border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:0.65rem 1rem;font-size:0.95rem;background:white;box-sizing:border-box;">
-                        <option value="Operativo">Operativo</option>
-                        <option value="Cliente">Cliente</option>
-                        <option value="Administrador">Administrador</option>
-                    </select>
-                </div>
+                <input type="hidden" id="f-role" value="Operativo">
                 <div>
                     <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">Estado</label>
                     <select id="f-active" style="width:100%;border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:0.65rem 1rem;font-size:0.95rem;background:white;box-sizing:border-box;">
@@ -360,12 +359,22 @@ function initRoleFilters() {
 }
 
 // ── Modal ──
-function openModal(mode, userId = null) {
+function openModal(mode, param1 = null) {
     editingMode = mode === 'edit';
-    document.getElementById('modal-title').textContent = editingMode ? 'Editar Usuario' : 'Nuevo Usuario Operativo';
+    let role = 'Operativo';
+    let userId = null;
+
+    if (editingMode) {
+        userId = param1;
+    } else {
+        role = param1 || 'Operativo';
+    }
+
+    document.getElementById('modal-title').textContent = editingMode ? 'Editar Usuario' : `Nuevo Usuario ${role}`;
     document.getElementById('form-error').style.display = 'none';
     document.getElementById('user-form').reset();
     document.getElementById('form-user-id').value = '';
+    document.getElementById('f-role').value = role;
     document.getElementById('password-group').style.display = editingMode ? 'none' : '';
     document.getElementById('f-password').required = !editingMode;
 
@@ -416,12 +425,11 @@ async function submitForm(e) {
         if (!res.ok) { errEl.textContent = data.detail || 'Error al guardar.'; errEl.style.display = 'block'; return; }
         
         if (!editingMode) {
-            sessionStorage.setItem('prefill_email', document.getElementById('f-email').value.trim());
-            sessionStorage.setItem('prefill_username', document.getElementById('f-username').value.trim());
-            sessionStorage.setItem('prefill_password', document.getElementById('f-password').value);
-            window.location.href = '/new-customer';
+            closeModal(); loadUsers();
+            showSuccessNotification('Usuario creado correctamente');
         } else {
             closeModal(); loadUsers();
+            showSuccessNotification('Usuario actualizado correctamente');
         }
     } catch { errEl.textContent = 'Error de conexión.'; errEl.style.display = 'block'; }
     finally { btn.textContent = 'Guardar'; btn.disabled = false; }
