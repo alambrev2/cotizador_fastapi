@@ -41,11 +41,21 @@
     #view-calendar {
         overflow: visible !important;
     }
+    /* Mobile event dots: hidden on desktop */
+    .cal-mobile-dots {
+        display: none !important;
+    }
     /* Responsive: make event labels smaller on very narrow columns */
     @media (max-width: 700px) {
         .calendar-days > div {
             min-height: 70px !important;
             padding: 4px !important;
+        }
+    }
+    /* Show dots only on mobile */
+    @media (max-width: 575.98px) {
+        .cal-mobile-dots {
+            display: flex !important;
         }
     }
 </style>
@@ -720,12 +730,31 @@
                     opacity = '0.65';
                 }
 
-                const escDesc = exp.descripcion.replace(/"/g, '&quot;');
+            const escDesc = exp.descripcion.replace(/"/g, '&quot;');
                 badges += `<div onclick="openEditModal(${exp.id})" style="font-size:0.7rem;font-weight:700;color:${textColor};white-space:normal;word-break:break-word;overflow-wrap:break-word;margin-top:0.3rem;display:flex;align-items:flex-start;gap:0.3rem;background-color:${bgColor};padding:0.3rem 0.5rem;border-radius:6px;box-shadow:0 2px 4px ${shadowColor},inset 0 1px 0 rgba(255,255,255,0.2);transition:all 0.2s;cursor:pointer;opacity:${opacity};line-height:1.25;" title="[${exp.estatus}] ${escDesc} - $${exp.monto}" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
                     <span style="font-size:0.6rem;flex-shrink:0;margin-top:0.05rem;">${statusDot}</span>
                     <span style="flex:1;min-width:0;">${escDesc}</span>
                 </div>`;
             });
+
+            // Dots compactos para móvil (uno por evento)
+            let mobileDots = '';
+            if (dayExpenses.length > 0) {
+                mobileDots = `<div class="cal-mobile-dots" style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap;margin-top:2px;">`;
+                dayExpenses.forEach(exp => {
+                    let hash = 0;
+                    const textForHash = exp.descripcion || String(exp.id || '0');
+                    for (let i = 0; i < textForHash.length; i++) {
+                        hash = textForHash.charCodeAt(i) + ((hash << 5) - hash);
+                    }
+                    const colorIdx = Math.abs(hash) % palette.length;
+                    const dotColor = palette[colorIdx].bg;
+                    const dotShadow = palette[colorIdx].shadow;
+                    const dotOpacity = exp.estatus === 'Pagado' ? '0.5' : '1';
+                    mobileDots += `<span onclick="openEditModal(${exp.id})" title="${exp.descripcion}" style="width:7px;height:7px;border-radius:50%;background:${dotColor};box-shadow:0 1px 3px ${dotShadow};display:inline-block;cursor:pointer;opacity:${dotOpacity};flex-shrink:0;"></span>`;
+                });
+                mobileDots += `</div>`;
+            }
 
             // Destacar el día de hoy solo si es el mes/año actual
             const isCurrentMonthYear = (year === now.getFullYear() && month === now.getMonth());
@@ -737,7 +766,8 @@
                 ? 'border:2px solid var(--primary-light);'
                 : 'border:1px solid var(--border-color);';
 
-            grid.innerHTML += `<div style="padding:var(--space-2);${cellBorder}border-radius:var(--radius-md);min-height:100px;background-color:var(--card-bg);position:relative;transition:all 0.2s;box-shadow:0 1px 2px rgba(0,0,0,0.02);min-width:0;overflow:visible;" onmouseover="this.style.borderColor='var(--primary-light)';this.style.boxShadow='0 4px 6px rgba(0,0,0,0.05)';" onmouseout="this.style.borderColor='${isToday ? 'var(--primary-light)' : 'var(--border-color)'}';this.style.boxShadow='0 1px 2px rgba(0,0,0,0.02)';"><div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-1);"><span style="font-size:0.85rem;font-weight:var(--font-weight-bold);display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;${todayStyle}">${day}</span></div><div style="display:flex;flex-direction:column;gap:2px;">${badges}</div></div>`;
+            grid.innerHTML += `<div style="padding:var(--space-2);${cellBorder}border-radius:var(--radius-md);min-height:100px;background-color:var(--card-bg);position:relative;transition:all 0.2s;box-shadow:0 1px 2px rgba(0,0,0,0.02);min-width:0;overflow:visible;" onmouseover="this.style.borderColor='var(--primary-light)';this.style.boxShadow='0 4px 6px rgba(0,0,0,0.05)';" onmouseout="this.style.borderColor='${isToday ? 'var(--primary-light)' : 'var(--border-color)'}';this.style.boxShadow='0 1px 2px rgba(0,0,0,0.02)';"><div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-1);"><span style="font-size:0.85rem;font-weight:var(--font-weight-bold);display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;${todayStyle}">${day}</span></div>${mobileDots}<div style="display:flex;flex-direction:column;gap:2px;">${badges}</div></div>`;
+
         }
     }
 

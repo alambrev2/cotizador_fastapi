@@ -480,8 +480,15 @@ def delete_customer(
     customer = session.get(Customer, customer_id)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
-        
-    # 1. Eliminar Quotes y QuoteItems asociados
+
+    from app.models import Quote, QuoteItem, Payment, AccountCharge
+
+    # 1. Eliminar Usuarios (Cuentas de Cliente)
+    usuarios = session.exec(select(User).where(User.cliente_id == customer.id)).all()
+    for u in usuarios:
+        session.delete(u)
+
+    # 2. Eliminar Quotes, QuoteItems y Pagos ligados a cotizaciones
     quotes = session.exec(select(Quote).where(Quote.cliente_id == customer.id)).all()
     for q in quotes:
         items = session.exec(select(QuoteItem).where(QuoteItem.cotizacion_id == q.id)).all()
@@ -492,22 +499,18 @@ def delete_customer(
         for pq in pagos_quote:
             session.delete(pq)
         session.delete(q)
-    
-    # 2. Eliminar Pagos directos del cliente
+
+    # 3. Eliminar Pagos directos del cliente
     pagos = session.exec(select(Payment).where(Payment.cliente_id == customer.id)).all()
     for p in pagos:
         session.delete(p)
-        
-    # 3. Eliminar Cargos
+
+    # 4. Eliminar Cargos
     cargos = session.exec(select(AccountCharge).where(AccountCharge.cliente_id == customer.id)).all()
     for c in cargos:
         session.delete(c)
-        
-    # 4. Eliminar Usuarios (Cuentas de Cliente)
-    usuarios = session.exec(select(User).where(User.cliente_id == customer.id)).all()
-    for u in usuarios:
-        session.delete(u)
 
+    # 5. Eliminar el cliente
     session.delete(customer)
     session.commit()
     return {"ok": True}

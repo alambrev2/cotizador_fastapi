@@ -305,9 +305,10 @@
                             <a href="/customers/${c.id}/edit" class="btn btn-indigo" style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; color: white;">
                                 <i class="bi bi-pencil"></i> Editar
                             </a>
-                            <button onclick="generateCustomerUser(${c.id})" class="btn btn-outline-primary" style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; background: white;" title="Generar Acceso Web">
-                                <i class="bi bi-person-badge"></i> Acceso
+                            <button onclick="deleteCustomer(${c.id}, '${c.nombre.replace(/'/g, "\\'")}')" class="btn" style="width: auto; padding: 0.45rem 0.9rem; font-size: 0.8rem; border-radius: var(--radius-md); font-weight: 700; display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35); transition: all 0.2s ease; letter-spacing: 0.01em;" onmouseover="this.style.background='linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'; this.style.boxShadow='0 4px 14px rgba(239, 68, 68, 0.5)'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'; this.style.boxShadow='0 2px 8px rgba(239, 68, 68, 0.35)'; this.style.transform='translateY(0)'" title="Eliminar Cliente">
+                                <i class="bi bi-trash3-fill" style="font-size: 0.78rem;"></i> Eliminar
                             </button>
+
                         </div>
                     </td>
                 </tr>
@@ -426,6 +427,34 @@
             }
         } catch (error) {
             Swal.fire('Error', 'Problema de conexión', 'error');
+        }
+    }
+
+    async function deleteCustomer(customerId, customerName) {
+        const confirmed = await showConfirmDialog(
+            `¿Estás seguro de que deseas eliminar al cliente "${customerName}"? Esta acción no se puede deshacer y eliminará también sus cotizaciones, pagos y cuenta de usuario asociados.`,
+            "¿Eliminar cliente?",
+            "Eliminar"
+        );
+        
+        if (!confirmed) return;
+        
+        try {
+            const response = await fetch(`/api/v1/customers/${customerId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                showSuccessNotification(`Cliente "${customerName}" eliminado correctamente.`);
+                // Recargar el listado de clientes
+                fetchCustomers();
+            } else {
+                const data = await response.json();
+                showErrorNotification(data.detail || "No se pudo eliminar al cliente.");
+            }
+        } catch (error) {
+            console.error('Error deleting customer:', error);
+            showErrorNotification("Error de conexión al intentar eliminar al cliente.");
         }
     }
 </script>
