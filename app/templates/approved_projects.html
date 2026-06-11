@@ -248,11 +248,11 @@
                 body: JSON.stringify({fecha_entrega: dateStr})
             });
             if(!response.ok) {
-                alert("Error al guardar la fecha.");
+                showNotification("Error al guardar la fecha.", "error");
             }
         } catch(e) { 
             console.error(e);
-            alert("Error de red al guardar fecha."); 
+            showNotification("Error de red al guardar fecha.", "error"); 
         }
     }
 
@@ -280,12 +280,12 @@
             if(response.ok) {
                 fetchProjects(); 
             } else {
-                alert('Error al subir documento');
+                showNotification('Error al subir documento', "error");
                 btn.textContent = originalText;
                 btn.disabled = false;
             }
         } catch (e) {
-            alert('Error de conexión');
+            showNotification('Error de conexión', "error");
             btn.textContent = originalText;
             btn.disabled = false;
         }
@@ -323,15 +323,15 @@
                 closeCostModal();
                 fetchProjects();
             } else {
-                alert("Error al guardar costos.");
+                showNotification("Error al guardar costos.", "error");
             }
         } catch(e) {
-            alert("Error de red");
+            showNotification("Error de red", "error");
         }
     }
 
     async function finishProject(id) {
-        if(!confirm("¿Estás seguro de marcar este proyecto como FINALIZADO? Las utilidades actuales se sellarán contablemente y desaparecerá de esta vista en curso.")) return;
+        if(!(await showConfirmDialog("¿Estás seguro de marcar este proyecto como FINALIZADO? Las utilidades actuales se sellarán contablemente y desaparecerá de esta vista en curso."))) return;
         
         try {
             const response = await fetch(`/api/v1/quotes/${id}`, {
@@ -342,10 +342,10 @@
             if(response.ok) {
                 fetchProjects(); // Will disappear from 'Aprobadas'
             } else {
-                alert("Error comunicando cierre del proyecto");
+                showNotification("Error comunicando cierre del proyecto", "error");
             }
         } catch(e) {
-            alert("Error de red.");
+            showNotification("Error de red.", "error");
         }
     }
 

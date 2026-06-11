@@ -125,6 +125,31 @@
     </div>
 </div>
 
+<!-- Estado de Resultados (P&L) Section -->
+<div class="card pnl-section" style="margin-bottom: var(--space-10); border-radius: var(--radius-xl); overflow: hidden;">
+    <div style="padding: var(--space-6) var(--space-6) var(--space-4); border-bottom: 1px solid var(--border-color); background: var(--gray-50);">
+        <h3 style="margin: 0; color: var(--gray-800);">📊 Estado de Resultados (P&L) del Año <span id="pnl-year"></span></h3>
+        <p style="margin: var(--space-1) 0 0 0; font-size: var(--font-size-xs); color: var(--text-muted);">Análisis de Rentabilidad Mensual (Ingresos - Costos de Materiales - Egresos Operativos)</p>
+    </div>
+    <div style="overflow-x: auto;">
+        <table id="pnl-table" style="margin-bottom: 0;">
+            <thead style="background: white;">
+                <tr>
+                    <th style="padding-left: var(--space-6);">Mes</th>
+                    <th style="text-align: right;">Ingresos Totales</th>
+                    <th style="text-align: right; color: var(--danger);">Costos de Materiales</th>
+                    <th style="text-align: right; color: var(--indigo);">Utilidad Bruta</th>
+                    <th style="text-align: right; color: var(--danger);">Egresos Operativos</th>
+                    <th style="text-align: right; padding-right: var(--space-6); color: var(--success);">Utilidad Neta</th>
+                </tr>
+            </thead>
+            <tbody id="pnl-body">
+                <!-- Data will be loaded here via JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <!-- History Tables -->
 <div class="history-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8);">
     <!-- Ingresos History -->
@@ -204,9 +229,60 @@
             const otherIncomes = await resOth.json();
 
             updateView(expenses, payments, otherIncomes);
+
+            // Fetch P&L Data
+            const selectedYear = monthSelector.value.split('-')[0];
+            const pnlRes = await fetch(`/api/v1/dashboard/pnl?anio=${selectedYear}`);
+            const pnlData = await pnlRes.json();
+            renderPnL(pnlData);
         } catch (error) {
             console.error("Error loading finance data:", error);
         }
+    }
+
+    function renderPnL(data) {
+        document.getElementById('pnl-year').textContent = data.anio;
+        const body = document.getElementById('pnl-body');
+        const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        
+        let html = '';
+        let totIngresos = 0, totCostos = 0, totBruta = 0, totOperativos = 0, totNeta = 0;
+        
+        data.pnl.forEach(m => {
+            // Only show months that have some activity or up to current month
+            if (m.ingresos > 0 || m.costos_materiales > 0 || m.egresos_operativos > 0 || m.mes <= new Date().getMonth() + 1) {
+                totIngresos += m.ingresos;
+                totCostos += m.costos_materiales;
+                totBruta += m.utilidad_bruta;
+                totOperativos += m.egresos_operativos;
+                totNeta += m.utilidad_neta;
+                
+                html += `
+                    <tr>
+                        <td style="padding: var(--space-3) var(--space-6); font-weight: 600;">${months[m.mes - 1]}</td>
+                        <td style="padding: var(--space-3) var(--space-4); text-align: right;">$${m.ingresos.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding: var(--space-3) var(--space-4); text-align: right; color: var(--danger);">-$${m.costos_materiales.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding: var(--space-3) var(--space-4); text-align: right; font-weight: 600; color: var(--indigo);">$${m.utilidad_bruta.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding: var(--space-3) var(--space-4); text-align: right; color: var(--danger);">-$${m.egresos_operativos.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="padding: var(--space-3) var(--space-6); text-align: right; font-weight: 700; color: ${m.utilidad_neta >= 0 ? 'var(--success)' : 'var(--danger)'};">$${m.utilidad_neta.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            }
+        });
+        
+        // Totales row
+        html += `
+            <tr style="background: var(--gray-50); border-top: 2px solid var(--border-color);">
+                <td style="padding: var(--space-4) var(--space-6); font-weight: 800;">TOTALES</td>
+                <td style="padding: var(--space-4) var(--space-4); text-align: right; font-weight: 700;">$${totIngresos.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td style="padding: var(--space-4) var(--space-4); text-align: right; font-weight: 700; color: var(--danger);">-$${totCostos.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td style="padding: var(--space-4) var(--space-4); text-align: right; font-weight: 800; color: var(--indigo);">$${totBruta.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td style="padding: var(--space-4) var(--space-4); text-align: right; font-weight: 700; color: var(--danger);">-$${totOperativos.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td style="padding: var(--space-4) var(--space-6); text-align: right; font-weight: 800; font-size: 1.1rem; color: ${totNeta >= 0 ? 'var(--success)' : 'var(--danger)'};">$${totNeta.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            </tr>
+        `;
+        
+        body.innerHTML = html;
     }
 
     function updateView(expenses, payments, otherIncomes) {

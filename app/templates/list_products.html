@@ -46,6 +46,37 @@
     </div>
 </div>
 
+<!-- Notificaciones -->
+<div id="success-notification" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; animation: slideIn 0.5s ease-out;">
+    <div style="background: var(--success); color: white; padding: 0.75rem 1rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 0.75rem; min-width: 280px;">
+        <div style="width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i class="bi bi-check-lg" style="font-size: 1rem; font-weight: bold;"></i>
+        </div>
+        <div>
+            <div style="font-weight: 600; font-size: 0.9rem;">¡Éxito!</div>
+            <div id="success-message" style="font-size: 0.8rem; opacity: 0.9;">Operación completada</div>
+        </div>
+        <button onclick="hideSuccessNotification()" style="background: none; border: none; color: white; cursor: pointer; padding: 0.25rem; margin-left: auto; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+            <i class="bi bi-x-lg" style="font-size: 0.9rem;"></i>
+        </button>
+    </div>
+</div>
+
+<div id="error-notification" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1000; animation: slideIn 0.5s ease-out;">
+    <div style="background: var(--danger); color: white; padding: 0.75rem 1rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 0.75rem; min-width: 280px;">
+        <div style="width: 32px; height: 32px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i class="bi bi-exclamation-lg" style="font-size: 1rem; font-weight: bold;"></i>
+        </div>
+        <div>
+            <div style="font-weight: 600; font-size: 0.9rem;">¡Error!</div>
+            <div id="error-message" style="font-size: 0.8rem; opacity: 0.9;">Ocurrió un error</div>
+        </div>
+        <button onclick="hideErrorNotification()" style="background: none; border: none; color: white; cursor: pointer; padding: 0.25rem; margin-left: auto; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+            <i class="bi bi-x-lg" style="font-size: 0.9rem;"></i>
+        </button>
+    </div>
+</div>
+
 <!-- Toolbar Row -->
 <div class="card" style="border-radius: var(--radius-xl); padding: var(--space-5); margin-bottom: var(--space-6); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap;">
     <!-- Búsqueda y Filtro de Marca con Icono -->
@@ -104,7 +135,45 @@
 {% endblock %}
 
 {% block scripts %}
+<style>
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+</style>
 <script>
+    function hideSuccessNotification() {
+        const notification = document.getElementById('success-notification');
+        notification.style.animation = 'slideOut 0.5s ease-out';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 500);
+    }
+
+    function hideErrorNotification() {
+        const notification = document.getElementById('error-notification');
+        notification.style.animation = 'slideOut 0.5s ease-out';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 500);
+    }
+
     const searchInput = document.getElementById('search-input');
     const brandInput = document.getElementById('brand-input');
     const tableBody = document.getElementById('table-body');
@@ -118,21 +187,17 @@
         };
     }
 
+    let productsTable;
+
     async function fetchProducts() {
-        const query = searchInput.value;
-        const brand = brandInput.value;
         loading.style.display = 'block';
+        if ($.fn.DataTable.isDataTable('#products-table')) {
+            $('#products-table').DataTable().destroy();
+        }
         tableBody.innerHTML = '';
 
         try {
             let url = '/api/v1/products/?_t=' + new Date().getTime();
-            if (query) {
-                url += `&search=${encodeURIComponent(query)}`;
-            }
-            if (brand) {
-                url += `&brand=${encodeURIComponent(brand)}`;
-            }
-
             const response = await fetch(url);
             const products = await response.json();
 
@@ -225,16 +290,16 @@
                             ${p.categoria || 'General'}
                         </span>
                     </td>
-                    <td style="padding: var(--space-4); text-align: right; font-weight: 500; color: var(--gray-600); font-size: 0.95rem;">
+                    <td style="padding: var(--space-4); text-align: right; font-weight: 500; color: var(--gray-600); font-size: 0.95rem;" data-order="${costo}">
                         $${costo.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td style="padding: var(--space-4); text-align: right; font-weight: 600; color: var(--text-main); font-size: 0.95rem;">
+                    <td style="padding: var(--space-4); text-align: right; font-weight: 600; color: var(--text-main); font-size: 0.95rem;" data-order="${precio}">
                         $${precio.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td style="padding: var(--space-4); text-align: right; font-weight: 700; color: var(--success); font-size: 0.95rem;">
+                    <td style="padding: var(--space-4); text-align: right; font-weight: 700; color: var(--success); font-size: 0.95rem;" data-order="${utilidadEst}">
                         $${utilidadEst.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td style="padding: var(--space-4); text-align: center;">
+                    <td style="padding: var(--space-4); text-align: center;" data-order="${stock}">
                         ${stockDisplay}
                     </td>
                     <td style="padding: var(--space-4) var(--space-6); text-align: right; white-space: nowrap;">
@@ -245,14 +310,37 @@
                 </tr>
             `;
         }).join('');
+
+        // Initialize DataTable
+        productsTable = $('#products-table').DataTable({
+            pageLength: 10,
+            language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+            order: [], // no default sort
+            dom: '<"top">rt<"bottom"ip><"clear">', // hide default search
+            columnDefs: [
+                { orderable: false, targets: [7] } // disable sorting on Acciones column
+            ]
+        });
     }
 
     fetchProducts();
 
-    const debouncedFetch = debounce(() => fetchProducts());
+    // Custom filtering using DataTables
+    function applyCustomFilters() {
+        if (!productsTable) return;
+        const query = searchInput.value;
+        const brand = brandInput.value;
+        
+        // Use DataTables search API
+        // General search for name
+        productsTable.search(query);
+        // Column 1 is Proveedor/Marca
+        productsTable.column(1).search(brand);
+        productsTable.draw();
+    }
 
-    searchInput.addEventListener('input', debouncedFetch);
-    brandInput.addEventListener('input', debouncedFetch);
+    searchInput.addEventListener('input', applyCustomFilters);
+    brandInput.addEventListener('input', applyCustomFilters);
 
     // --- IMPORTACIÓN MASIVA EXCEL ---
     const importInput = document.getElementById('import-file');
@@ -275,13 +363,19 @@
             
             if (res.ok) {
                 const msg = `✅ Importación exitosa: ${data.creados} productos creados, ${data.actualizados} actualizados.`;
-                alert(msg);
+                showSuccessNotification(msg);
                 fetchProducts(); // Recargar tabla
             } else {
-                alert("Error al procesar el archivo: " + JSON.stringify(data));
+                let errorMsg = data.detail || JSON.stringify(data);
+                if (Array.isArray(data.detail)) {
+                    errorMsg = data.detail.map(e => e.msg).join(', ');
+                } else if (typeof data.detail === 'object') {
+                    errorMsg = JSON.stringify(data.detail);
+                }
+                showErrorNotification("Error al procesar el archivo: " + errorMsg);
             }
         } catch (e) {
-            alert("Error de conexión al cargar el archivo.");
+            showErrorNotification("Error de conexión al cargar el archivo.");
             console.error(e);
         } finally {
             importInput.value = ''; // Limpiar input para permitir subir el mismo archivo de nuevo

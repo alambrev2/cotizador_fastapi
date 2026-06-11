@@ -266,6 +266,21 @@ def update_quote(
                     # Descontar stock
                     producto.stock -= item.cantidad
                     session.add(producto)
+                    
+    # Si cambió de "Aceptada" a cualquier otro estado (Cancelada, Rechazada, Borrador), devolver stock
+    elif old_estado == "Aceptada" and db_quote.estado != "Aceptada":
+        from sqlalchemy.orm import selectinload
+        quote_with_items = session.exec(
+            select(Quote).where(Quote.id == quote_id).options(selectinload(Quote.items))
+        ).first()
+        
+        if quote_with_items:
+            for item in quote_with_items.items:
+                producto = session.get(Product, item.producto_id)
+                if producto:
+                    # Devolver stock
+                    producto.stock += item.cantidad
+                    session.add(producto)
 
     session.add(db_quote)
     session.commit()
@@ -315,6 +330,80 @@ def generate_quote_pdf(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generando PDF: {str(e)}")
 
+@router.post("/{quote_id}/send-email")
+def send_quote_email(
+    *,
+    session: Session = Depends(get_session),
+    quote_id: int,
+    current_user: User = Depends(get_current_active_operativo_or_admin)
+):
+    quote = session.get(Quote, quote_id)
+    if not quote or not quote.cliente:
+        raise HTTPException(status_code=404, detail="Cotización o cliente no encontrado")
+
+    if not quote.cliente.email:
+        raise HTTPException(status_code=400, detail="El cliente no tiene un correo electrónico registrado")
+
+    try:
+        # 1. Generar el PDF
+        html_content = templates.get_template("pdf/quote.html").render(quote=quote)
+        pdf_bytes = generate_pdf_bytes(html_content)
+        folio = quote.folio_cotizacion or f"COT{quote_id:04d}"
+        pdf_name = f"Cotizacion_{folio}.pdf"
+
+        # 2. Preparar el correo
+        import smtplib
+        from email.message import EmailMessage
+        import os
+
+        smtp_server = os.getenv("SMTP_SERVER")
+        smtp_port = os.getenv("SMTP_PORT")
+        smtp_user = os.getenv("SMTP_USER")
+        smtp_password = os.getenv("SMTP_PASSWORD")
+
+        if not all([smtp_server, smtp_port, smtp_user, smtp_password]):
+            # Simular envío
+            print(f"--- SIMULACIÓN DE ENVÍO DE CORREO ---")
+            print(f"Para: {quote.cliente.email}")
+            print(f"Asunto: Tu Cotización {folio} - Cotizador Pro")
+            print(f"Adjunto: {pdf_name} ({len(pdf_bytes)} bytes)")
+            print(f"-------------------------------------")
+            return {"message": "Correo simulado con éxito (Faltan credenciales SMTP reales en .env)"}
+
+        msg = EmailMessage()
+        msg['Subject'] = f"Tu Cotización {folio} - Cotizador Pro"
+        msg['From'] = smtp_user
+        msg['To'] = quote.cliente.email
+
+        msg.set_content(f"""Hola {quote.cliente.nombre},
+
+Adjunto encontrarás la cotización solicitada ({folio}).
+
+Total: ${float(quote.total):,.2f}
+
+Si tienes alguna duda, responde a este correo.
+
+Saludos,
+El equipo de Cotizador Pro""")
+
+        msg.add_attachment(pdf_bytes, maintype='application', subtype='pdf', filename=pdf_name)
+
+        with smtplib.SMTP_SSL(smtp_server, int(smtp_port)) as server:
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+
+        # Si se quiere, actualizar el estado a "Enviada" si estaba en Borrador
+        if quote.estado == "Borrador":
+            quote.estado = "Enviada"
+            session.add(quote)
+            session.commit()
+
+        return {"message": "Correo enviado con éxito"}
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error enviando correo: {str(e)}")
 
 @router.post("/{quote_id}/report", response_model=QuoteRead)
 async def upload_operative_report(

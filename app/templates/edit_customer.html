@@ -174,7 +174,7 @@
             document.getElementById('consumo_2026').value = customer.consumo_2026 || 0;
 
         } catch (error) {
-            alert('Error cargando cliente: ' + error.message);
+            showNotification('Error cargando cliente: ' + error.message);
             window.location.href = '/customers';
         }
     }
