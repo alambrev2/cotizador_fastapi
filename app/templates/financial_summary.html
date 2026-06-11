@@ -9,7 +9,7 @@
 {% block content %}
 <div class="header-bar">
     <h2 class="page-title">💰 Resumen Financiero: Ingresos vs Gastos</h2>
-    <div class="d-flex gap-4 align-items-center">
+    <div class="d-flex gap-4 align-items-center month-selector-container">
         <label for="month-selector" class="font-weight-semibold">Corte Mensual:</label>
         <input type="month" id="month-selector" class="form-control">
     </div>
@@ -88,24 +88,32 @@
 
 <!-- Balance Summary & Chart -->
 <div class="balance-section" style="display: flex; gap: var(--space-8); margin-bottom: var(--space-10); flex-wrap: wrap;">
-    <div class="card d-flex flex-column justify-content-center" style="background: #0b1329; border: 1px solid rgba(255, 255, 255, 0.06); padding: var(--space-6); color: white; position: relative; overflow: hidden; border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 320px; flex-shrink: 0;">
+    <div class="balance-card">
         <!-- Glowing circular decorative shape -->
-        <div style="position: absolute; right: -20px; top: -20px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
+        <div class="balance-glow"></div>
         
-        <p style="text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; color: var(--gray-400); margin: 0; font-weight: 700; word-wrap: break-word;">BALANCE NETO</p>
-        <h2 id="balance-title" style="font-size: clamp(1.5rem, 5vw, 2.2rem); margin: 0.5rem 0 0.25rem 0; color: #10b981; font-weight: 800; letter-spacing: -0.02em; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;">$0.00</h2>
-        <p id="balance-subtitle" style="font-weight: 700; font-size: 0.85rem; margin: 0 0 1.25rem 0; display: inline-flex; align-items: center; color: #10b981; word-wrap: break-word;">Saldo Positivo <span style="background: #10b981; color: white; border-radius: 4px; padding: 2px; font-size: 0.6rem; font-weight: bold; margin-left: 6px; display: inline-flex; align-items: center; justify-content: center; width: fit-content; min-width: 16px; height: 16px;"><i class="bi bi-check-lg"></i></span></p>
+        <!-- Bloque 1 (Arriba): Etiqueta y Monto Principal -->
+        <div class="balance-block-top">
+            <p class="balance-label">BALANCE NETO</p>
+            <h2 id="balance-title" class="balance-val">$0.00</h2>
+        </div>
         
-        <div class="balance-grid" style="display: grid; grid-template-columns: 1fr 1fr; background: #070b14; padding: var(--space-4); border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,0.06); text-align: center; position: relative;">
-            <div style="padding-right: var(--space-2);">
-                <p style="font-size: 0.65rem; color: var(--gray-400); margin: 0 0 0.25rem 0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Ingresos</p>
-                <div class="text-success" style="font-weight: 800; font-size: 1.1rem; color: #10b981;" id="summary-income">$0.00</div>
+        <!-- Bloque 2 (Medio): Indicador de saldo -->
+        <div class="balance-block-middle">
+            <p id="balance-subtitle" class="balance-sub">Saldo Positivo <span class="balance-icon-container"><i class="bi bi-check-lg"></i></span></p>
+        </div>
+        
+        <!-- Bloque 3 (Abajo): Desglose (Ingresos vs Gastos) -->
+        <div class="balance-desglose">
+            <div class="desglose-col desglose-income">
+                <p class="desglose-label label-income">INGRESOS</p>
+                <div class="desglose-val val-income" id="summary-income">$0.00</div>
             </div>
-            <!-- Vertical divider line -->
-            <div style="position: absolute; left: 50%; top: 15%; bottom: 15%; width: 1px; background: rgba(255, 255, 255, 0.12); transform: translateX(-50%);"></div>
-            <div style="padding-left: var(--space-2);">
-                <p style="font-size: 0.65rem; color: var(--gray-400); margin: 0 0 0.25rem 0; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Gastos</p>
-                <div class="text-danger" style="font-weight: 800; font-size: 1.1rem; color: #ef4444;" id="summary-expenses">$0.00</div>
+            <!-- Divider Line -->
+            <div class="desglose-divider"></div>
+            <div class="desglose-col desglose-expenses">
+                <p class="desglose-label label-expenses">GASTOS</p>
+                <div class="desglose-val val-expenses" id="summary-expenses">$0.00</div>
             </div>
         </div>
     </div>

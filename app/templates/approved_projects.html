@@ -3,11 +3,11 @@
 {% block title %}Proyectos Aprobados - Operación{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: var(--space-8);">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-4);">
+<div style="margin-bottom: var(--space-10);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4);">
         <div>
-            <h2 style="font-weight: 800; color: var(--gray-800); margin: 0; font-size: 2rem;">🚀 Seguimiento de Proyectos Aprobados</h2>
-            <p style="color: var(--gray-500); margin: 4px 0 0 0; font-size: 1.1rem;">Supervisa la ejecución de tus proyectos activos, costos reales, márgenes de ganancia y reportes operativos.</p>
+            <h2 style="font-weight: 800; color: var(--gray-800); margin: 0 0 var(--space-3) 0; font-size: 2rem; line-height: 1.3;">🚀 Seguimiento de Proyectos Aprobados</h2>
+            <p style="color: var(--gray-500); margin: 0; font-size: 1.1rem; line-height: 1.5;">Supervisa la ejecución de tus proyectos activos, costos reales, márgenes de ganancia y reportes operativos.</p>
         </div>
     </div>
 </div>
@@ -22,17 +22,17 @@
 </div>
 
 <!-- Table Card -->
-<div class="card padding-0 overflow-hidden" style="border-radius: var(--radius-xl); border: 1px solid var(--border-color); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); margin-bottom: var(--space-8);">
+<div class="card padding-0 overflow-hidden" style="border-radius: var(--radius-xl); border: 1px solid var(--border-color); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); margin-bottom: var(--space-8); background: white;">
     <div style="overflow-x: auto;">
-        <table id="projects-table" style="width: 100%; border-collapse: collapse; margin: 0;">
+        <table id="projects-table" style="width: 100%; border-collapse: separate; border-spacing: 0; margin: 0;">
             <thead>
-                <tr style="background: var(--gray-50); border-bottom: 1px solid var(--border-color);">
-                    <th style="padding: var(--space-4) var(--space-5); text-align: left; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Folio</th>
-                    <th style="padding: var(--space-4); text-align: left; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Cliente</th>
-                    <th style="padding: var(--space-4); text-align: right; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Monto Venta</th>
-                    <th style="padding: var(--space-4); text-align: center; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Utilidad Real</th>
-                    <th style="padding: var(--space-4); text-align: center; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Fecha de Entrega/Inicio</th>
-                    <th style="padding: var(--space-4) var(--space-5); text-align: center; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-500); text-transform: uppercase;">Acciones Operativas</th>
+                <tr style="background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%); border-bottom: 2px solid var(--border-color);">
+                    <th style="padding: 1rem 1.25rem; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Folio</th>
+                    <th style="padding: 1rem; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Cliente</th>
+                    <th style="padding: 1rem; text-align: right; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Monto Venta</th>
+                    <th style="padding: 1rem; text-align: center; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Utilidad Real</th>
+                    <th style="padding: 1rem; text-align: center; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Fecha de Entrega</th>
+                    <th style="padding: 1rem 1.25rem; text-align: center; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Acciones</th>
                 </tr>
             </thead>
             <tbody id="table-body" style="font-size: 0.9rem;">
@@ -139,40 +139,50 @@
 
             let badgeStyle = '';
             let iconClass = '';
+            let badgeLabel = '';
             if (netUtility < 0) {
-                badgeStyle = 'background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;';
+                badgeStyle = 'background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626; border: 1px solid #fca5a5; box-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);';
                 iconClass = 'bi-graph-down-arrow';
+                badgeLabel = 'PÉRDIDA';
             } else if (marginPct < 15) {
-                badgeStyle = 'background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa;';
+                badgeStyle = 'background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #c2410c; border: 1px solid #fdba74; box-shadow: 0 2px 4px rgba(194, 65, 12, 0.1);';
                 iconClass = 'bi-exclamation-triangle';
+                badgeLabel = 'BAJO';
             } else if (marginPct < 30) {
-                badgeStyle = 'background: #fef3c7; color: #b45309; border: 1px solid #fde68a;';
+                badgeStyle = 'background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #b45309; border: 1px solid #fcd34d; box-shadow: 0 2px 4px rgba(180, 83, 9, 0.1);';
                 iconClass = 'bi-graph-up-arrow';
+                badgeLabel = 'MEDIO';
             } else {
-                badgeStyle = 'background: #d1fae5; color: #047857; border: 1px solid #6ee7b7;';
+                badgeStyle = 'background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%); color: #047857; border: 1px solid #34d399; box-shadow: 0 2px 4px rgba(4, 120, 87, 0.1);';
                 iconClass = 'bi-graph-up-arrow';
+                badgeLabel = 'ALTO';
             }
             
-            const tooltipTitle = `Venta Real (Subtotal): $${saleAmount.toFixed(2)}\nCosto de Materiales: -$${realMaterialCost.toFixed(2)}\nGastos Operativos: -$${opCosts.toFixed(2)}\nMargen %: ${marginPct.toFixed(1)}%\n-----------------------\nMargen Neto Limpio: $${netUtility.toFixed(2)}`;
+            const tooltipTitle = `Venta Real: $${saleAmount.toFixed(2)}\nCosto Materiales: -$${realMaterialCost.toFixed(2)}\nGastos Operativos: -$${opCosts.toFixed(2)}\nMargen %: ${marginPct.toFixed(1)}%\nMargen Neto: $${netUtility.toFixed(2)}`;
             
             const utilityHtml = `
-                <div style="position: relative; display: inline-flex; align-items: center; gap: 6px; cursor: help; padding: 0.35rem 0.65rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.85rem; ${badgeStyle}" title="${tooltipTitle}">
-                    <i class="bi ${iconClass}"></i>
-                    <span>$${netUtility.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    <span style="font-size: 0.75rem; opacity: 0.85; font-weight: 500;">(${marginPct.toFixed(1)}%)</span>
+                <div style="position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: 4px; cursor: help; padding: 0.5rem 0.75rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; ${badgeStyle}" title="${tooltipTitle}">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <i class="bi ${iconClass}" style="font-size: 1rem;"></i>
+                        <span style="font-size: 0.95rem;">$${netUtility.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem; opacity: 0.9; font-weight: 600;">
+                        <span>${marginPct.toFixed(1)}%</span>
+                        <span style="font-size: 0.65rem; opacity: 0.8;">${badgeLabel}</span>
+                    </div>
                 </div>
             `;
 
-            const dateInput = `<input type="date" value="${p.fecha_entrega || ''}" onchange="updateDate(${p.id}, this.value)" style="padding: 0.35rem 0.65rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); font-family: inherit; font-size: 0.85rem; outline: none; background: white; color: var(--gray-700); transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)';" onblur="this.style.borderColor='var(--gray-300)';">`;
+            const dateInput = `<input type="date" value="${p.fecha_entrega || ''}" onchange="updateDate(${p.id}, this.value)" style="padding: 0.5rem 0.75rem; border: 2px solid var(--gray-200); border-radius: 10px; font-family: inherit; font-size: 0.85rem; outline: none; background: white; color: var(--gray-700); transition: all 0.2s; cursor: pointer;" onfocus="this.style.borderColor='var(--indigo)'; this.style.boxShadow='0 0 0 3px rgba(79, 70, 229, 0.1)';" onblur="this.style.borderColor='var(--gray-200)'; this.style.boxShadow='none';">`;
             
             let docsHtml = '';
             if(p.reporte_operativo_path) {
                 docsHtml = `
-                    <div style="display: inline-flex; gap: 4px; align-items: center;">
-                        <a href="${p.reporte_operativo_path}" target="_blank" class="btn btn-outline" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.8rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white; color: var(--gray-700);" title="Ver Reporte">
-                            <i class="bi bi-file-earmark-pdf text-success"></i> Reporte
+                    <div style="display: inline-flex; gap: 6px; align-items: center;">
+                        <a href="${p.reporte_operativo_path}" target="_blank" class="btn" style="width: auto; padding: 0.5rem 0.85rem; font-size: 0.8rem; text-decoration: none; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--success); background: linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%); color: #047857; box-shadow: 0 2px 4px rgba(4, 120, 87, 0.15); transition: all 0.2s;" title="Ver Reporte" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(4, 120, 87, 0.25)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(4, 120, 87, 0.15)';">
+                            <i class="bi bi-file-earmark-pdf" style="font-size: 1rem;"></i> Ver PDF
                         </a>
-                        <button onclick="triggerUpload(${p.id})" id="btn-upload-${p.id}" style="background: none; border: none; cursor: pointer; color: var(--gray-400); font-size: 1rem; display: flex; align-items: center;" title="Reemplazar Archivo">
+                        <button onclick="triggerUpload(${p.id})" id="btn-upload-${p.id}" style="background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%); border: 2px solid var(--gray-300); cursor: pointer; color: var(--gray-600); font-size: 0.9rem; display: flex; align-items: center; padding: 0.5rem 0.75rem; border-radius: 10px; transition: all 0.2s; font-weight: 600;" title="Reemplazar Archivo" onmouseover="this.style.background='var(--gray-200)'; this.style.borderColor='var(--gray-400)';" onmouseout="this.style.background='linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%)'; this.style.borderColor='var(--gray-300)';">
                             <i class="bi bi-arrow-repeat"></i>
                         </button>
                         <input type="file" id="upload-input-${p.id}" style="display:none" onchange="uploadReport(${p.id}, this)" accept="application/pdf">
@@ -180,8 +190,8 @@
             } else {
                 docsHtml = `
                     <div style="display: inline-flex;">
-                        <button onclick="triggerUpload(${p.id})" id="btn-upload-${p.id}" class="btn btn-outline" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.8rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white; color: var(--gray-700);">
-                            <i class="bi bi-cloud-arrow-up text-primary"></i> Subir PDF
+                        <button onclick="triggerUpload(${p.id})" id="btn-upload-${p.id}" class="btn" style="width: auto; padding: 0.5rem 0.85rem; font-size: 0.8rem; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--primary); background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%); color: white; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(79, 70, 229, 0.35)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(79, 70, 229, 0.25)';">
+                            <i class="bi bi-cloud-arrow-up" style="font-size: 1rem;"></i> Subir PDF
                         </button>
                         <input type="file" id="upload-input-${p.id}" style="display:none" onchange="uploadReport(${p.id}, this)" accept="application/pdf">
                     </div>`;
@@ -189,39 +199,39 @@
 
             // Operaciones / Acciones extra de fila
             const actionButtons = `
-                <div style="display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                <div style="display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap;">
                     ${docsHtml}
-                    <button onclick="openCostModal(${p.id}, ${realMaterialCost}, ${opCosts})" class="btn btn-outline" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.8rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white; color: var(--gray-700);" title="Ajustar Costos">
-                        <i class="bi bi-sliders text-warning"></i> Costos
+                    <button onclick="openCostModal(${p.id}, ${realMaterialCost}, ${opCosts})" class="btn" style="width: auto; padding: 0.5rem 0.85rem; font-size: 0.8rem; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--warning); background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); color: #c2410c; box-shadow: 0 2px 4px rgba(194, 65, 12, 0.2); transition: all 0.2s;" title="Ajustar Costos" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(194, 65, 12, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(194, 65, 12, 0.2)';">
+                        <i class="bi bi-sliders" style="font-size: 1rem;"></i> Costos
                     </button>
-                    <button onclick="finishProject(${p.id})" class="btn btn-indigo" style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.8rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; color: white;" title="Finalizar Proyecto">
-                        <i class="bi bi-check2-circle"></i> Finalizar
+                    <button onclick="finishProject(${p.id})" class="btn" style="width: auto; padding: 0.5rem 0.85rem; font-size: 0.8rem; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--primary); background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3); transition: all 0.2s;" title="Finalizar Proyecto" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(79, 70, 229, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(79, 70, 229, 0.3)';">
+                        <i class="bi bi-check2-circle" style="font-size: 1rem;"></i> Finalizar
                     </button>
                 </div>
             `;
 
             return `
-            <tr style="border-bottom: 1px solid var(--border-color); transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--gray-50)'" onmouseout="this.style.backgroundColor='transparent'">
-                <td style="padding: 0.65rem 0.75rem;">
-                    <div style="font-weight: 700; color: var(--indigo-dark); font-size: 0.9rem; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
-                        <i class="bi bi-hash text-muted"></i>${folioText}
+            <tr style="border-bottom: 1px solid var(--border-color); transition: all 0.2s; background: white;" onmouseover="this.style.backgroundColor='var(--gray-50)'; this.style.transform='scale(1.005)';" onmouseout="this.style.backgroundColor='white'; this.style.transform='scale(1)'">
+                <td style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color);">
+                    <div style="font-weight: 700; color: var(--primary); font-size: 0.95rem; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                        <i class="bi bi-hash" style="color: var(--primary-light); font-size: 0.85rem;"></i>${folioText}
                     </div>
                 </td>
-                <td style="padding: 0.65rem 0.5rem;">
-                    <div style="font-weight: 600; color: var(--text-main); font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;" title="${clientName}">
+                <td style="padding: 1rem 1rem; border-bottom: 1px solid var(--border-color);">
+                    <div style="font-weight: 600; color: var(--gray-800); font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;" title="${clientName}">
                         ${clientName}
                     </div>
                 </td>
-                <td style="padding: 0.65rem 0.5rem; text-align: right; font-weight: 700; color: var(--text-main); font-size: 0.85rem; white-space: nowrap;">
+                <td style="padding: 1rem 1rem; border-bottom: 1px solid var(--border-color); text-align: right; font-weight: 700; color: var(--gray-800); font-size: 0.95rem; white-space: nowrap;">
                     $${saleAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
-                <td style="padding: 0.65rem 0.5rem; text-align: center; white-space: nowrap;">
+                <td style="padding: 1rem 1rem; border-bottom: 1px solid var(--border-color); text-align: center; white-space: nowrap;">
                     ${utilityHtml}
                 </td>
-                <td style="padding: 0.65rem 0.5rem; text-align: center; white-space: nowrap;">
+                <td style="padding: 1rem 1rem; border-bottom: 1px solid var(--border-color); text-align: center; white-space: nowrap;">
                     ${dateInput}
                 </td>
-                <td style="padding: 0.65rem 0.75rem; text-align: center; white-space: nowrap;">
+                <td style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); text-align: center; white-space: nowrap;">
                     ${actionButtons}
                 </td>
             </tr>

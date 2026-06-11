@@ -2,18 +2,22 @@ from typing import List, Optional
 from datetime import datetime, date
 from decimal import Decimal
 from sqlmodel import SQLModel, Field
+from pydantic import EmailStr
 from app.models import CustomerBase, QuoteBase, PaymentBase, AccountChargeBase, UserBase, RoleEnum
 
 
 class CustomerCreate(CustomerBase):
-    pass
+    username: Optional[str] = None
+    password: Optional[str] = None
 
 
 class CustomerUpdate(SQLModel):
     nombre: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     telefono: Optional[str] = None
     direccion: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
 
 
 class Token(SQLModel):
@@ -32,7 +36,7 @@ class UserRead(UserBase):
 class UserAdminCreate(SQLModel):
     """Schema para que el Admin cree usuarios Operativos o Clientes."""
     username: str
-    email: str
+    email: EmailStr
     password: str
     role: RoleEnum = RoleEnum.Operativo
     is_active: bool = True
@@ -41,7 +45,7 @@ class UserAdminCreate(SQLModel):
 class UserUpdate(SQLModel):
     """Schema para editar un usuario existente (campos opcionales)."""
     username: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     role: Optional[RoleEnum] = None
     is_active: Optional[bool] = None
     cliente_id: Optional[int] = None

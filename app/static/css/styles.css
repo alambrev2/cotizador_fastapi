@@ -1016,6 +1016,164 @@ tr:last-child td {
   -webkit-overflow-scrolling: touch;
 }
 
+/* === Balance Card Premium Styles === */
+.balance-card {
+  background: #0b1329 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  padding: var(--space-6) !important;
+  color: white !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xl) !important;
+  width: 100% !important;
+  max-width: 320px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  transition: transform var(--transition-base), box-shadow var(--transition-base) !important;
+}
+
+.balance-card:hover {
+  box-shadow: var(--shadow-2xl) !important;
+  transform: translateY(-2px) !important;
+}
+
+.balance-glow {
+  position: absolute !important;
+  right: -20px !important;
+  top: -20px !important;
+  width: 100px !important;
+  height: 100px !important;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%) !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+}
+
+.balance-block-top {
+  display: flex !important;
+  flex-direction: column !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.balance-label {
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  font-size: 0.7rem !important;
+  color: var(--gray-400) !important;
+  margin: 0 !important;
+  font-weight: 700 !important;
+  word-wrap: break-word !important;
+}
+
+.balance-val {
+  font-size: clamp(1.5rem, 5vw, 2.2rem) !important;
+  margin: 0.5rem 0 0.25rem 0 !important;
+  color: #10b981 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+}
+
+.balance-block-middle {
+  margin-bottom: 1.25rem !important;
+}
+
+.balance-sub {
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  color: #10b981 !important;
+  word-wrap: break-word !important;
+  gap: 6px !important;
+}
+
+.balance-icon-container {
+  background: #10b981 !important;
+  color: white !important;
+  border-radius: 4px !important;
+  padding: 2px !important;
+  font-size: 0.6rem !important;
+  font-weight: bold !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: fit-content !important;
+  min-width: 16px !important;
+  height: 16px !important;
+}
+
+.balance-desglose {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  background: #070b14 !important;
+  padding: var(--space-4) !important;
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  text-align: center !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+.desglose-col {
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+}
+
+.desglose-col.desglose-income {
+  padding-right: var(--space-2) !important;
+}
+
+.desglose-col.desglose-expenses {
+  padding-left: var(--space-2) !important;
+}
+
+.desglose-label {
+  font-size: 0.65rem !important;
+  margin: 0 0 0.25rem 0 !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+}
+
+.desglose-label.label-income {
+  color: rgba(16, 185, 129, 0.7) !important;
+}
+
+.desglose-label.label-expenses {
+  color: rgba(239, 68, 68, 0.7) !important;
+}
+
+.desglose-val {
+  font-weight: 800 !important;
+  font-size: 1.1rem !important;
+}
+
+.desglose-val.val-income {
+  color: #10b981 !important;
+}
+
+.desglose-val.val-expenses {
+  color: #ef4444 !important;
+}
+
+.desglose-divider {
+  position: absolute !important;
+  left: 50% !important;
+  top: 15% !important;
+  bottom: 15% !important;
+  width: 1px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  transform: translateX(-50%) !important;
+}
+
 /* === RESPONSIVE DESIGN === */
 
 /* Mobile First - Extra Small Devices (< 576px) */
@@ -1183,6 +1341,198 @@ tr:last-child td {
   }
 }
 
+/* Mobile Devices (< 768px) - Calendar Responsive */
+@media screen and (max-width: 768px) {
+  /* === Dropdown and Selector Mobile Adjustments === */
+  .month-selector-container,
+  .dropdown,
+  .dropdown-menu-container {
+    margin-top: 1rem !important;
+    position: relative !important;
+    z-index: 50 !important;
+  }
+
+  #month-selector,
+  select,
+  .form-select,
+  .dropdown-menu {
+    padding: 8px 12px !important;
+    min-width: 160px !important;
+    width: auto !important;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 10px !important;
+  }
+
+  /* Make sure container cards and surrounding elements allow dropdown rendering */
+  .card,
+  .balance-card,
+  .history-section,
+  .balance-section {
+    overflow: visible !important;
+  }
+
+  /* === Balance Card Mobile Adjustments === */
+  .balance-card {
+    padding: 1.25rem !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+  
+  .balance-block-top {
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .balance-block-middle {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .balance-desglose {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    margin-top: 1rem !important;
+    background: #070b14 !important;
+    padding: 1rem !important;
+    border-radius: var(--radius-lg) !important;
+    box-sizing: border-box !important;
+  }
+
+  .desglose-col {
+    flex: 1 !important;
+    width: 50% !important;
+    text-align: center !important;
+  }
+
+  .desglose-col.desglose-income {
+    padding-right: var(--space-1) !important;
+  }
+
+  .desglose-col.desglose-expenses {
+    padding-left: var(--space-1) !important;
+  }
+
+  .desglose-divider {
+    display: none !important;
+  }
+
+  /* Calendar container - prevent overflow on mobile */
+  .calendar-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    padding: 0 4px !important;
+  }
+
+  /* List view container - add margin and padding for mobile */
+  #view-list {
+    margin-top: 1.5rem !important;
+    padding: 0 1rem !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Table cells - increase padding for better readability on mobile */
+  #view-list th,
+  #view-list td {
+    padding: 12px 10px !important;
+  }
+
+  /* Force weekdays to horizontal grid on mobile */
+  .calendar-weekdays {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .calendar-weekdays > div {
+    width: auto !important;
+    text-align: center !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Force calendar body to grid on mobile */
+  .calendar-days,
+  #calendar-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    gap: 6px !important;
+  }
+
+  /* Pill/button style day cells on mobile */
+  .calendar-days > div,
+  #calendar-grid > div {
+    width: 100% !important;
+    height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    background-color: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Hide event text on mobile */
+  .calendar-days > div > div:not([style*="text-align: center"]),
+  #calendar-grid > div > div:not([style*="text-align: center"]),
+  [style*="font-size: 0.75rem"][style*="font-weight: 700"] {
+    display: none !important;
+  }
+
+  /* Day numbers - centered and styled */
+  .calendar-days > div > div,
+  #calendar-grid > div > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .calendar-days span,
+  #calendar-grid span {
+    font-size: 0.9rem !important;
+    font-weight: bold !important;
+  }
+
+  /* Calendar header - clean horizontal layout */
+  .calendar-header {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .calendar-header h3 {
+    font-size: clamp(1rem, 3vw, 1.25rem) !important;
+  }
+
+  .calendar-header .btn {
+    width: fit-content !important;
+    white-space: nowrap !important;
+    font-size: 0.8rem !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  @media (max-width: 350px) {
+    .calendar-header {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+    .calendar-header .btn {
+      width: 100% !important;
+      margin-top: 0.5rem !important;
+    }
+  }
+}
 
 /* Small Devices (576px - 767.98px) - Tablets portrait */
 @media (min-width: 576px) and (max-width: 767.98px) {
@@ -1255,10 +1605,10 @@ tr:last-child td {
 /* Mobile Menu Toggle Button */
 .mobile-menu-toggle {
   display: none;
-  position: fixed;
-  top: var(--space-4);
-  left: var(--space-4);
-  z-index: var(--z-modal);
+  position: fixed !important;
+  top: var(--space-4) !important;
+  left: var(--space-4) !important;
+  z-index: 99999 !important; /* Always visible above all scrolling cards and overlays */
   background: var(--primary);
   color: var(--text-white);
   border: none;
@@ -1308,6 +1658,16 @@ tr:last-child td {
 @media (max-width: 575.98px) {
   .sidebar-overlay.active {
     display: block;
+  }
+  
+  /* Ensure sidebar is above overlay */
+  .sidebar {
+    z-index: calc(var(--z-modal-backdrop) + 1);
+  }
+  
+  /* Prevent content scrolling when sidebar is open */
+  body.sidebar-open {
+    overflow: hidden;
   }
 }
 

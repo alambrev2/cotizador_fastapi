@@ -8,8 +8,8 @@
         <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--primary-light) 0%, #e0e7ff 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-4); border: 4px solid white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
             <i class="bi bi-pencil-square" style="font-size: 1.8rem; color: var(--primary);"></i>
         </div>
-        <h2 style="font-weight: 800; color: var(--gray-800); margin-bottom: var(--space-2); font-size: 2rem;">Editar Cliente</h2>
-        <p style="color: var(--gray-500); font-size: 1.1rem;">Modifica los detalles del contacto seleccionado.</p>
+        <h2 style="font-weight: 800; color: var(--gray-800); margin-bottom: var(--space-3); font-size: 2rem; line-height: 1.3;">Editar Cliente</h2>
+        <p style="color: var(--gray-500); font-size: 1.1rem; line-height: 1.5;">Modifica los detalles del contacto seleccionado.</p>
     </div>
 
     <div class="card" style="border-radius: var(--radius-xl); padding: var(--space-8); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01); border: 1px solid var(--border-color);">
@@ -44,7 +44,28 @@
                 </div>
             </div>
 
+            <div style="height: 1px; background: var(--gray-200); margin: var(--space-6) 0;"></div>
 
+            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--gray-800); margin-bottom: var(--space-4); display: flex; align-items: center; gap: var(--space-2);">
+                <i class="bi bi-person-badge" style="color: #0dcaf0;"></i> Acceso al Portal (Opcional)
+            </h4>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="username" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Nuevo Nombre de usuario</label>
+                    <input type="text" id="username" name="username" placeholder="Dejar en blanco para no cambiar" autocomplete="new-password" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="password" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Nueva Contraseña</label>
+                    <div style="position: relative;">
+                        <input type="text" id="password" name="password" placeholder="Dejar en blanco para no cambiar" autocomplete="new-password" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 2.5rem 0.75rem 1rem; width: 100%;">
+                        <button type="button" onclick="togglePassword('password', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--gray-500);" title="Ocultar/Mostrar contraseña">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <div style="height: 1px; background: var(--gray-200); margin: var(--space-6) 0;"></div>
 
@@ -114,7 +135,19 @@
 
 {% block scripts %}
 <script>
-
+    function togglePassword(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
 
     // Obtener ID de la URL
     const pathParts = window.location.pathname.split('/');
@@ -164,6 +197,15 @@
             consumo_2026: parseFloat(formData.get('consumo_2026') || 0)
         };
         
+        const username = formData.get('username');
+        const password = formData.get('password');
+        
+        if (username) {
+            data.username = username;
+        }
+        if (password) {
+            data.password = password;
+        }
 
         try {
             const response = await fetch(`/api/v1/customers/${customerId}`, {

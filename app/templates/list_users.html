@@ -2,20 +2,17 @@
 {% block title %}Gestión de Usuarios{% endblock %}
 
 {% block content %}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-6);flex-wrap:wrap;gap:var(--space-4);">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-10);flex-wrap:wrap;gap:var(--space-4);">
     <div>
-        <h2 style="font-weight:800;color:var(--gray-800);margin:0;font-size:2rem;">Gestión de Usuarios</h2>
-        <p style="color:var(--gray-500);margin:4px 0 0 0;font-size:1.05rem;">Crea y administra cuentas de operadores del sistema. Solo el administrador tiene acceso.</p>
+        <h2 style="font-weight:800;color:var(--gray-800);margin:0 0 var(--space-3) 0;font-size:2rem;line-height:1.3;">Gestión de Usuarios</h2>
+        <p style="color:var(--gray-500);margin:0;font-size:1.1rem;line-height:1.5;">Crea y administra cuentas de operadores del sistema. Solo el administrador tiene acceso.</p>
     </div>
     <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;">
-        <button onclick="window.location.href='/new-customer'" class="btn btn-outline" style="width:auto;padding:0.65rem 1.25rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--primary);color:var(--primary);background:white;">
-            <i class="bi bi-person-plus-fill"></i> Nuevo Cliente
+        <button id="btn-generar" onclick="abrirModalGenerar()" class="btn" style="width:auto;padding:0.65rem 1.5rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;box-shadow:0 4px 6px rgba(16,185,129,0.3);transition:all 0.2s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 12px rgba(16,185,129,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 6px rgba(16,185,129,0.3)'">
+            <i class="bi bi-magic"></i> Generar Cuentas Clientes
         </button>
-        <button onclick="openModal('create', null, 'Operativo')" class="btn btn-indigo" style="width:auto;padding:0.65rem 1.25rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;">
-            <i class="bi bi-gear-fill"></i> Nuevo Operativo
-        </button>
-        <button onclick="openModal('create', null, 'Administrador')" class="btn" style="background:var(--gray-800);color:white;width:auto;padding:0.65rem 1.25rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 6px -1px rgba(15,23,42,0.15);">
-            <i class="bi bi-shield-lock-fill"></i> Nuevo Administrador
+        <button id="btn-nuevo" onclick="openModal('create')" class="btn btn-indigo" style="width:auto;padding:0.65rem 1.5rem;border-radius:var(--radius-lg);font-weight:600;display:inline-flex;align-items:center;gap:8px;">
+            <i class="bi bi-person-plus-fill"></i> Nuevo Usuario
         </button>
     </div>
 </div>
@@ -102,7 +99,14 @@
                     <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">Contraseña *</label>
                     <input id="f-password" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:0.65rem 1rem;font-size:0.95rem;box-sizing:border-box;">
                 </div>
-                <input type="hidden" id="f-role" value="Operativo">
+                <div>
+                    <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">Rol *</label>
+                    <select id="f-role" required style="width:100%;border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:0.65rem 1rem;font-size:0.95rem;background:white;box-sizing:border-box;">
+                        <option value="Operativo">Operativo</option>
+                        <option value="Cliente">Cliente</option>
+                        <option value="Administrador">Administrador</option>
+                    </select>
+                </div>
                 <div>
                     <label style="font-size:0.85rem;font-weight:600;color:var(--gray-700);display:block;margin-bottom:6px;">Estado</label>
                     <select id="f-active" style="width:100%;border:1px solid var(--gray-300);border-radius:var(--radius-lg);padding:0.65rem 1rem;font-size:0.95rem;background:white;box-sizing:border-box;">
@@ -154,6 +158,71 @@
         </div>
     </div>
 </div>
+
+<!-- ═══ MODAL GENERAR CUENTAS CLIENTES ═══ -->
+<div id="modal-generar" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.7);z-index:1100;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+    <div style="background:white;border-radius:var(--radius-xl);width:100%;max-width:660px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.4);max-height:90vh;display:flex;flex-direction:column;margin:1rem;overflow:hidden;">
+        <!-- Header -->
+        <div style="padding:var(--space-6) var(--space-8);border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#10b981,#059669);color:white;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">
+                    <i class="bi bi-magic"></i>
+                </div>
+                <div>
+                    <h3 style="margin:0;font-size:1.2rem;font-weight:800;color:var(--gray-800);">Generar Cuentas de Clientes</h3>
+                    <p style="margin:0;font-size:0.85rem;color:var(--gray-500);">Crea accesos automáticos para clientes sin cuenta</p>
+                </div>
+            </div>
+            <button onclick="cerrarModalGenerar()" style="background:none;border:none;font-size:1.6rem;cursor:pointer;color:var(--gray-400);line-height:1;padding:4px;">&times;</button>
+        </div>
+
+        <!-- Estado: listo para ejecutar -->
+        <div id="generar-estado-inicial" style="padding:var(--space-8);text-align:center;">
+            <div style="width:80px;height:80px;border-radius:50%;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin:0 auto var(--space-4);">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <p style="color:var(--gray-600);font-size:1rem;margin-bottom:var(--space-6);line-height:1.6;">Se crearán cuentas con <strong>contraseñas seguras únicas</strong> para todos los clientes que aún no tengan acceso al sistema.</p>
+            <div id="generar-sin-pendientes" style="display:none;padding:var(--space-4);background:#d1fae5;border-radius:var(--radius-lg);color:#065f46;font-weight:600;margin-bottom:var(--space-4);">
+                <i class="bi bi-check-circle-fill"></i> ¡Todos los clientes ya tienen cuenta!
+            </div>
+            <div style="display:flex;gap:var(--space-3);justify-content:center;">
+                <button onclick="cerrarModalGenerar()" style="padding:0.7rem 1.5rem;border:1px solid var(--gray-300);border-radius:var(--radius-lg);font-size:0.95rem;font-weight:600;cursor:pointer;background:white;">Cancelar</button>
+                <button id="btn-ejecutar-generar" onclick="ejecutarGenerarCuentas()" style="padding:0.7rem 2rem;border-radius:var(--radius-lg);font-size:0.95rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;box-shadow:0 4px 6px rgba(16,185,129,0.3);display:inline-flex;align-items:center;gap:8px;">
+                    <i class="bi bi-magic"></i> Generar ahora
+                </button>
+            </div>
+        </div>
+
+        <!-- Estado: procesando -->
+        <div id="generar-estado-loading" style="display:none;padding:var(--space-10);text-align:center;">
+            <div style="width:64px;height:64px;border:4px solid #d1fae5;border-top-color:#10b981;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto var(--space-5);"></div>
+            <p style="color:var(--gray-600);font-size:1rem;font-weight:600;">Generando cuentas... Por favor espera</p>
+        </div>
+
+        <!-- Estado: resultado -->
+        <div id="generar-estado-resultado" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+            <!-- Métricas -->
+            <div id="generar-metricas" style="padding:var(--space-5) var(--space-8);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);border-bottom:1px solid var(--border-color);flex-shrink:0;"></div>
+            <!-- Tabla resultados -->
+            <div style="flex:1;overflow-y:auto;padding:var(--space-4) var(--space-8);">
+                <div id="generar-tabla-container"></div>
+            </div>
+            <!-- Footer acciones -->
+            <div style="padding:var(--space-5) var(--space-8);border-top:1px solid var(--border-color);display:flex;gap:var(--space-3);justify-content:flex-end;flex-shrink:0;">
+                <button onclick="descargarCSV()" id="btn-descargar-csv" style="padding:0.65rem 1.25rem;border-radius:var(--radius-lg);font-size:0.9rem;font-weight:600;cursor:pointer;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;display:inline-flex;align-items:center;gap:6px;">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Descargar CSV
+                </button>
+                <button onclick="cerrarModalGenerar();loadUsers();" style="padding:0.65rem 1.5rem;border-radius:var(--radius-lg);font-size:0.9rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#4f46e5,#3730a3);color:white;border:none;display:inline-flex;align-items:center;gap:6px;">
+                    <i class="bi bi-check-lg"></i> Listo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -291,9 +360,9 @@ function initRoleFilters() {
 }
 
 // ── Modal ──
-function openModal(mode, userId = null, role = 'Operativo') {
+function openModal(mode, userId = null) {
     editingMode = mode === 'edit';
-    
+    document.getElementById('modal-title').textContent = editingMode ? 'Editar Usuario' : 'Nuevo Usuario Operativo';
     document.getElementById('form-error').style.display = 'none';
     document.getElementById('user-form').reset();
     document.getElementById('form-user-id').value = '';
@@ -303,16 +372,12 @@ function openModal(mode, userId = null, role = 'Operativo') {
     if (editingMode && userId) {
         const u = allUsers.find(x => x.id === userId);
         if (u) {
-            document.getElementById('modal-title').textContent = 'Editar Usuario';
             document.getElementById('form-user-id').value = u.id;
             document.getElementById('f-username').value = u.username;
             document.getElementById('f-email').value = u.email;
             document.getElementById('f-role').value = u.role;
             document.getElementById('f-active').value = u.is_active ? 'true' : 'false';
         }
-    } else {
-        document.getElementById('modal-title').textContent = `Nuevo Usuario ${role}`;
-        document.getElementById('f-role').value = role;
     }
     document.getElementById('modal-overlay').style.display = 'flex';
 }
@@ -350,13 +415,17 @@ async function submitForm(e) {
         const data = await res.json();
         if (!res.ok) { errEl.textContent = data.detail || 'Error al guardar.'; errEl.style.display = 'block'; return; }
         
-        closeModal(); loadUsers();
-        alert(editingMode ? 'Usuario actualizado correctamente.' : 'Usuario creado correctamente.');
+        if (!editingMode) {
+            sessionStorage.setItem('prefill_email', document.getElementById('f-email').value.trim());
+            sessionStorage.setItem('prefill_username', document.getElementById('f-username').value.trim());
+            sessionStorage.setItem('prefill_password', document.getElementById('f-password').value);
+            window.location.href = '/new-customer';
+        } else {
+            closeModal(); loadUsers();
+        }
     } catch { errEl.textContent = 'Error de conexión.'; errEl.style.display = 'block'; }
     finally { btn.textContent = 'Guardar'; btn.disabled = false; }
 }
-
-
 
 // ── Confirm Modal ──
 let confirmCallback = null;
@@ -457,6 +526,123 @@ document.getElementById('modal-overlay').addEventListener('click', e => { if (e.
 document.getElementById('modal-reset').addEventListener('click', e => { if (e.target === e.currentTarget) closeResetModal(); });
 document.getElementById('modal-confirm').addEventListener('click', e => { if (e.target === e.currentTarget) closeConfirmModal(); });
 
+// ── GENERAR CUENTAS CLIENTES ────────────────────────────────────────────────
+let _ultimasCuentasGeneradas = [];
+
+function abrirModalGenerar() {
+    // Resetear estado
+    document.getElementById('generar-estado-inicial').style.display = 'block';
+    document.getElementById('generar-estado-loading').style.display = 'none';
+    document.getElementById('generar-estado-resultado').style.display = 'none';
+    document.getElementById('generar-sin-pendientes').style.display = 'none';
+    document.getElementById('btn-ejecutar-generar').disabled = false;
+    document.getElementById('btn-ejecutar-generar').innerHTML = '<i class="bi bi-magic"></i> Generar ahora';
+    _ultimasCuentasGeneradas = [];
+
+    // Mostrar modal
+    document.getElementById('modal-generar').style.display = 'flex';
+}
+
+function cerrarModalGenerar() {
+    document.getElementById('modal-generar').style.display = 'none';
+}
+
+async function ejecutarGenerarCuentas() {
+    const btn = document.getElementById('btn-ejecutar-generar');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Procesando...';
+
+    document.getElementById('generar-estado-inicial').style.display = 'none';
+    document.getElementById('generar-estado-loading').style.display = 'block';
+
+    try {
+        const res = await fetch('/api/v1/users/generar-cuentas-clientes', { method: 'POST' });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.detail || 'Error al generar cuentas');
+
+        _ultimasCuentasGeneradas = data.cuentas || [];
+
+        // Mostrar métricas
+        const metricas = document.getElementById('generar-metricas');
+        metricas.innerHTML = [
+            { label: 'Cuentas creadas', value: data.creados, color: '#10b981', bg: '#d1fae5', icon: 'bi-person-plus-fill' },
+            { label: 'Ya tenían cuenta', value: data.omitidos, color: '#6366f1', bg: '#e0e7ff', icon: 'bi-person-check-fill' },
+            { label: 'Vinculados', value: data.vinculados, color: '#f59e0b', bg: '#fef3c7', icon: 'bi-link-45deg' },
+        ].map(m => `
+            <div style="background:${m.bg};border-radius:var(--radius-lg);padding:var(--space-4);text-align:center;">
+                <i class="bi ${m.icon}" style="font-size:1.5rem;color:${m.color};display:block;margin-bottom:6px;"></i>
+                <div style="font-size:1.6rem;font-weight:800;color:${m.color};">${m.value}</div>
+                <div style="font-size:0.75rem;font-weight:600;color:${m.color};opacity:0.8;text-transform:uppercase;letter-spacing:0.04em;">${m.label}</div>
+            </div>
+        `).join('');
+
+        // Mostrar tabla de cuentas creadas o mensaje vacío
+        const container = document.getElementById('generar-tabla-container');
+        if (_ultimasCuentasGeneradas.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center;padding:var(--space-8);color:var(--gray-500);">
+                    <i class="bi bi-check-circle-fill" style="font-size:2.5rem;color:#10b981;display:block;margin-bottom:var(--space-3);"></i>
+                    <p style="font-weight:600;font-size:1rem;">¡Todos los clientes ya tienen cuenta! No se crearon nuevas.</p>
+                </div>`;
+            document.getElementById('btn-descargar-csv').style.display = 'none';
+        } else {
+            document.getElementById('btn-descargar-csv').style.display = 'inline-flex';
+            container.innerHTML = `
+                <p style="font-size:0.9rem;font-weight:700;color:var(--gray-700);margin-bottom:var(--space-3);">⚠️ Guarda estas credenciales — la contraseña no se podrá recuperar:</p>
+                <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+                    <thead>
+                        <tr style="background:var(--gray-100);">
+                            <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gray-600);border-bottom:2px solid var(--border-color);">Cliente</th>
+                            <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gray-600);border-bottom:2px solid var(--border-color);">Usuario</th>
+                            <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gray-600);border-bottom:2px solid var(--border-color);">Contraseña</th>
+                            <th style="padding:10px 12px;text-align:left;font-weight:700;color:var(--gray-600);border-bottom:2px solid var(--border-color);">Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${_ultimasCuentasGeneradas.map((c, i) => `
+                        <tr style="border-bottom:1px solid var(--border-color);background:${i%2===0?'white':'var(--gray-50)'}">
+                            <td style="padding:10px 12px;color:var(--gray-700);font-weight:600;">${c.nombre_cliente}</td>
+                            <td style="padding:10px 12px;"><code style="background:#e0e7ff;color:#3730a3;padding:3px 8px;border-radius:6px;font-size:0.85rem;">${c.username}</code></td>
+                            <td style="padding:10px 12px;"><code style="background:#fef9c3;color:#713f12;padding:3px 8px;border-radius:6px;font-size:0.85rem;">${c.password}</code></td>
+                            <td style="padding:10px 12px;color:var(--gray-500);font-size:0.85rem;">${c.email}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+                </div>`;
+        }
+
+        document.getElementById('generar-estado-loading').style.display = 'none';
+        document.getElementById('generar-estado-resultado').style.display = 'flex';
+
+    } catch (err) {
+        document.getElementById('generar-estado-loading').style.display = 'none';
+        document.getElementById('generar-estado-inicial').style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-magic"></i> Generar ahora';
+        alert('Error: ' + err.message);
+    }
+}
+
+function descargarCSV() {
+    if (!_ultimasCuentasGeneradas.length) return;
+    const headers = ['Nombre Cliente', 'Email', 'Usuario', 'Contraseña'];
+    const rows = _ultimasCuentasGeneradas.map(c =>
+        [c.nombre_cliente, c.email, c.username, c.password].map(v => `"${v}"`).join(',')
+    );
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const fecha = new Date().toISOString().slice(0,10);
+    a.download = `cuentas_clientes_${fecha}.csv`;
+    a.click();
+}
+
+document.getElementById('modal-generar').addEventListener('click', e => { if (e.target === e.currentTarget) cerrarModalGenerar(); });
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     loadUsers();
     document.getElementById('q-filter').addEventListener('input', applyFilters);
