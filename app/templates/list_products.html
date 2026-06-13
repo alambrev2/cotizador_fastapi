@@ -211,6 +211,29 @@
         }
     }
 
+    async function deleteProduct(id, nombre) {
+        if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente el producto "${nombre}"?\n\nEsta acción no se puede deshacer.`)) {
+            return;
+        }
+        
+        try {
+            const res = await fetch(`/api/v1/products/${id}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                showSuccessNotification('Producto eliminado correctamente');
+                fetchProducts(); // Recargar la tabla
+            } else {
+                showErrorNotification(data.detail || 'Error al eliminar el producto');
+            }
+        } catch (e) {
+            showErrorNotification('Error de conexión al eliminar');
+            console.error(e);
+        }
+    }
+
     function renderTable(products) {
         // Actualizar métricas del resumen dinámicamente
         document.getElementById('summary-total-products').textContent = products.length;
@@ -302,10 +325,13 @@
                     <td style="padding: var(--space-4); text-align: center;" data-order="${stock}">
                         ${stockDisplay}
                     </td>
-                    <td style="padding: var(--space-4) var(--space-6); text-align: right; white-space: nowrap;">
-                        <a href="/products/${p.id}/edit" class="btn btn-indigo" style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; color: white;">
+                    <td style="padding: var(--space-4) var(--space-6); text-align: right; white-space: nowrap; display: flex; gap: 4px; justify-content: flex-end;">
+                        <a href="/products/${p.id}/edit" class="btn btn-indigo" style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; color: white;" title="Editar producto">
                             <i class="bi bi-pencil"></i> Editar
                         </a>
+                        <button onclick="deleteProduct(${p.id}, '${p.nombre.replace(/'/g, "\\'")}')" class="btn" style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s; cursor: pointer;" title="Eliminar permanentemente">
+                            <i class="bi bi-trash-fill"></i>
+                        </button>
                     </td>
                 </tr>
             `;
