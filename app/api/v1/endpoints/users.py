@@ -40,7 +40,8 @@ def list_users(
     db: Session = Depends(get_session),
     _admin: User = Depends(get_current_active_admin),
 ):
-    query = select(User)
+    from sqlalchemy.orm import selectinload
+    query = select(User).options(selectinload(User.cliente_vinculado))
     if role:
         query = query.where(User.role == role)
     return db.exec(query.order_by(User.id.desc())).all()
@@ -141,6 +142,7 @@ def generar_cuentas_clientes(
             "email": cliente.email,
             "username": username,
             "password": password,
+            "telefono": cliente.telefono,
         })
 
     db.commit()

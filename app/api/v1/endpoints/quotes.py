@@ -330,6 +330,43 @@ def generate_quote_pdf(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generando PDF: {str(e)}")
 
+@router.get("/public/{quote_id}/pdf")
+def generate_quote_pdf_public(
+    *,
+    session: Session = Depends(get_session),
+    quote_id: int
+):
+    quote = session.get(Quote, quote_id)
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    try:
+        # Renderizar HTML con datos reales
+        html_content = templates.get_template("pdf/quote.html").render(quote=quote)
+
+        # Generar bytes PDF
+        pdf_bytes = generate_pdf_bytes(html_content)
+
+        # Nomenclatura: Cotizacion_FOLIO_CLI0001_nombre.pdf
+        import unicodedata, re
+        def _safe(t, n=20):
+            s = unicodedata.normalize('NFKD', t or '').encode('ascii','ignore').decode()
+            return re.sub(r'_+','_', re.sub(r'[^\w]','_', s)).strip('_')[:n]
+        folio = quote.folio_cotizacion or f"COT{quote_id:04d}"
+        nombre = _safe(quote.cliente.nombre) if quote.cliente else "cliente"
+        pdf_name = f"Cotizacion_{folio}_CLI{quote.cliente_id:04d}_{nombre}.pdf"
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{pdf_name}"'},
+        )
+    except Exception as e:
+        import traceback
+
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generando PDF: {str(e)}")
+
 @router.post("/{quote_id}/send-email")
 def send_quote_email(
     *,

@@ -30,8 +30,14 @@ class Token(SQLModel):
 class UserCreate(UserBase):
     password: str
 
+class CustomerShort(SQLModel):
+    id: int
+    nombre: str
+    telefono: Optional[str] = None
+
 class UserRead(UserBase):
     id: int
+    cliente_vinculado: Optional[CustomerShort] = None
 
 class UserAdminCreate(SQLModel):
     """Schema para que el Admin cree usuarios Operativos o Clientes."""
