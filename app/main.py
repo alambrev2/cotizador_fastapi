@@ -75,6 +75,46 @@ app.include_router(api_router, prefix="/api/v1")
 
 # ─── Rutas Públicas ───────────────────────────────────────────────────────────
 
+@app.get("/login-magico", include_in_schema=False)
+async def login_magico(token: str, request: Request):
+    from app.database import get_session
+    from sqlmodel import select
+    from datetime import datetime
+    from fastapi.responses import RedirectResponse
+    from app.core import security
+    from datetime import timedelta
+    from app.models import User
+
+    db = next(get_session())
+    try:
+        user = db.exec(
+            select(User)
+            .where(User.magic_token == token)
+            .where(User.magic_token_expires > datetime.utcnow())
+        ).first()
+
+        if not user or not user.is_active:
+            return RedirectResponse(url="/login?error=invalid_token")
+
+        # Generar token de sesión
+        access_token_expires = timedelta(minutes=security.ACCESS_TOKEN_EXPIRE_MINUTES)
+        session_token = security.create_access_token(
+            user.id, expires_delta=access_token_expires
+        )
+
+        response = RedirectResponse(url="/dashboard")
+        response.set_cookie(
+            key="access_token",
+            value=session_token,
+            httponly=True,
+            max_age=security.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            samesite="lax",
+            secure=False  # Permitir localmente
+        )
+        return response
+    finally:
+        db.close()
+
 @app.get("/login", include_in_schema=False)
 async def login_page(request: Request):
     return templates.TemplateResponse(request, "login.html")

@@ -311,9 +311,9 @@ function renderTable(users) {
                         <i class="bi bi-key-fill"></i> Clave
                     </button>
                     ${u.role === 'Cliente' && u.cliente_vinculado && u.cliente_vinculado.telefono ? `
-                    <a href="https://wa.me/52${u.cliente_vinculado.telefono.replace(/\D/g,'')}?text=%C2%A1Hola%20${encodeURIComponent(u.cliente_vinculado.nombre)}!%20Te%20comparto%20tus%20datos%20de%20acceso%20para%20el%20Cotizador%20Pro%3A%0A%0A*Usuario%3A*%20${encodeURIComponent(u.username)}%0A%0APuedes%20ingresar%20aqu%C3%AD%3A%20${encodeURIComponent(window.location.origin + '/login')}%0A%0ASi%20no%20recuerdas%20tu%20contrase%C3%B1a%2C%20solic%C3%ADtame%20un%20reinicio%20de%20clave.%20%C2%A1Saludos!" target="_blank" title="Enviar usuario por WhatsApp" style="padding:0.4rem 0.8rem;border-radius:var(--radius-md);border:1px solid #c3e6cb;background:#dcf8c6;color:#075e54;font-size:0.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;text-decoration:none;">
+                    <button onclick="shareUserMagicLink(${u.id}, '${u.username}', '${u.cliente_vinculado.nombre.replace(/'/g, "\\'")}', '${u.cliente_vinculado.telefono}')" title="Enviar enlace de acceso rápido por WhatsApp" style="padding:0.4rem 0.8rem;border-radius:var(--radius-md);border:1px solid #c3e6cb;background:#dcf8c6;color:#075e54;font-size:0.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
                         <i class="bi bi-whatsapp"></i> Compartir
-                    </a>
+                    </button>
                     ` : ''}
                     <button onclick="toggleUser(${u.id},${u.is_active})" title="${toggleLabel}" style="padding:0.4rem 0.8rem;border-radius:var(--radius-md);border:1px solid var(--border-color);background:white;font-size:0.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:${toggleColor}">
                         <i class="bi ${toggleIcon}"></i> ${toggleLabel}
@@ -537,12 +537,13 @@ async function submitReset() {
             const clientName = u.cliente_vinculado.nombre;
             const phone = u.cliente_vinculado.telefono.replace(/\D/g, '');
             const username = u.username;
-            const msg = `¡Hola ${clientName}! Hemos actualizado tu contraseña de acceso para el Cotizador Pro.🚀\n\n*Usuario:* ${username}\n*Contraseña:* ${pwd}\n\nPuedes ingresar aquí: ${window.location.origin}/login\n\n¡Saludos!`;
+            const token = data.magic_token;
+            const msg = `¡Hola ${clientName}! Hemos actualizado tus accesos para el Cotizador Pro. 🚀\n\nAccede con un solo clic aquí:\n${window.location.origin}/login-magico?token=${token}\n\n(Tus datos de respaldo son: Usuario: ${username}, Contraseña: ${pwd})\n\n¡Saludos!`;
             const waUrl = `https://wa.me/52${phone}?text=${encodeURIComponent(msg)}`;
             
             Swal.fire({
                 title: 'Contraseña Actualizada',
-                text: '¿Deseas enviar las nuevas credenciales por WhatsApp al cliente?',
+                text: '¿Deseas enviar el nuevo enlace de acceso rápido por WhatsApp al cliente?',
                 icon: 'success',
                 showCancelButton: true,
                 confirmButtonColor: '#25D366',
@@ -559,6 +560,23 @@ async function submitReset() {
         }
     }
     else { errEl.textContent = data.detail || 'Error.'; errEl.style.display = 'block'; }
+}
+
+async function shareUserMagicLink(userId, username, clientName, phone) {
+    try {
+        const cleanPhone = phone.replace(/\D/g, '');
+        // Generar un token fresco al vuelo
+        const res = await fetch(`/api/v1/users/${userId}/magic-token`, { method: 'POST' });
+        if (!res.ok) throw new Error('Error al obtener token');
+        const data = await res.json();
+        
+        const msg = `¡Hola ${clientName}! Te comparto tu enlace de acceso rápido para tu portal de Cotizador Pro. 🚀\n\nAccede con un solo clic aquí:\n${window.location.origin}/login-magico?token=${data.magic_token}\n\n(Tu usuario de respaldo es: ${username})\n\n¡Saludos!`;
+        const waUrl = `https://wa.me/52${cleanPhone}?text=${encodeURIComponent(msg)}`;
+        window.open(waUrl, '_blank');
+    } catch (e) {
+        console.error(e);
+        showNotification('Error al generar enlace de WhatsApp', 'error');
+    }
 }
 
 // Cerrar modals al click fuera
@@ -650,7 +668,7 @@ async function ejecutarGenerarCuentas() {
                              <td style="padding:10px 12px;color:var(--gray-500);font-size:0.85rem;">${c.email}</td>
                              <td style="padding:10px 12px;text-align:center;">
                                  ${c.telefono ? `
-                                 <a href="https://wa.me/52${c.telefono.replace(/\D/g,'')}?text=%C2%A1Hola%20${encodeURIComponent(c.nombre_cliente)}!%20Te%20comparto%20tus%20credenciales%20de%20acceso%20para%20el%20Cotizador%20Pro%3A%0A%0A*Usuario%3A*%20${encodeURIComponent(c.username)}%0A*Contrase%C3%B1a%3A*%20${encodeURIComponent(c.password)}%0A%0APuedes%20ingresar%20aqu%C3%AD%3A%20${encodeURIComponent(window.location.origin + '/login')}%0A%0A%C2%A1Saludos!" target="_blank" style="padding:0.35rem 0.65rem;font-size:0.75rem;border-radius:var(--radius-md);background:#dcf8c6;color:#075e54;display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-weight:600;border:1px solid #c3e6cb;" title="Enviar credenciales por WhatsApp">
+                                 <a href="https://wa.me/52${c.telefono.replace(/\D/g,'')}?text=%C2%A1Hola%20${encodeURIComponent(c.nombre_cliente)}!%20Te%20comparto%20tu%20enlace%20de%20acceso%20r%C3%A1pido%20para%20tu%20portal%20de%20Cotizador%20Pro.%20%F0%9F%9A%80%0A%0AAccede%20con%20un%20solo%20clic%20aqu%C3%AD%3A%20${encodeURIComponent(window.location.origin + '/login-magico?token=' + c.magic_token)}%0A%0A(Tus%20datos%20de%20respaldo%20son%3A%20Usuario%3A%20${encodeURIComponent(c.username)}%2C%20Contrase%C3%B1a%3A%20${encodeURIComponent(c.password)})%0A%0A%C2%A1Saludos!" target="_blank" style="padding:0.35rem 0.65rem;font-size:0.75rem;border-radius:var(--radius-md);background:#dcf8c6;color:#075e54;display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-weight:600;border:1px solid #c3e6cb;" title="Enviar credenciales por WhatsApp">
                                      <i class="bi bi-whatsapp"></i> WhatsApp
                                  </a>
                                  ` : '<span style="color:var(--gray-400);font-size:0.8rem;">Sin teléfono</span>'}
