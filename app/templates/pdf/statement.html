@@ -4,37 +4,52 @@
     <style>
         @page {
             size: letter;
-            margin: 1.2cm 1.5cm;
+            margin: 1cm 1.4cm;
             @frame footer_frame {
                 -pdf-frame-content: footerContent;
-                bottom: 0.5cm;
-                margin-left: 1.5cm;
-                margin-right: 1.5cm;
-                height: 1cm;
+                bottom: 0.4cm;
+                margin-left: 1.4cm;
+                margin-right: 1.4cm;
+                height: 0.9cm;
             }
         }
         body {
             font-family: 'Helvetica Neue', Roboto, sans-serif;
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #333;
         }
-        .header-tbl { width: 100%; border-bottom: 2px solid #dc2626; padding-bottom: 6px; margin-bottom: 12px; }
-        .header-tbl h1 { color: #dc2626; font-size: 20pt; margin: 0; }
-        
-        table.info-table { width: 100%; margin-bottom: 15px; }
-        table.info-table td { line-height: 1.4; }
+        .header-tbl { width: 100%; border-bottom: 2px solid #dc2626; padding-bottom: 5px; margin-bottom: 8px; }
+        .header-tbl h1 { color: #dc2626; font-size: 18pt; margin: 0; }
 
-        table.items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        table.items-table th { background-color: #f8fafc; color: #1e293b; font-weight: bold; padding: 6px 8px; text-align: left; border-bottom: 2px solid #cbd5e1; font-size: 8pt; }
-        table.items-table td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; font-size: 8.5pt; }
+        table.info-table { width: 100%; margin-bottom: 8px; }
+        table.info-table td { line-height: 1.35; font-size: 8.5pt; }
+
+        /* Banner de Saldo Pendiente */
+        .saldo-banner {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            background-color: #fff5f5;
+            border: 1.5px solid #dc2626;
+            border-radius: 4px;
+        }
+        .saldo-banner td { padding: 8px 14px; vertical-align: middle; }
+        .saldo-label { font-size: 7.5pt; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; margin-bottom: 2px; }
+        .saldo-amount { font-size: 18pt; font-weight: bold; color: #b91c1c; }
+        .saldo-sub-label { font-size: 7.5pt; color: #15803d; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; margin-bottom: 2px; }
+        .saldo-sub-amount { font-size: 14pt; font-weight: bold; color: #15803d; }
+
+        table.items-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        table.items-table th { background-color: #f8fafc; color: #1e293b; font-weight: bold; padding: 4px 6px; text-align: left; border-bottom: 2px solid #cbd5e1; font-size: 7.5pt; }
+        table.items-table td { padding: 3px 6px; border-bottom: 1px solid #e2e8f0; font-size: 7.8pt; }
 
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        
+
         .row-cargo { color: #b91c1c; font-weight: bold;}
         .row-abono { color: #15803d; font-weight: bold;}
-        
-        #footerContent { text-align: center; color: #94a3b8; font-size: 8pt; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+
+        #footerContent { text-align: center; color: #94a3b8; font-size: 7.5pt; border-top: 1px solid #e2e8f0; padding-top: 6px; }
     </style>
 </head>
 <body>
@@ -69,46 +84,31 @@
         </tr>
     </table>
 
-    <div style="margin-bottom: 25px;">
-        <table style="width: 100%;">
-            <tr>
-                <td width="45%" valign="top">
-                    <!-- Espacio libre -->
-                    <p style="color: #64748b; font-size: 9pt; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-                        <em>Notas:</em><br>
-                        - Este estado de cuenta refleja los saldos conformes a la fecha de emisión.<br>
-                        - Los pagos depositados pueden tardar hasta 24h en verse reflejados.
-                    </p>
-                </td>
-                <td width="55%" valign="top">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td width="50%" style="padding: 8px 5px;">
-                                <div style="border-left: 3px solid #15803d; padding-left: 12px;">
-                                    <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Pagos / Abonos</div>
-                                    <div style="font-size: 15pt; font-weight: bold; color: #15803d;">${{ "{:,.2f}".format(deuda_historica - saldo_pendiente) }}</div>
-                                </div>
-                            </td>
-                            <td width="50%" style="padding: 8px 5px;">
-                                <div style="border-left: 4px solid #b91c1c; padding-left: 12px;">
-                                    <div style="font-size: 9pt; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: bold;">SALDO PENDIENTE</div>
-                                    <div style="font-size: 15pt; font-weight: bold; color: #b91c1c;">${{ "{:,.2f}".format(saldo_pendiente) }}</div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </div>
+    <!-- ═══ BANNER SALDO PENDIENTE ═══ -->
+    <table class="saldo-banner">
+        <tr>
+            <td width="50%" style="border-right: 1px solid #fca5a5;">
+                <div class="saldo-label">SALDO PENDIENTE</div>
+                <div class="saldo-amount">${{ "{:,.2f}".format(saldo_pendiente) }}</div>
+            </td>
+            <td width="25%" style="border-right: 1px solid #fca5a5;">
+                <div class="saldo-sub-label">Total Pagado</div>
+                <div class="saldo-sub-amount">${{ "{:,.2f}".format(deuda_historica - saldo_pendiente) }}</div>
+            </td>
+            <td width="25%" style="text-align:right; padding-right: 16px;">
+                <div style="font-size: 7.5pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; margin-bottom: 2px;">Deuda Total</div>
+                <div style="font-size: 11pt; font-weight: bold; color: #334155;">${{ "{:,.2f}".format(deuda_historica) }}</div>
+            </td>
+        </tr>
+    </table>
 
     <table class="items-table">
         <thead>
             <tr>
-                <th width="12%">Fecha</th>
-                <th width="20%">Origen</th>
-                <th width="33%">Concepto / Folio</th>
-                <th width="11%" class="text-center">Tipo</th>
+                <th width="11%">Fecha</th>
+                <th width="21%">Origen</th>
+                <th width="34%">Concepto</th>
+                <th width="10%" class="text-center">Tipo</th>
                 <th width="12%" class="text-right">Cargo</th>
                 <th width="12%" class="text-right">Abono</th>
             </tr>
@@ -143,6 +143,11 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <p style="color: #64748b; font-size: 7.5pt; border-top: 1px solid #e2e8f0; padding-top: 6px; margin-top: 4px;">
+        <em>Notas:</em> Este estado de cuenta refleja los saldos a la fecha de emisión.
+        Los pagos depositados pueden tardar hasta 24h en reflejarse.
+    </p>
 
     <div id="footerContent">
         Este documento es un resumen operativo de movimientos. Para aclaraciones, contacte al área administrativa. Emitido por Smart Site Company.

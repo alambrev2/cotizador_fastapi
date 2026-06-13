@@ -369,11 +369,11 @@ def get_customer_statement_pdf(
                 "abono": float(p.monto)
             })
 
-    # Sort chronological
-    movements.sort(key=lambda x: x["raw_date"])
+    # Ordenar del más reciente al menos reciente
+    movements.sort(key=lambda x: x["raw_date"], reverse=True)
 
     if not full and len(movements) > 9:
-        movements = movements[-9:]
+        movements = movements[:9]
 
     try:
         html_content = templates.get_template("pdf/statement.html").render(
@@ -678,3 +678,4 @@ def delete_payment(
     session.delete(payment)
     session.commit()
     return Response(status_code=204)
+
