@@ -90,6 +90,10 @@
                     <span>$<span id="calc-iva">0.00</span></span>
                 </div>
                 <div style="height: 1px; background: var(--gray-300); width: 100%; margin: 4px 0;"></div>
+                <div style="font-size: 1.1rem; font-weight: 700; color: var(--gray-700); width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span>Suma Exacta Productos:</span>
+                    <span>$<span id="exact-total">0.00</span></span>
+                </div>
                 <div style="font-size: 1.4rem; font-weight: 800; color: var(--gray-800); width: 100%; display: flex; justify-content: space-between; align-items: center;">
                     <span>Total Venta:</span>
                     <div style="display: flex; align-items: center; background: white; padding: 2px 8px; border-radius: var(--radius-md); border: 2px solid var(--indigo-light); box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); cursor: text;" onclick="document.getElementById('grand-total-input').focus()">
@@ -131,15 +135,15 @@
 
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="anticipo" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Anticipo Solicitado ($)</label>
-                        <div style="margin-bottom: 0.5rem; display: flex; gap: var(--space-2); flex-wrap: wrap;">
-                            <button type="button" class="btn" style="background: white; border: 1px solid var(--border-color); color: var(--gray-700); padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 600; border-radius: var(--radius-md);" onclick="setAnticipoPct(0.10)">10%</button>
-                            <button type="button" class="btn" style="background: white; border: 1px solid var(--border-color); color: var(--gray-700); padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 600; border-radius: var(--radius-md);" onclick="setAnticipoPct(0.20)">20%</button>
-                            <button type="button" class="btn" style="background: white; border: 1px solid var(--border-color); color: var(--gray-700); padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 600; border-radius: var(--radius-md);" onclick="setAnticipoPct(0.30)">30%</button>
-                            <button type="button" class="btn" style="background: white; border: 1px solid var(--border-color); color: var(--gray-700); padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 600; border-radius: var(--radius-md);" onclick="setAnticipoPct(0.50)">50%</button>
+                        <div style="margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: var(--space-2);">
+                            <button type="button" class="btn pct-btn" style="background: white; border: 1px solid var(--border-color); color: var(--gray-700); padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 600; border-radius: var(--radius-md); transition: all 0.2s;" onclick="setAnticipoPct(0.10, this)">10%</button>
+                            <button type="button" class="btn pct-btn" style="background: white; border: 1px solid var(--border-color); color: var(--gray-700); padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 600; border-radius: var(--radius-md); transition: all 0.2s;" onclick="setAnticipoPct(0.20, this)">20%</button>
+                            <button type="button" class="btn pct-btn" style="background: white; border: 1px solid var(--border-color); color: var(--gray-700); padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 600; border-radius: var(--radius-md); transition: all 0.2s;" onclick="setAnticipoPct(0.30, this)">30%</button>
+                            <button type="button" class="btn pct-btn" style="background: white; border: 1px solid var(--border-color); color: var(--gray-700); padding: 0.35rem 0.75rem; font-size: 0.8rem; font-weight: 600; border-radius: var(--radius-md); transition: all 0.2s;" onclick="setAnticipoPct(0.50, this)">50%</button>
                         </div>
                         <div style="position: relative;">
                             <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-weight: bold;">$</span>
-                            <input type="number" id="anticipo" name="anticipo" value="0" step="0.01" min="0" onchange="calculateFinance(false)" onkeyup="calculateFinance(false)" style="width: 100%; padding: 0.75rem 1rem 0.75rem 1.75rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); background: white;">
+                            <input type="number" id="anticipo" name="anticipo" value="0" step="0.01" min="0" onchange="clearAnticipoBtns(); calculateFinance(false)" onkeyup="clearAnticipoBtns(); calculateFinance(false)" style="width: 100%; padding: 0.75rem 1rem 0.75rem 1.75rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); background: white;">
                         </div>
                     </div>
                 </div>
@@ -417,6 +421,12 @@
         
         const requiereFactura = document.getElementById('requiere_factura').checked;
         
+        // Calcular y mostrar siempre el Total Exacto (no modificable)
+        const exactIva = requiereFactura ? (subtotal * 0.16) : 0;
+        const exactTotal = subtotal + exactIva;
+        const exactTotalEl = document.getElementById('exact-total');
+        if (exactTotalEl) exactTotalEl.textContent = exactTotal.toFixed(2);
+        
         if (isManualTotal) {
             const customTotal = parseFloat(document.getElementById('grand-total-input').value || 0);
             let calcSubtotal = 0;
@@ -471,7 +481,23 @@
         calculateGrandTotal(true);
     }
 
-    function setAnticipoPct(pct) {
+    function clearAnticipoBtns() {
+        document.querySelectorAll('.pct-btn').forEach(btn => {
+            btn.style.background = 'white';
+            btn.style.border = '1px solid var(--border-color)';
+            btn.style.color = 'var(--gray-700)';
+        });
+    }
+
+    function setAnticipoPct(pct, btnElement) {
+        clearAnticipoBtns();
+        
+        if (btnElement) {
+            btnElement.style.background = 'var(--indigo-light)';
+            btnElement.style.border = '1px solid var(--indigo)';
+            btnElement.style.color = 'var(--indigo)';
+        }
+
         const total = parseFloat(document.getElementById('grand-total-input').value) || 0;
         const anticipoVal = total * pct;
         document.getElementById('anticipo').value = anticipoVal.toFixed(2);
