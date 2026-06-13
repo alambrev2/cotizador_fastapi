@@ -391,6 +391,12 @@
                         <h4 style="margin: 0 0 0.5rem 0; color: #2563eb; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;"><i class="bi bi-cash-stack"></i> Cobranza Atrasada (>30 días)</h4>
                         <ul id="cobranza_alert_list" style="margin: 0; padding-left: 1.25rem; color: #1e40af; font-size: 0.85rem; font-weight: 500; display: flex; flex-direction: column; gap: 0.25rem;"></ul>
                     </div>
+
+                    <!-- Respuestas de Cotizaciones (Cliente Aceptó/Rechazó) -->
+                    <div id="quotes_alert_box" style="display: none; background: #faf5ff; border: 1px solid #f3e8ff; border-radius: 12px; padding: 1rem;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #7c3aed; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;"><i class="bi bi-file-earmark-check"></i> Respuestas de Cotizaciones</h4>
+                        <ul id="quotes_alert_list" style="margin: 0; padding-left: 0; color: #6d28d9; font-size: 0.85rem; font-weight: 500; display: flex; flex-direction: column; gap: 0.50rem; list-style-type: none;"></ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -405,10 +411,12 @@
         const alertBox = document.getElementById('alert_box');
         const stockAlertBox = document.getElementById('stock_alert_box');
         const cobranzaAlertBox = document.getElementById('cobranza_alert_box');
+        const quotesAlertBox = document.getElementById('quotes_alert_box');
         
         if(alertBox && alertBox.style.display !== 'none') count++;
         if(stockAlertBox && stockAlertBox.style.display !== 'none') count++;
         if(cobranzaAlertBox && cobranzaAlertBox.style.display !== 'none') count++;
+        if(quotesAlertBox && quotesAlertBox.style.display !== 'none') count++;
         
         const badge = document.getElementById('badge-notificaciones');
         const emptyState = document.getElementById('no-notificaciones');
@@ -480,6 +488,49 @@
                         alertList.innerHTML = data.alertas_proximas.map(a => `<li>${a.descripcion} - Vence: ${a.fecha_vencimiento} ($${a.monto})</li>`).join('');
                     } else {
                         alertBox.style.display = 'none';
+                    }
+                }
+
+                // Render Alertas de Respuestas de Cotizaciones (Cliente Aceptó/Rechazó)
+                const quotesAlertBox = document.getElementById('quotes_alert_box');
+                const quotesAlertList = document.getElementById('quotes_alert_list');
+                if(quotesAlertBox && quotesAlertList) {
+                    if (data.alertas_cotizaciones && data.alertas_cotizaciones.length > 0) {
+                        quotesAlertBox.style.display = 'block';
+                        quotesAlertList.innerHTML = data.alertas_cotizaciones.map(q => {
+                            const isAprobacion = q.estado === 'Aprobación Solicitada';
+                            const badgeBg = isAprobacion ? '#f59e0b' : '#dc2626';
+                            const badgeText = isAprobacion ? 'Aprob. Solicitada' : 'Rechazada';
+                            
+                            // Extrae snippet de nota de cliente si existe
+                            let clientComment = '';
+                            if (q.notas) {
+                                const noteLines = q.notas.split('\n');
+                                const clientNoteLine = noteLines.find(line => line.includes('[Comentario del Cliente'));
+                                if (clientNoteLine) {
+                                    clientComment = `<div style="font-size:0.75rem; color:#6b21a8; background:#faf5ff; border-left:3px solid #7c3aed; padding:4px 8px; border-radius:6px; margin-top:4px; font-style:italic;">"${clientNoteLine.split(']:').slice(1).join(']:').trim()}"</div>`;
+                                }
+                            }
+
+                            return `
+                            <li style="border-bottom:1px solid #f3e8ff; padding-bottom:8px; margin-bottom:8px; list-style-type:none;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                    <span style="font-weight:600; color:#4c1d95;">${q.cliente_nombre}</span>
+                                    <span style="font-size:0.7rem; font-weight:700; background:${badgeBg}; color:white; padding:2px 6px; border-radius:4px;">${badgeText}</span>
+                                </div>
+                                <div style="font-size:0.8rem; color:#4b5563; margin-top:2px;">
+                                    Cotización: <strong>${q.folio_cotizacion}</strong> | Total: <strong>$${q.total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>
+                                </div>
+                                ${clientComment}
+                                <div style="margin-top:6px; text-align:right;">
+                                    <a href="/quotes" style="font-size:0.75rem; color:#7c3aed; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:3px;">
+                                        <i class="bi bi-eye-fill"></i> Ver Cotizaciones
+                                    </a>
+                                </div>
+                            </li>`;
+                        }).join('');
+                    } else {
+                        quotesAlertBox.style.display = 'none';
                     }
                 }
 

@@ -3,6 +3,13 @@
 {% block title %}Cotizaciones - Cotizador Pro{% endblock %}
 
 {% block content %}
+<style>
+@keyframes pulse-alert {
+    0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.6); }
+    70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+</style>
 <div style="margin-bottom: var(--space-10);">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4);">
         <div>
@@ -60,6 +67,7 @@
                 <option value="Todos">Todos</option>
                 <option value="Borrador">Borrador</option>
                 <option value="Enviada">Enviada</option>
+                <option value="Aprobación Solicitada">Aprobación Solicitada</option>
                 <option value="Aprobada">Aprobada</option>
                 <option value="Rechazada">Rechazada</option>
                 <option value="Sustituida">Sustituida</option>
@@ -243,9 +251,10 @@
                         $${(q.utilidad_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td style="padding: 0.55rem 0.5rem; text-align: center;" data-order="${q.estado}">
-                        <select onchange="updateStatus(${q.id}, this.value)" ${isSustituida ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; border: 1px solid transparent; background: ${getStatusColor(q.estado)}; color: var(--text-white); cursor: pointer; transition: all 0.2s; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 110px; text-align-last: center;">
+                        <select onchange="updateStatus(${q.id}, this.value)" ${isSustituida ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; border: 1px solid transparent; background: ${getStatusColor(q.estado)}; color: var(--text-white); cursor: pointer; transition: all 0.2s; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 110px; text-align-last: center; ${q.estado === 'Aprobación Solicitada' ? 'animation: pulse-alert 2s infinite;' : ''}">
                             <option value="Borrador" ${q.estado === 'Borrador' ? 'selected' : ''}>Borrador</option>
                             <option value="Enviada" ${q.estado === 'Enviada' ? 'selected' : ''}>Enviada</option>
+                            <option value="Aprobación Solicitada" ${q.estado === 'Aprobación Solicitada' ? 'selected' : ''}>Aprob. Solicitada</option>
                             <option value="Aprobada" ${q.estado === 'Aprobada' ? 'selected' : ''}>Aprobada</option>
                             <option value="Rechazada" ${q.estado === 'Rechazada' ? 'selected' : ''}>Rechazada</option>
                             ${isSustituida ? `<option value="Sustituida" selected>Sustituida</option>` : ''}
@@ -260,7 +269,7 @@
                                 <i class="bi bi-envelope"></i>
                             </button>
                             ${q.cliente && q.cliente.telefono ? `
-                            <a href="https://wa.me/52${q.cliente.telefono.replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(clientName)},%20adjunto%20el%20link%20de%20tu%20cotizaci%C3%B3n%20${folioText}%20por%20un%20total%20de%20$${q.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.%20Saludos!" target="_blank" class="btn btn-outline" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: #dcf8c6; color: #075e54;" title="Enviar por WhatsApp">
+                            <a href="https://wa.me/52${q.cliente.telefono.replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(clientName)},%20adjunto%20el%20link%20de%20tu%20cotizaci%C3%B3n%20${folioText}%20por%20un%20total%20de%20$${q.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.%20Desc%C3%A1rgalo%20aqu%C3%AD%3A%20${encodeURIComponent(window.location.origin + '/api/v1/quotes/public/' + q.id + '/pdf')}" target="_blank" class="btn btn-outline" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: #dcf8c6; color: #075e54;" title="Enviar por WhatsApp">
                                 <i class="bi bi-whatsapp"></i>
                             </a>
                             ` : ''}
@@ -278,7 +287,7 @@
             pageLength: 10,
             language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
             order: [], // no default sort
-            dom: '<"top">rt<"bottom"ip><"clear">', // hide default search
+            dom: '<"top"p>rt<"bottom"i><"clear">', // paginación arriba
             columnDefs: [
                 { orderable: false, targets: [7] } // disable sorting on Acciones column
             ]
@@ -290,6 +299,7 @@
             case 'Aprobada': return 'var(--success)';
             case 'Rechazada': return 'var(--danger)';
             case 'Enviada': return 'var(--primary)';
+            case 'Aprobación Solicitada': return '#f59e0b';
             case 'Sustituida': return 'var(--gray-500)';
             default: return 'var(--gray-400)';
         }

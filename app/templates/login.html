@@ -367,6 +367,16 @@
                 btn.disabled = false;
             }
         });
+
+        // Mostrar error de enlace mágico si aplica
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('error') === 'invalid_token') {
+                const errorDiv = document.getElementById('error-msg');
+                errorDiv.textContent = 'El enlace de acceso rápido es inválido, ha expirado o está desactivado.';
+                errorDiv.style.display = 'block';
+            }
+        });
     </script>
 </body>
 </html>

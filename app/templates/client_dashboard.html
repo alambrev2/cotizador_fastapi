@@ -644,17 +644,30 @@
                                     border-radius: 4px;
                                     font-size: 0.68rem;
                                     font-weight: 700;
-                                    {% if cotizacion.estado == 'Aceptada' %}background:rgba(16,185,129,0.15); color:#6ee7b7;
+                                    {% if cotizacion.estado == 'Aceptada' or cotizacion.estado == 'Aprobada' %}background:rgba(16,185,129,0.15); color:#6ee7b7;
                                     {% elif cotizacion.estado == 'Rechazada' %}background:rgba(239,68,68,0.15); color:#fca5a5;
+                                    {% elif cotizacion.estado == 'Aprobación Solicitada' %}background:rgba(245,158,11,0.15); color:#fcd34d;
                                     {% else %}background:rgba(59,130,246,0.15); color:#93c5fd;{% endif %}
                                 ">{{ cotizacion.estado }}</span>
                             </div>
                         </div>
                         <div style="text-align: right;">
                             <div class="movement-amount" style="color: #93c5fd;">${{ "%.2f"|format(cotizacion.total) }}</div>
-                            <a href="/api/v1/quotes/{{ cotizacion.id }}/pdf" target="_blank" style="font-size: 0.75rem; color: #60a5fa; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px;">
-                                <i class="bi bi-download"></i> PDF
-                            </a>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; margin-top: 4px;">
+                                <a href="/api/v1/quotes/{{ cotizacion.id }}/pdf" target="_blank" style="font-size: 0.75rem; color: #60a5fa; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="bi bi-download"></i> PDF
+                                </a>
+                                {% if cotizacion.estado == 'Enviada' %}
+                                <div style="display: flex; gap: 6px;">
+                                    <button onclick="clientAcceptQuote({{ cotizacion.id }}, '{{ cotizacion.folio_cotizacion or ("#%s"|format(cotizacion.id)) }}')" style="background: var(--success); color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;" title="Aceptar cotización">
+                                        <i class="bi bi-check-lg"></i> Aceptar
+                                    </button>
+                                    <button onclick="clientRejectQuote({{ cotizacion.id }}, '{{ cotizacion.folio_cotizacion or ("#%s"|format(cotizacion.id)) }}')" style="background: var(--danger); color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;" title="Rechazar o solicitar cambios">
+                                        <i class="bi bi-x-lg"></i> Rechazar
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
                     </li>
                     {% endfor %}
@@ -744,6 +757,75 @@
     </main>
 
     <script>
+        async function clientAcceptQuote(quoteId, folio) {
+            const result = await Swal.fire({
+                title: '¿Aceptar Cotización?',
+                text: `¿Estás de acuerdo con la propuesta de la cotización ${folio}? Se enviará una solicitud al Administrador para su procesamiento final.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: 'var(--success)',
+                cancelButtonColor: 'var(--danger)',
+                confirmButtonText: 'Sí, Aceptar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/v1/quotes/${quoteId}/client-status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ estado: 'Aprobación Solicitada' })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        await Swal.fire('Solicitado', 'Tu solicitud de aprobación ha sido enviada al administrador con éxito.', 'success');
+                        window.location.reload();
+                    } else {
+                        Swal.fire('Error', data.detail || 'No se pudo enviar la solicitud', 'error');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    Swal.fire('Error', 'Error de conexión con el servidor', 'error');
+                }
+            }
+        }
+
+        async function clientRejectQuote(quoteId, folio) {
+            const { value: text, isConfirmed } = await Swal.fire({
+                title: 'Rechazar Cotización',
+                input: 'textarea',
+                inputLabel: 'Comentarios / Motivo del rechazo',
+                inputPlaceholder: 'Escribe aquí tus comentarios o los cambios que requieres en la cotización...',
+                inputAttributes: {
+                    'aria-label': 'Escribe tus comentarios aquí'
+                },
+                showCancelButton: true,
+                confirmButtonColor: 'var(--danger)',
+                confirmButtonText: 'Rechazar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (isConfirmed) {
+                try {
+                    const response = await fetch(`/api/v1/quotes/${quoteId}/client-status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ estado: 'Rechazada', notas: text || '' })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        await Swal.fire('Rechazada', 'La cotización ha sido rechazada y se le notificó al administrador.', 'success');
+                        window.location.reload();
+                    } else {
+                        Swal.fire('Error', data.detail || 'No se pudo rechazar la cotización', 'error');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    Swal.fire('Error', 'Error de conexión con el servidor', 'error');
+                }
+            }
+        }
+
         async function logout(event) {
             if (event) event.preventDefault();
             try {

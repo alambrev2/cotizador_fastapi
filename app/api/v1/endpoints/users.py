@@ -40,7 +40,8 @@ def list_users(
     db: Session = Depends(get_session),
     _admin: User = Depends(get_current_active_admin),
 ):
-    query = select(User)
+    from sqlalchemy.orm import selectinload
+    query = select(User).options(selectinload(User.cliente_vinculado))
     if role:
         query = query.where(User.role == role)
     return db.exec(query.order_by(User.id.desc())).all()
@@ -127,6 +128,10 @@ def generar_cuentas_clientes(
         username = _generar_username(cliente.email, cliente.nombre, db)
         password = _generar_contrasena()
 
+        import secrets
+        from datetime import datetime, timedelta
+        token = secrets.token_urlsafe(32)
+
         nuevo = User(
             username=username,
             email=cliente.email,
@@ -134,6 +139,8 @@ def generar_cuentas_clientes(
             hashed_password=get_password_hash(password),
             cliente_id=cliente.id,
             is_active=True,
+            magic_token=token,
+            magic_token_expires=datetime.utcnow() + timedelta(days=30),
         )
         db.add(nuevo)
         creados.append({
@@ -141,6 +148,8 @@ def generar_cuentas_clientes(
             "email": cliente.email,
             "username": username,
             "password": password,
+            "telefono": cliente.telefono,
+            "magic_token": token,
         })
 
     db.commit()
@@ -263,14 +272,42 @@ def reset_password(
     db: Session = Depends(get_session),
     _admin: User = Depends(get_current_active_admin),
 ):
+    import secrets
+    from datetime import datetime, timedelta
     user = _get_user_or_404(user_id, db)
     new_password = payload.get("password", "")
     if len(new_password) < 6:
         raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres")
     user.hashed_password = get_password_hash(new_password)
+    
+    # También generar y guardar el token mágico
+    token = secrets.token_urlsafe(32)
+    user.magic_token = token
+    user.magic_token_expires = datetime.utcnow() + timedelta(days=30)
+    
     db.add(user)
     db.commit()
-    return {"detail": "Contraseña actualizada correctamente"}
+    return {
+        "detail": "Contraseña actualizada correctamente",
+        "magic_token": token
+    }
+
+@router.post("/{user_id}/magic-token")
+def generate_user_magic_token(
+    user_id: int,
+    db: Session = Depends(get_session),
+    _admin: User = Depends(get_current_active_admin),
+):
+    import secrets
+    from datetime import datetime, timedelta
+    user = _get_user_or_404(user_id, db)
+    token = secrets.token_urlsafe(32)
+    user.magic_token = token
+    user.magic_token_expires = datetime.utcnow() + timedelta(days=30)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return {"magic_token": token}
 
 
 # ── DELETE ────────────────────────────────────────────────────────────────────

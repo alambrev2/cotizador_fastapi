@@ -137,6 +137,27 @@ def get_dashboard_summary(*, session: Session = Depends(get_session), response: 
     limite_5_dias = hoy + dt.timedelta(days=5)
     alertas_proximas = [s for s in scheduled_expenses if hoy <= s.fecha_vencimiento <= limite_5_dias]
 
+    from app.models import Customer
+    # Alertas de Cotizaciones (Aprobación Solicitada o Rechazada)
+    quotes_query = select(Quote).where(Quote.estado.in_(["Aprobación Solicitada", "Rechazada"]))
+    quotes_alertas = session.exec(quotes_query).all()
+    
+    alertas_cotizaciones = []
+    for q in quotes_alertas:
+        cliente_nombre = "Cliente"
+        if q.cliente_id:
+            cliente_obj = session.get(Customer, q.cliente_id)
+            if cliente_obj:
+                cliente_nombre = cliente_obj.nombre
+        alertas_cotizaciones.append({
+            "id": q.id,
+            "folio_cotizacion": q.folio_cotizacion or f"#{q.id}",
+            "cliente_nombre": cliente_nombre,
+            "estado": q.estado,
+            "total": float(q.total),
+            "notas": q.notas
+        })
+
     return {
         "saldo_por_cobrar": round(saldo_por_cobrar, 2),
         "flujo_caja_real": round(flujo_caja_real, 2),
@@ -147,7 +168,8 @@ def get_dashboard_summary(*, session: Session = Depends(get_session), response: 
             "saldo_neto": round(saldo_neto, 2)
         },
         "scheduled_expenses": scheduled_expenses,
-        "alertas_proximas": alertas_proximas
+        "alertas_proximas": alertas_proximas,
+        "alertas_cotizaciones": alertas_cotizaciones
     }
 
 @router.get("/analytics")
