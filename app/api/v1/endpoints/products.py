@@ -384,6 +384,14 @@ def delete_product(
     product = session.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    session.delete(product)
-    session.commit()
-    return {"ok": True}
+        
+    try:
+        session.delete(product)
+        session.commit()
+        return {"ok": True}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=400, 
+            detail="No se puede eliminar permanentemente este producto porque ya forma parte de cotizaciones existentes. Te sugerimos cambiar su estatus a 'Inactivo'."
+        )
