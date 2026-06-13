@@ -608,13 +608,14 @@
                 alertBox.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span>¡Cotización <strong>#${result.id}</strong> creada por <strong>$${totalFormatted}</strong>!</span>
-                        <a href="/api/v1/quotes/${result.id}/pdf" target="_blank" class="btn" style="width: auto; background-color: #166534; padding: 0.5rem 1rem; font-size: 0.9rem; text-decoration: none;">
-                            ⬇️ Descargar PDF
+                        <a href="/api/v1/quotes/${result.id}/pdf" target="_blank" class="btn" style="width: auto; background-color: #166534; padding: 0.5rem 1rem; font-size: 0.9rem; text-decoration: none; color: white;">
+                            <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
                         </a>
                     </div>
                 `;
                 alertBox.className = 'alert alert-success';
                 alertBox.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
 
                 // Limpiar formulario pero no recargar inmediatamente para permitir descarga
                 this.reset();
@@ -636,12 +637,14 @@
                 alertBox.textContent = `Error: ${error.detail}`;
                 alertBox.className = 'alert alert-error';
                 alertBox.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         } catch (err) {
             console.error(err);
             alertBox.innerHTML = `<strong>Error inesperado:</strong><br>${err.message}`;
             alertBox.className = 'alert alert-error';
             alertBox.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     });
 

@@ -393,7 +393,7 @@ def get_customer_statement_pdf(
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="{pdf_name}"'}
+            headers={"Content-Disposition": f'inline; filename="{pdf_name}"'}
         )
     except Exception as e:
         import traceback

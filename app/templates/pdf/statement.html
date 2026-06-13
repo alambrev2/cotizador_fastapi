@@ -69,21 +69,6 @@
         </tr>
     </table>
 
-    <table class="info-table">
-        <tr>
-            <td width="50%" valign="top" style="padding-right: 20px;">
-                <strong>No. de Cliente:</strong> {{ client_id }}<br>
-                <strong>Nombre:</strong> {{ client_name }}<br>
-                <strong>Teléfono:</strong> {{ client_telefono or 'N/D' }}<br>
-                <strong>Correo:</strong> {{ client_email or 'N/D' }}
-            </td>
-            <td width="50%" valign="top" class="text-right">
-                <strong>Documento:</strong> Estado de Cuenta Global<br>
-                <strong>Fecha de Emisión:</strong> {{ fecha_generacion }}<br>
-            </td>
-        </tr>
-    </table>
-
     <!-- ═══ BANNER SALDO PENDIENTE ═══ -->
     <table class="saldo-banner">
         <tr>
@@ -102,6 +87,21 @@
         </tr>
     </table>
 
+    <table class="info-table">
+        <tr>
+            <td width="50%" valign="top" style="padding-right: 20px;">
+                <strong>No. de Cliente:</strong> {{ client_id }}<br>
+                <strong>Nombre:</strong> {{ client_name }}<br>
+                <strong>Teléfono:</strong> {{ client_telefono or 'N/D' }}<br>
+                <strong>Correo:</strong> {{ client_email or 'N/D' }}
+            </td>
+            <td width="50%" valign="top" class="text-right">
+                <strong>Documento:</strong> Estado de Cuenta Global<br>
+                <strong>Fecha de Emisión:</strong> {{ fecha_generacion }}<br>
+            </td>
+        </tr>
+    </table>
+
     <table class="items-table">
         <thead>
             <tr>
@@ -114,17 +114,6 @@
             </tr>
         </thead>
         <tbody>
-            {% if saldo_inicial and saldo_inicial > 0 %}
-            <tr>
-                <td>--/--/----</td>
-                <td>Apertura</td>
-                <td>Saldo Inicial de Cuenta</td>
-                <td class="text-center"><span class="row-cargo">Cargo</span></td>
-                <td class="text-right">${{ "{:,.2f}".format(saldo_inicial) }}</td>
-                <td class="text-right">-</td>
-            </tr>
-            {% endif %}
-            
             {% for mov in movements %}
             <tr>
                 <td>{{ mov.fecha }}</td>
@@ -138,9 +127,20 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="6" class="text-center" style="padding: 20px;">No hay movimientos registrados ni deuda activa.</td>
+                <td colspan="6" class="text-center" style="padding: 10px;">No hay movimientos registrados.</td>
             </tr>
             {% endfor %}
+            
+            {% if saldo_inicial and saldo_inicial > 0 %}
+            <tr>
+                <td>--/--/----</td>
+                <td>Apertura</td>
+                <td>Saldo Inicial de Cuenta</td>
+                <td class="text-center"><span class="row-cargo">Cargo</span></td>
+                <td class="text-right">${{ "{:,.2f}".format(saldo_inicial) }}</td>
+                <td class="text-right">-</td>
+            </tr>
+            {% endif %}
         </tbody>
     </table>
 

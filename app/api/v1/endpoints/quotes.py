@@ -322,7 +322,7 @@ def generate_quote_pdf(
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="{pdf_name}"'},
+            headers={"Content-Disposition": f'inline; filename="{pdf_name}"'},
         )
     except Exception as e:
         import traceback
@@ -359,7 +359,7 @@ def generate_quote_pdf_public(
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="{pdf_name}"'},
+            headers={"Content-Disposition": f'inline; filename="{pdf_name}"'},
         )
     except Exception as e:
         import traceback

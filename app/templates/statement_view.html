@@ -56,13 +56,49 @@
     </div>
 
     <!-- Filtro de Búsqueda Rápida -->
-    <div style="margin-bottom: var(--space-6);">
-        <div class="input-group shadow-sm border overflow-hidden bg-white" style="border-radius: var(--radius-md); max-width: 100%; width: 100%;">
-            <span class="input-group-text bg-white border-0 px-3 text-muted" style="background: transparent;"><i class="bi bi-search"></i></span>
-            <input type="text" id="client-filter" class="form-control border-0 py-2" style="font-size: 0.95rem; background: transparent;"
-                placeholder="Buscar cliente por nombre...">
+    <div id="search-bar-container" style="margin-bottom: var(--space-6);">
+        <div style="position: relative; max-width: 480px;">
+            <!-- Ícono lupa -->
+            <i class="bi bi-search" style="
+                position: absolute; left: 1rem; top: 50%;
+                transform: translateY(-50%);
+                color: var(--gray-400); font-size: 1rem;
+                pointer-events: none; z-index: 1;
+            "></i>
+            <input
+                type="text"
+                id="client-filter"
+                placeholder="Buscar cliente por nombre..."
+                style="
+                    width: 100%;
+                    padding: 0.7rem 2.75rem 0.7rem 2.75rem;
+                    border: 1.5px solid var(--border-color);
+                    border-radius: var(--radius-lg);
+                    font-size: 0.95rem;
+                    font-family: var(--font-family);
+                    color: var(--gray-800);
+                    background: #ffffff;
+                    outline: none;
+                    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+                "
+                onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,0.1)';"
+                onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='0 1px 3px rgba(0,0,0,0.04)';"
+            >
+            <!-- Botón limpiar (aparece solo cuando hay texto) -->
+            <button id="clear-filter-btn" onclick="clearFilter()" style="
+                display: none;
+                position: absolute; right: 0.75rem; top: 50%;
+                transform: translateY(-50%);
+                background: none; border: none; cursor: pointer;
+                color: var(--gray-400); font-size: 1rem; padding: 0;
+                line-height: 1; transition: color 0.15s;
+            " title="Limpiar búsqueda">
+                <i class="bi bi-x-circle-fill"></i>
+            </button>
         </div>
     </div>
+
 
     <div id="loading" class="text-center py-5" style="display: none;">
         <div class="spinner-border text-primary" role="status">
@@ -120,12 +156,12 @@
                             </div>
                             <h4 class="fw-bold mb-1" id="st-client-name" style="color: var(--gray-800);">Nombre Cliente</h4>
                             <p class="text-muted small mb-4" id="st-client-info">email@ejemplo.com</p>
-                            <button onclick="downloadStatementPDF(false)" class="btn btn-outline-primary btn-sm px-4 py-2" style="border-radius: var(--radius-md); width: 100%; margin-bottom: 8px;">
+                            <a id="btn-pdf-recent" href="#" target="_blank" class="btn btn-outline-primary btn-sm px-4 py-2" style="border-radius: var(--radius-md); width: 100%; margin-bottom: 8px; display: inline-block; text-decoration: none;">
                                 📄 PDF (Últimos 9 Movimientos)
-                            </button>
-                            <button onclick="downloadStatementPDF(true)" class="btn btn-outline-secondary btn-sm px-4 py-2" style="border-radius: var(--radius-md); width: 100%;">
+                            </a>
+                            <a id="btn-pdf-full" href="#" target="_blank" class="btn btn-outline-secondary btn-sm px-4 py-2" style="border-radius: var(--radius-md); width: 100%; display: inline-block; text-decoration: none;">
                                 📄 PDF (Historial Completo)
-                            </button>
+                            </a>
                         </div>
 
                         <div style="height: 1px; background: var(--border-color); margin: var(--space-6) 0;"></div>
@@ -182,6 +218,30 @@
 
             <!-- Listado de Cotizaciones y Cargos -->
             <div style="display: flex; flex-direction: column; gap: var(--space-6); min-width: 0;">
+                <!-- Historial de Pagos / Abonos -->
+                <div class="card shadow-sm" style="border-radius: var(--radius-lg); overflow: hidden; padding: 0; border: 1px solid var(--border-color);">
+                    <div class="card-header bg-white py-4 px-4 border-bottom" style="background: var(--gray-50);">
+                        <h5 class="card-title mb-0 fw-bold" style="color: var(--gray-800); font-size: 1.1rem;"><i class="bi bi-clock-history me-2 text-primary"></i>Historial de Pagos y Abonos</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="margin: 0;">
+                            <thead style="background: white;">
+                                <tr>
+                                    <th class="ps-4 py-3" style="color: var(--gray-500);">ID</th>
+                                    <th class="py-3" style="color: var(--gray-500);">Fecha</th>
+                                    <th class="py-3" style="color: var(--gray-500);">Vinculado a</th>
+                                    <th class="py-3" style="color: var(--gray-500);">Método/Ref</th>
+                                    <th class="text-end py-3" style="color: var(--gray-500);">Monto</th>
+                                    <th class="text-center pe-4 py-3" style="color: var(--gray-500);">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="client-payments-body">
+                                <!-- JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- Cargos / Servicios -->
                 <div class="card shadow-sm mb-4" id="cargos-container" style="display: none; border-radius: var(--radius-lg); overflow: hidden; padding: 0; border: 1px solid var(--border-color);">
                     <div class="card-header bg-white py-4 px-4 border-bottom d-flex justify-content-between align-items-center" style="background: var(--gray-50);">
@@ -234,29 +294,7 @@
             </div>
         </div>
         
-        <!-- Historial de Pagos / Abonos -->
-        <div class="card shadow-sm mt-4" style="border-radius: var(--radius-lg); overflow: hidden; padding: 0; border: 1px solid var(--border-color);">
-            <div class="card-header bg-white py-4 px-4 border-bottom" style="background: var(--gray-50);">
-                <h5 class="card-title mb-0 fw-bold" style="color: var(--gray-800); font-size: 1.1rem;"><i class="bi bi-clock-history me-2 text-primary"></i>Historial de Pagos y Abonos</h5>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="margin: 0;">
-                    <thead style="background: white;">
-                        <tr>
-                            <th class="ps-4 py-3" style="color: var(--gray-500);">ID</th>
-                            <th class="py-3" style="color: var(--gray-500);">Fecha</th>
-                            <th class="py-3" style="color: var(--gray-500);">Vinculado a</th>
-                            <th class="py-3" style="color: var(--gray-500);">Método/Ref</th>
-                            <th class="text-end py-3" style="color: var(--gray-500);">Monto</th>
-                            <th class="text-center pe-4 py-3" style="color: var(--gray-500);">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="client-payments-body">
-                        <!-- JS -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
+
         
     </div>
 </div>
@@ -408,6 +446,7 @@
     }
 
     async function loadCustomerStatement(customerId) {
+        document.getElementById('search-bar-container').style.display = 'none';
         document.getElementById('loading').style.display = 'block';
         document.getElementById('statement-content').style.display = 'none';
         document.getElementById('active-accounts-section').style.display = 'none';
@@ -438,6 +477,10 @@
         document.getElementById('st-client-info').textContent = `${c.email || 'Sin email'} | ${c.telefono || 'Sin tel.'}`;
         document.getElementById('st-global-balance').textContent = parseFloat(g.saldo_pendiente).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         document.getElementById('st-global-paid').textContent = parseFloat(g.total_pagado).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // Establecer URLs nativas para los botones PDF
+        document.getElementById('btn-pdf-recent').href = `/api/v1/payments/statement/customer/${c.id}/pdf?full=false`;
+        document.getElementById('btn-pdf-full').href = `/api/v1/payments/statement/customer/${c.id}/pdf?full=true`;
 
         const tbody = document.getElementById('client-quotes-body');
         let quotesHtml = quotes.map(q => `
@@ -620,16 +663,27 @@
     function hideDetail() {
         document.getElementById('statement-content').style.display = 'none';
         document.getElementById('active-accounts-section').style.display = 'block';
+        document.getElementById('search-bar-container').style.display = 'block';
         loadActiveAccounts();
     }
 
     document.getElementById('client-filter').addEventListener('input', function (e) {
         const query = e.target.value.toLowerCase().trim();
+        // Mostrar/ocultar botón limpiar
+        document.getElementById('clear-filter-btn').style.display = query ? 'block' : 'none';
         const filtered = allActiveCustomers.filter(c =>
             c.cliente_nombre.toLowerCase().includes(query)
         );
         renderActiveList(filtered);
     });
+
+    function clearFilter() {
+        const input = document.getElementById('client-filter');
+        input.value = '';
+        input.focus();
+        document.getElementById('clear-filter-btn').style.display = 'none';
+        renderActiveList(allActiveCustomers);
+    }
 
     document.getElementById('payment-form').addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -858,13 +912,7 @@
         }
     }
 
-    function downloadStatementPDF(full = false) {
-        if (!lastLoadedCustomerId) {
-            showToast('warning', 'Sin cliente seleccionado', 'Selecciona un cliente primero.');
-            return;
-        }
-        window.open(`/api/v1/payments/statement/customer/${lastLoadedCustomerId}/pdf?full=${full}`, '_blank');
-    }
+    // (Función checkCustomerForPDF eliminada ya que ahora se asigna la url nativamente en renderCustomerStatement)
 
     document.addEventListener('DOMContentLoaded', async () => {
         await loadActiveAccounts();

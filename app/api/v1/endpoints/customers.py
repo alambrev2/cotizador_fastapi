@@ -151,113 +151,89 @@ def import_excel_route(
         
         # Validar que el archivo no esté vacío
         if not contents:
-            error_msg = "El archivo Excel está vacío"
+            error_msg = "El archivo Excel/CSV está vacío"
             logger.error(f"Error de importación: {error_msg}")
             raise HTTPException(status_code=400, detail=error_msg)
         
-        df = pd.read_excel(BytesIO(contents))
+        filename_lower = file.filename.lower() if file.filename else ""
+        if filename_lower.endswith('.csv'):
+            df = pd.read_csv(BytesIO(contents))
+        else:
+            df = pd.read_excel(BytesIO(contents))
+            
         df = df.fillna("")
         
         logger.info(f"Archivo Excel leído. Filas: {len(df)}, Columnas: {list(df.columns)}")
-        
-        # Validar estructura del Excel (columnas requeridas)
-        columnas_requeridas = [
-            'Correo Electrónico',
-            'Nombre Completo',
-            'Saldo Pendiente Actual (Saldo Inicial)',
-            'Consumo Total 2022',
-            'Consumo Total 2023',
-            'Consumo Total 2024',
-            'Consumo Total 2025',
-            'Consumo Total 2026'
-        ]
-        
-        columnas_faltantes = [col for col in columnas_requeridas if col not in df.columns]
-        if columnas_faltantes:
-            error_msg = f"Faltan columnas requeridas en el Excel: {', '.join(columnas_faltantes)}"
-            logger.error(f"Error de estructura del Excel: {error_msg}")
-            raise HTTPException(status_code=400, detail=error_msg)
         
         # Validar que el Excel tenga datos
         if df.empty:
             error_msg = "El archivo Excel no tiene filas de datos"
             logger.error(f"Error de importación: {error_msg}")
             raise HTTPException(status_code=400, detail=error_msg)
+            
+        # Normalizar nombres de columnas a minusculas sin espacios extra
+        original_columns = list(df.columns)
+        df.columns = [str(c).strip().lower() for c in df.columns]
         
         count_new = 0
         count_updated = 0
         error_row = None
         
-        logger.info(f"Iniciando procesamiento de {len(df)} filas")
+        logger.info(f"Iniciando procesamiento de {len(df)} filas con columnas: {df.columns}")
         
         # Iniciar transacción para rollback completo en caso de error
         try:
+            import uuid
             for index, row in df.iterrows():
                 row_number = index + 2  # +2 porque pandas usa 0-index y Excel tiene encabezado en fila 1
-                
-                logger.info(f"Procesando fila {row_number}")
-                
                 try:
-                    email = str(row.get('Correo Electrónico', '')).strip()
-                    logger.info(f"Email en fila {row_number}: '{email}'")
-                    if not email:
-                        logger.warning(f"Fila {row_number} saltada: email vacío")
+
+                    # Buscar nombre (flexible)
+                    nombre = str(row.get('nombre completo', row.get('nombre', ''))).strip()
+                    if not nombre or nombre == 'nan':
+                        logger.warning(f"Fila {row_number} saltada: nombre vacío")
                         continue
-                        
-                    nombre = str(row.get('Nombre Completo', '')).strip()
-                    telefono = str(row.get('Teléfono', ''))
-                    direccion = str(row.get('Dirección', ''))
-                    
-                    # Validar tipos de datos numéricos con try/except
-                    try:
-                        saldo = float(row.get('Saldo Pendiente Actual (Saldo Inicial)', 0) or 0)
-                    except (ValueError, TypeError):
-                        error_msg = f"Error en fila {row_number}: 'Saldo Pendiente Actual (Saldo Inicial)' debe ser un número válido. Valor: {row.get('Saldo Pendiente Actual (Saldo Inicial)')}"
-                        logger.error(error_msg)
-                        error_row = row_number
-                        raise ValueError(error_msg)
-                    
-                    try:
-                        c_22 = float(row.get('Consumo Total 2022', 0) or 0)
-                    except (ValueError, TypeError):
-                        error_msg = f"Error en fila {row_number}: 'Consumo Total 2022' debe ser un número válido. Valor: {row.get('Consumo Total 2022')}"
-                        logger.error(error_msg)
-                        error_row = row_number
-                        raise ValueError(error_msg)
-                    
-                    try:
-                        c_23 = float(row.get('Consumo Total 2023', 0) or 0)
-                    except (ValueError, TypeError):
-                        error_msg = f"Error en fila {row_number}: 'Consumo Total 2023' debe ser un número válido. Valor: {row.get('Consumo Total 2023')}"
-                        logger.error(error_msg)
-                        error_row = row_number
-                        raise ValueError(error_msg)
-                    
-                    try:
-                        c_24 = float(row.get('Consumo Total 2024', 0) or 0)
-                    except (ValueError, TypeError):
-                        error_msg = f"Error en fila {row_number}: 'Consumo Total 2024' debe ser un número válido. Valor: {row.get('Consumo Total 2024')}"
-                        logger.error(error_msg)
-                        error_row = row_number
-                        raise ValueError(error_msg)
-                        
-                    try:
-                        c_25 = float(row.get('Consumo Total 2025', 0) or 0)
-                    except (ValueError, TypeError):
-                        error_msg = f"Error en fila {row_number}: 'Consumo Total 2025' debe ser un número válido. Valor: {row.get('Consumo Total 2025')}"
-                        logger.error(error_msg)
-                        error_row = row_number
-                        raise ValueError(error_msg)
-                        
-                    try:
-                        c_26 = float(row.get('Consumo Total 2026', 0) or 0)
-                    except (ValueError, TypeError):
-                        error_msg = f"Error en fila {row_number}: 'Consumo Total 2026' debe ser un número válido. Valor: {row.get('Consumo Total 2026')}"
-                        logger.error(error_msg)
-                        error_row = row_number
-                        raise ValueError(error_msg)
-                    
+
+                    # Buscar email (flexible)
+                    email = str(row.get('correo electrónico', row.get('correo electronico', row.get('correo', row.get('email', ''))))).strip()
+                    if not email or email == 'nan':
+                        # Si no hay email, generar uno basado en nombre para que no falle la BD
+                        safe_n = "".join([c for c in nombre if c.isalnum()]).lower()
+                        email = f"{safe_n}_{uuid.uuid4().hex[:6]}@import.local"
+
+                    telefono = str(row.get('teléfono', row.get('telefono', ''))).strip()
+                    if telefono == 'nan': telefono = ""
+
+                    direccion = str(row.get('dirección', row.get('direccion', ''))).strip()
+                    if direccion == 'nan': direccion = ""
+
+                    # Función auxiliar para extraer números seguros
+                    def get_num(keys):
+                        for k in keys:
+                            if k in df.columns:
+                                val = row.get(k)
+                                if pd.notnull(val) and str(val).strip() != '':
+                                    try: return float(val)
+                                    except: pass
+                        return 0.0
+
+                    saldo = get_num(['saldo pendiente actual (saldo inicial)', 'saldo inicial', 'saldo pendiente', 'saldo'])
+                    c_22 = get_num(['consumo total 2022', 'consumo 2022', '2022'])
+                    c_23 = get_num(['consumo total 2023', 'consumo 2023', '2023'])
+                    c_24 = get_num(['consumo total 2024', 'consumo 2024', '2024'])
+                    c_25 = get_num(['consumo total 2025', 'consumo 2025', '2025'])
+                    c_26 = get_num(['consumo total 2026', 'consumo 2026', '2026'])
+
+                    # Si el usuario mandó saldos por año, agregarlos al saldo inicial general (si así lo requiere su negocio)
+                    # Opcional: si "saldo" está en 0 pero los años tienen deuda, sumarlos.
+                    if saldo == 0 and (c_22 + c_23 + c_24 + c_25 + c_26) > 0:
+                        saldo = c_22 + c_23 + c_24 + c_25 + c_26
+
                     existing = session.exec(select(Customer).where(Customer.email == email)).first()
+                    if not existing:
+                        # Si no lo encuentra por email, tratar de buscar por nombre exacto para evitar duplicados si no usaron email
+                        existing = session.exec(select(Customer).where(Customer.nombre == nombre)).first()
+
                     if existing:
                         if not dry_run:
                             if nombre: existing.nombre = nombre
@@ -274,7 +250,7 @@ def import_excel_route(
                     else:
                         if not dry_run:
                             new_c = Customer(
-                                nombre=nombre or "Desconocido",
+                                nombre=nombre,
                                 email=email,
                                 telefono=telefono,
                                 direccion=direccion,
@@ -287,7 +263,7 @@ def import_excel_route(
                             )
                             session.add(new_c)
                         count_new += 1
-                        
+
                 except ValueError as ve:
                     # Error de validación de datos - propagar para rollback
                     raise ve
