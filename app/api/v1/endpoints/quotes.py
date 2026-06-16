@@ -173,8 +173,8 @@ def create_quote(
     
     # Validar que el monto semanal esté en rango razonable si es financiamiento semanal
     if quote_in.tipo_pago == "Semanal" and quote_in.monto_semanal:
-        min_weekly = 600
-        max_weekly = 800
+        min_weekly = 10
+        max_weekly = 100000
         if quote_in.monto_semanal < min_weekly or quote_in.monto_semanal > max_weekly:
             raise HTTPException(
                 status_code=400,

@@ -37,11 +37,20 @@
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <label for="filial" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Filial <span style="color: var(--danger);">*</span></label>
-                    <select id="filial" name="filial" required style="width: 100%; padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); background: white;">
-                        <option value="Data X Pos">Data X Pos</option>
-                        <option value="General Systech">General Systech</option>
-                        <option value="Estudio Design">Estudio Design</option>
-                    </select>
+                    <div id="filial-select-container">
+                        <select id="filial" name="filial" required onchange="handleFilialChange()" style="width: 100%; padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); background: white;">
+                            <option value="Data X Pos">Data X Pos</option>
+                            <option value="General Systech">General Systech</option>
+                            <option value="Estudio Design">Estudio Design</option>
+                            <option value="Otro">Otro (Escribir manualmente)...</option>
+                        </select>
+                    </div>
+                    <div id="filial-input-container" style="display: none; position: relative;">
+                        <input type="text" id="filial_custom" placeholder="Escribe el nombre de la filial..." style="width: 100%; padding: 0.75rem 2.5rem 0.75rem 1rem; border-radius: var(--radius-md); border: 2px solid var(--indigo-light); background: white; outline: none;">
+                        <button type="button" onclick="cancelCustomFilial()" title="Volver a la lista" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--gray-400); cursor: pointer; padding: 0.25rem;">
+                            <i class="bi bi-x-circle-fill" style="font-size: 1.2rem;"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <label for="agente" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Nombre del Agente</label>
@@ -151,7 +160,7 @@
                 <div id="finance-options" style="display: none; margin-top: var(--space-6); padding-top: var(--space-6); border-top: 1px dashed var(--gray-300);">
                     <div style="display: grid; grid-template-columns: 1fr; gap: var(--space-4);">
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Semanas de Financiamiento (Sugeridas entre $600 y $800, máx 16)</label>
+                            <label style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Semanas de Financiamiento (Máximo 16 semanas)</label>
                             <input type="number" id="plazo_semanas" name="plazo_semanas" min="1" max="16" value="1" onchange="calculateFinance(false)" onkeyup="calculateFinance(false)" style="width: 100%; padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); background: white;">
                             <small style="color: var(--gray-500); font-size: 0.8rem; display: block; margin-top: 4px;">El modelo auto-calcula las semanas óptimas al procesar el Total/Anticipo. Ajústalo si prefieres otra cuota puntual.</small>
                         </div>
@@ -236,9 +245,57 @@
         }
     }
 
+    function handleFilialChange() {
+        const select = document.getElementById('filial');
+        const selectContainer = document.getElementById('filial-select-container');
+        const inputContainer = document.getElementById('filial-input-container');
+        const customInput = document.getElementById('filial_custom');
+        
+        if (select.value === 'Otro') {
+            selectContainer.style.display = 'none';
+            inputContainer.style.display = 'block';
+            customInput.required = true;
+            select.required = false;
+            customInput.focus();
+        }
+    }
+
+    function cancelCustomFilial() {
+        const select = document.getElementById('filial');
+        const selectContainer = document.getElementById('filial-select-container');
+        const inputContainer = document.getElementById('filial-input-container');
+        const customInput = document.getElementById('filial_custom');
+        
+        inputContainer.style.display = 'none';
+        selectContainer.style.display = 'block';
+        customInput.required = false;
+        select.required = true;
+        select.value = 'Data X Pos';
+        customInput.value = '';
+    }
+
     function hydrateForm(quoteData) {
         document.getElementById('cliente_id').value = quoteData.cliente_id;
-        document.getElementById('filial').value = quoteData.filial || 'Data X Pos';
+        
+        const filialVal = quoteData.filial || 'Data X Pos';
+        const filialSelect = document.getElementById('filial');
+        let optionExists = false;
+        for (let i = 0; i < filialSelect.options.length; i++) {
+            if (filialSelect.options[i].value === filialVal) {
+                optionExists = true; break;
+            }
+        }
+        
+        if (optionExists) {
+            filialSelect.value = filialVal;
+            cancelCustomFilial(); // Ensure we are in select mode
+            filialSelect.value = filialVal; // Set again in case cancel cleared it
+        } else {
+            filialSelect.value = 'Otro';
+            handleFilialChange(); // Switch to input mode
+            document.getElementById('filial_custom').value = filialVal;
+        }
+
         document.getElementById('agente').value = quoteData.agente || '';
         document.getElementById('notas').value = quoteData.notas || '';
         
@@ -530,8 +587,9 @@
         const inputSemanas = document.getElementById('plazo_semanas');
 
         if (autoSuggest) {
-            // Buscamos monto semanal sugerido alrededor de 800
+            // Mantener la sugerencia original buscando cobros de ~$800 por semana
             let suggestedWeeks = Math.ceil(saldo / 800);
+            
             if (suggestedWeeks < 1) suggestedWeeks = 1;
             if (suggestedWeeks > 16) suggestedWeeks = 16;
             inputSemanas.value = suggestedWeeks;
@@ -571,14 +629,26 @@
         });
 
         if (items.length === 0) {
-            showNotification('Agrega al menos un producto');
+            showNotification('Agrega al menos un producto', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-file-earmark-check"></i> Crear Cotización';
+            return;
+        }
+
+        const filialSelectValue = document.getElementById('filial').value;
+        const finalFilial = filialSelectValue === 'Otro' ? document.getElementById('filial_custom').value : filialSelectValue;
+
+        if (filialSelectValue === 'Otro' && !finalFilial.trim()) {
+            showNotification('Por favor escribe el nombre de la filial', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-file-earmark-check"></i> Crear Cotización';
             return;
         }
 
         const payload = {
             cliente_id: parseInt(clienteId),
             items: items,
-            filial: document.getElementById('filial').value,
+            filial: finalFilial || 'Data X Pos',
             agente: document.getElementById('agente').value,
             notas: document.getElementById('notas').value,
             anticipo: parseFloat(document.getElementById('anticipo').value) || 0,

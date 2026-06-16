@@ -137,7 +137,15 @@
             {% set enganche = quote.total / 2 %}
             {% set saldo_restante = quote.total - enganche %}
         {% else %}
-            {% set plazo_str = quote.plazo_semanas ~ ' Semanas de $' ~ ("%.2f"|format(quote.monto_semanal)) %}
+            {% set pagos_regulares = (saldo_restante / quote.monto_semanal)|int %}
+            {% set resto = saldo_restante - (pagos_regulares * quote.monto_semanal) %}
+            {% if resto > 0 and pagos_regulares > 0 %}
+                {% set plazo_str = pagos_regulares ~ ' pagos de $' ~ ("%.2f"|format(quote.monto_semanal)) ~ ' y 1 pago final de $' ~ ("%.2f"|format(resto)) %}
+            {% elif resto > 0 and pagos_regulares == 0 %}
+                {% set plazo_str = '1 pago final de $' ~ ("%.2f"|format(resto)) %}
+            {% else %}
+                {% set plazo_str = pagos_regulares ~ ' pagos semanales de $' ~ ("%.2f"|format(quote.monto_semanal)) %}
+            {% endif %}
         {% endif %}
 
         <table style="width: 100%; margin-top: 15px;">

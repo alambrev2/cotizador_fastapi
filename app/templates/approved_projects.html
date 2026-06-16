@@ -14,10 +14,20 @@
 
 <!-- Toolbar Row -->
 <div class="card" style="border-radius: var(--radius-xl); padding: var(--space-5); margin-bottom: var(--space-6); border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap;">
+    <!-- Tabs -->
+    <div style="display: flex; gap: 8px; background: var(--gray-100); padding: 4px; border-radius: 10px;">
+        <button id="tab-active" onclick="switchTab('Aprobada')" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: none; font-weight: 700; font-size: 0.9rem; cursor: pointer; background: white; color: var(--indigo); box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s;">
+            <i class="bi bi-rocket-takeoff me-1"></i> En Curso
+        </button>
+        <button id="tab-finished" onclick="switchTab('Finalizada')" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; background: transparent; color: var(--gray-500); transition: all 0.2s;" onmouseover="if(currentStatus!=='Finalizada') this.style.color='var(--gray-800)'" onmouseout="if(currentStatus!=='Finalizada') this.style.color='var(--gray-500)'">
+            <i class="bi bi-archive me-1"></i> Historial Finalizados
+        </button>
+    </div>
+
     <!-- Búsqueda con Icono -->
-    <div style="position: relative; flex: 1; min-width: 280px; max-width: 500px;">
+    <div style="position: relative; flex: 1; min-width: 280px; max-width: 400px;">
         <i class="bi bi-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 1rem;"></i>
-        <input type="text" id="search-input" placeholder="Buscar por Cliente o Folio..." style="border-radius: var(--radius-lg); border: 1px solid var(--gray-300); padding: 0.65rem 1rem 0.65rem 2.5rem; width: 100%; font-size: 0.95rem; background: var(--gray-50); outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)'; this.style.background='white';" onblur="this.style.borderColor='var(--gray-300)'; this.style.background='var(--gray-50)';">
+        <input type="text" id="search-input" placeholder="Buscar por Cliente o Folio..." style="border-radius: var(--radius-lg); border: 1px solid var(--gray-300); padding: 0.65rem 1rem 0.65rem 2.5rem; width: 100%; font-size: 0.95rem; background: white; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)'; this.style.boxShadow='0 0 0 3px rgba(79, 70, 229, 0.1)';" onblur="this.style.borderColor='var(--gray-300)'; this.style.boxShadow='none';">
     </div>
 </div>
 
@@ -29,8 +39,10 @@
                 <tr style="background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%); border-bottom: 2px solid var(--border-color);">
                     <th style="padding: 1rem 1.25rem; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Folio</th>
                     <th style="padding: 1rem; text-align: left; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Cliente</th>
+                    {% if current_user.role != 'Operativo' %}
                     <th style="padding: 1rem; text-align: right; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Monto Venta</th>
                     <th style="padding: 1rem; text-align: center; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Utilidad Real</th>
+                    {% endif %}
                     <th style="padding: 1rem; text-align: center; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Fecha de Entrega</th>
                     <th style="padding: 1rem 1.25rem; text-align: center; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em; color: var(--gray-600); text-transform: uppercase; border-bottom: 2px solid var(--border-color);">Acciones</th>
                 </tr>
@@ -87,13 +99,44 @@
         };
     }
 
+    let currentStatus = 'Aprobada'; // 'Aprobada' o 'Finalizada'
+
+    function switchTab(status) {
+        currentStatus = status;
+        const tabActive = document.getElementById('tab-active');
+        const tabFinished = document.getElementById('tab-finished');
+        
+        if (status === 'Aprobada') {
+            tabActive.style.background = 'white';
+            tabActive.style.color = 'var(--indigo)';
+            tabActive.style.fontWeight = '700';
+            tabActive.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+            
+            tabFinished.style.background = 'transparent';
+            tabFinished.style.color = 'var(--gray-500)';
+            tabFinished.style.fontWeight = '600';
+            tabFinished.style.boxShadow = 'none';
+        } else {
+            tabFinished.style.background = 'white';
+            tabFinished.style.color = 'var(--indigo)';
+            tabFinished.style.fontWeight = '700';
+            tabFinished.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+            
+            tabActive.style.background = 'transparent';
+            tabActive.style.color = 'var(--gray-500)';
+            tabActive.style.fontWeight = '600';
+            tabActive.style.boxShadow = 'none';
+        }
+        fetchProjects(searchInput.value);
+    }
+
     async function fetchProjects(query = '') {
         loading.style.display = 'block';
         tableBody.innerHTML = '';
 
         try {
-            // Fetch SOLO aprobadas
-            let url = '/api/v1/quotes/?estado=Aprobada&_t=' + new Date().getTime();
+            // Fetch usando el status actual
+            let url = `/api/v1/quotes/?estado=${currentStatus}&_t=` + new Date().getTime();
             if (query) {
                 url += `&search=${encodeURIComponent(query)}`;
             }
@@ -111,9 +154,10 @@
 
     function renderTable(projects) {
         if (projects.length === 0) {
+            const emptyMsg = currentStatus === 'Aprobada' ? 'No hay proyectos aprobados activos en este momento.' : 'Aún no hay proyectos finalizados en el historial.';
             tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 4rem; color: var(--gray-400);">
                 <i class="bi bi-folder" style="font-size: 2.5rem; display: block; margin-bottom: 1rem; color: var(--gray-300);"></i>
-                No hay proyectos aprobados activos en este momento.
+                ${emptyMsg}
             </td></tr>`;
             return;
         }
@@ -224,34 +268,90 @@
             }
 
             // Botones de acciones principales
+            let finishButtonHtml = '';
+            let costosButtonHtml = '';
+            
+            if ("{{ current_user.role }}" !== "Operativo") {
+                if (currentStatus === 'Aprobada') {
+                    finishButtonHtml = `
+                        <button onclick="finishProject(${p.id})"
+                                style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem;
+                                       border-radius: var(--radius-md); font-weight: 600; display: inline-flex;
+                                       align-items: center; gap: 5px; border: 1px solid transparent;
+                                       background: linear-gradient(135deg, var(--primary) 0%, var(--indigo-dark) 100%);
+                                       color: white; cursor: pointer; box-shadow: 0 2px 6px rgba(79,70,229,0.3);
+                                       transition: all 0.18s ease;"
+                                onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(79,70,229,0.4)';"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 6px rgba(79,70,229,0.3)';"
+                                title="Finalizar Proyecto">
+                            <i class="bi bi-check2-circle"></i> Finalizar
+                        </button>
+                    `;
+                    
+                    costosButtonHtml = `
+                        <button onclick="openCostModal(${p.id}, ${realMaterialCost}, ${opCosts})"
+                                style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem;
+                                       border-radius: var(--radius-md); font-weight: 600; display: inline-flex;
+                                       align-items: center; gap: 5px; border: 1px solid #fed7aa;
+                                       background: #fff7ed; color: #c2410c; cursor: pointer;
+                                       transition: all 0.18s ease;"
+                                onmouseover="this.style.background='#ffedd5'; this.style.borderColor='#fdba74'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 8px rgba(194,65,12,0.15)';"
+                                onmouseout="this.style.background='#fff7ed'; this.style.borderColor='#fed7aa'; this.style.transform='translateY(0)'; this.style.boxShadow='none';"
+                                title="Ajustar Costos">
+                            <i class="bi bi-sliders"></i> Costos
+                        </button>
+                    `;
+                } else {
+                    finishButtonHtml = `
+                        <div style="padding: 0.4rem 0.75rem; font-size: 0.75rem; border-radius: var(--radius-md); font-weight: 700; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="bi bi-check-all" style="font-size: 1rem;"></i> Terminado
+                        </div>
+                    `;
+                }
+            } else {
+                // Operativo user
+                if (currentStatus === 'Aprobada') {
+                    finishButtonHtml = `
+                        <button onclick="finishProject(${p.id})"
+                                style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem;
+                                       border-radius: var(--radius-md); font-weight: 600; display: inline-flex;
+                                       align-items: center; gap: 5px; border: 1px solid transparent;
+                                       background: linear-gradient(135deg, var(--indigo) 0%, var(--primary) 100%);
+                                       color: white; cursor: pointer; box-shadow: 0 2px 6px rgba(79,70,229,0.3);
+                                       transition: all 0.18s ease;"
+                                onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(79,70,229,0.4)';"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 6px rgba(79,70,229,0.3)';"
+                                title="Marcar como listo">
+                            <i class="bi bi-cloud-check"></i> Subir Información
+                        </button>
+                    `;
+                } else {
+                    finishButtonHtml = `
+                        <div style="padding: 0.4rem 0.75rem; font-size: 0.75rem; border-radius: var(--radius-md); font-weight: 700; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="bi bi-check-all" style="font-size: 1rem;"></i> Terminado
+                        </div>
+                    `;
+                }
+            }
+
             const actionButtons = `
                 <div style="display: inline-flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap;">
                     ${docsHtml}
-                    <button onclick="openCostModal(${p.id}, ${realMaterialCost}, ${opCosts})"
-                            style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem;
-                                   border-radius: var(--radius-md); font-weight: 600; display: inline-flex;
-                                   align-items: center; gap: 5px; border: 1px solid #fed7aa;
-                                   background: #fff7ed; color: #c2410c; cursor: pointer;
-                                   transition: all 0.18s ease;"
-                            onmouseover="this.style.background='#ffedd5'; this.style.borderColor='#fdba74'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 8px rgba(194,65,12,0.15)';"
-                            onmouseout="this.style.background='#fff7ed'; this.style.borderColor='#fed7aa'; this.style.transform='translateY(0)'; this.style.boxShadow='none';"
-                            title="Ajustar Costos">
-                        <i class="bi bi-sliders"></i> Costos
-                    </button>
-                    <button onclick="finishProject(${p.id})"
-                            style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem;
-                                   border-radius: var(--radius-md); font-weight: 600; display: inline-flex;
-                                   align-items: center; gap: 5px; border: 1px solid transparent;
-                                   background: linear-gradient(135deg, var(--primary) 0%, var(--indigo-dark) 100%);
-                                   color: white; cursor: pointer; box-shadow: 0 2px 6px rgba(79,70,229,0.3);
-                                   transition: all 0.18s ease;"
-                            onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(79,70,229,0.4)';"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 6px rgba(79,70,229,0.3)';"
-                            title="Finalizar Proyecto">
-                        <i class="bi bi-check2-circle"></i> Finalizar
-                    </button>
+                    ${costosButtonHtml}
+                    ${finishButtonHtml}
                 </div>
             `;
+
+            let financialsColumnsHtml = '';
+            if ("{{ current_user.role }}" !== "Operativo") {
+                financialsColumnsHtml = `
+                <td style="padding: 1rem 1rem; border-bottom: 1px solid var(--border-color); text-align: right; font-weight: 700; color: var(--gray-800); font-size: 0.95rem; white-space: nowrap;">
+                    $${saleAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+                <td style="padding: 1rem 1rem; border-bottom: 1px solid var(--border-color); text-align: center; white-space: nowrap;">
+                    ${utilityHtml}
+                </td>`;
+            }
 
             return `
             <tr style="border-bottom: 1px solid var(--border-color); transition: all 0.2s; background: white;" onmouseover="this.style.backgroundColor='var(--gray-50)'; this.style.transform='scale(1.005)';" onmouseout="this.style.backgroundColor='white'; this.style.transform='scale(1)'">
@@ -265,12 +365,7 @@
                         ${clientName}
                     </div>
                 </td>
-                <td style="padding: 1rem 1rem; border-bottom: 1px solid var(--border-color); text-align: right; font-weight: 700; color: var(--gray-800); font-size: 0.95rem; white-space: nowrap;">
-                    $${saleAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </td>
-                <td style="padding: 1rem 1rem; border-bottom: 1px solid var(--border-color); text-align: center; white-space: nowrap;">
-                    ${utilityHtml}
-                </td>
+                ${financialsColumnsHtml}
                 <td style="padding: 1rem 1rem; border-bottom: 1px solid var(--border-color); text-align: center; white-space: nowrap;">
                     ${dateInput}
                 </td>
@@ -374,7 +469,12 @@
     }
 
     async function finishProject(id) {
-        if(!(await showConfirmDialog("¿Estás seguro de marcar este proyecto como FINALIZADO? Las utilidades actuales se sellarán contablemente y desaparecerá de esta vista en curso."))) return;
+        const role = "{{ current_user.role }}";
+        const msg = role === 'Operativo' 
+            ? "¿Estás seguro de enviar la información y marcar este proyecto como terminado?"
+            : "¿Estás seguro de marcar este proyecto como FINALIZADO? Las utilidades actuales se sellarán contablemente y desaparecerá de esta vista en curso.";
+            
+        if(!(await showConfirmDialog(msg))) return;
         
         try {
             const response = await fetch(`/api/v1/quotes/${id}`, {
@@ -383,7 +483,7 @@
                 body: JSON.stringify({ estado: 'Finalizada' })
             });
             if(response.ok) {
-                fetchProjects(); // Will disappear from 'Aprobadas'
+                fetchProjects(searchInput.value);
             } else {
                 showNotification("Error comunicando cierre del proyecto", "error");
             }
