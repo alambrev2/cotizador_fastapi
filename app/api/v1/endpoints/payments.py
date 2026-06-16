@@ -18,7 +18,12 @@ from app.api.deps import (
 from app.models import RoleEnum
 import unicodedata, re
 
-templates = Jinja2Templates(directory="app/templates")
+import os
+
+# Obtener el directorio base del proyecto
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app", "templates"))
 
 router = APIRouter()
 
@@ -420,7 +425,7 @@ def create_charge(
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
 
-    db_charge = AccountCharge.from_orm(charge_in)
+    db_charge = AccountCharge.model_validate(charge_in.model_dump())
     session.add(db_charge)
     session.commit()
     session.refresh(db_charge)
@@ -602,7 +607,7 @@ def create_payment(
         if not cargo:
             raise HTTPException(status_code=404, detail="Cargo o Servicio no encontrado")
 
-    db_payment = Payment.from_orm(payment_in)
+    db_payment = Payment.model_validate(payment_in.model_dump())
     session.add(db_payment)
     session.commit()
     session.refresh(db_payment)

@@ -166,6 +166,36 @@
         }, 500);
     }
 
+    function showSuccessNotification(message) {
+        const notification = document.getElementById('success-notification');
+        document.getElementById('success-message').textContent = message || 'Operación completada';
+        notification.style.animation = 'slideIn 0.5s ease-out';
+        notification.style.display = 'flex';
+        setTimeout(() => hideSuccessNotification(), 4000);
+    }
+
+    function showErrorNotification(message) {
+        const notification = document.getElementById('error-notification');
+        document.getElementById('error-message').textContent = message || 'Ocurrió un error';
+        notification.style.animation = 'slideIn 0.5s ease-out';
+        notification.style.display = 'flex';
+        setTimeout(() => hideErrorNotification(), 5000);
+    }
+
+    function showConfirmDialog(message, title = '¿Confirmar acción?', confirmText = 'Confirmar') {
+        return Swal.fire({
+            title: title,
+            text: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: 'var(--danger)',
+            cancelButtonColor: 'var(--gray-500)',
+            confirmButtonText: confirmText,
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then(result => result.isConfirmed);
+    }
+
     const searchInput = document.getElementById('search-input');
     const tableBody = document.getElementById('table-body');
     const loading = document.getElementById('loading');
@@ -307,6 +337,12 @@
                             <a href="/customers/${c.id}/edit" class="btn btn-indigo" style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; color: white;">
                                 <i class="bi bi-pencil"></i> Editar
                             </a>
+                            <button onclick="deleteCustomer(${c.id}, '${c.nombre.replace(/'/g, "\\'")}')"
+                                style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; color: white; background: var(--danger); border: none; cursor: pointer; transition: opacity 0.2s;"
+                                onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'"
+                                title="Eliminar cliente">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
                         </div>
                     </td>
                 </tr>

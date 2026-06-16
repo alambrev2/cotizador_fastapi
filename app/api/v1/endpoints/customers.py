@@ -313,7 +313,7 @@ def read_customers(
     *,
     session: Session = Depends(get_session),
     offset: int = 0,
-    limit: int = Query(default=100, le=100),
+    limit: int = Query(default=5000, le=5000),
     search: str = None,
     current_user: User = Depends(get_current_active_admin),
 ):

@@ -59,18 +59,21 @@
     <div style="display: flex; gap: var(--space-3); flex-wrap: wrap; width: 100%; justify-content: space-between; align-items: center;">
         <div style="position: relative; flex: 1; min-width: 280px; max-width: 500px;">
             <i class="bi bi-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 1rem;"></i>
-            <input type="text" id="search-input" placeholder="Buscar por Cliente, Folio o Agente..." style="border-radius: var(--radius-lg); border: 1px solid var(--gray-300); padding: 0.65rem 1rem 0.65rem 2.5rem; width: 100%; font-size: 0.95rem; background: var(--gray-50); outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)'; this.style.background='white';" onblur="this.style.borderColor='var(--gray-300)'; this.style.background='var(--gray-50)';">
+            <input type="text" id="search-input" placeholder="Buscar por cliente, folio (ej: C2026...) o agente..." style="border-radius: var(--radius-lg); border: 1px solid var(--gray-300); padding: 0.65rem 1rem 0.65rem 2.5rem; width: 100%; font-size: 0.95rem; background: var(--gray-50); outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)'; this.style.background='white';" onblur="this.style.borderColor='var(--gray-300)'; this.style.background='var(--gray-50)';">
         </div>
         <div style="display: flex; gap: var(--space-2); align-items: center;">
             <label for="status-filter" style="font-size: 0.85rem; font-weight: 700; color: var(--gray-500); text-transform: uppercase;">Estado:</label>
             <select id="status-filter" style="border-radius: var(--radius-lg); border: 1px solid var(--gray-300); padding: 0.65rem 2rem 0.65rem 1rem; font-size: 0.95rem; background: white; outline: none; cursor: pointer; font-weight: 600; color: var(--gray-700); transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)';" onblur="this.style.borderColor='var(--gray-300)';" onchange="applyFilters()">
-                <option value="Todos">Todos</option>
-                <option value="Borrador">Borrador</option>
-                <option value="Enviada">Enviada</option>
-                <option value="Aprobación Solicitada">Aprobación Solicitada</option>
-                <option value="Aprobada">Aprobada</option>
-                <option value="Rechazada">Rechazada</option>
-                <option value="Sustituida">Sustituida</option>
+                <option value="Todos">✦ Todos</option>
+                <option value="Borrador">📝 Borrador</option>
+                <option value="Enviada">📤 Enviada</option>
+                <option value="Aprobación Solicitada">⏳ Aprobación Solicitada</option>
+                <option value="Aprobada">✅ Aprobada</option>
+                <option value="Pendiente">💳 Pendiente (Cobro)</option>
+                <option value="Cobranza Requerida">🔴 Cobranza Requerida</option>
+                <option value="Rechazada">❌ Rechazada</option>
+                <option value="Sustituida">🔄 Sustituida</option>
+                <option value="Finalizada">🏁 Finalizada</option>
             </select>
         </div>
     </div>

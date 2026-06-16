@@ -198,7 +198,289 @@
 {% endblock %}
 
 {% block scripts %}
+<style>
+    .searchable-select-wrapper {
+        position: relative;
+        width: 100%;
+    }
+    .searchable-select-input {
+        cursor: pointer;
+        background-color: white !important;
+        transition: all 0.2s ease;
+    }
+    .searchable-select-input:focus {
+        border-color: var(--indigo) !important;
+        box-shadow: 0 0 0 3px var(--indigo-light) !important;
+        background-color: white !important;
+    }
+    .searchable-select-dropdown {
+        scrollbar-width: thin;
+        scrollbar-color: var(--gray-300) transparent;
+        transition: all 0.15s ease;
+    }
+    .searchable-select-dropdown::-webkit-scrollbar {
+        width: 6px;
+    }
+    .searchable-select-dropdown::-webkit-scrollbar-thumb {
+        background-color: var(--gray-300);
+        border-radius: 3px;
+    }
+    .searchable-select-option {
+        padding: 0.65rem 1rem;
+        cursor: pointer;
+        font-size: 0.95rem;
+        color: var(--gray-700);
+        transition: background 0.15s, color 0.15s;
+    }
+    .searchable-select-option:hover {
+        background-color: var(--gray-50);
+    }
+</style>
 <script>
+    function makeSearchableSelect(select) {
+        if (!select || select.parentNode.classList.contains('searchable-select-wrapper')) {
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'searchable-select-wrapper';
+
+        select.style.position = 'absolute';
+        select.style.opacity = '0';
+        select.style.width = '0';
+        select.style.height = '0';
+        select.style.overflow = 'hidden';
+        select.style.pointerEvents = 'none';
+        select.tabIndex = -1;
+
+        select.parentNode.insertBefore(wrapper, select);
+        wrapper.appendChild(select);
+
+        const triggerWrapper = document.createElement('div');
+        triggerWrapper.className = 'searchable-select-trigger';
+        triggerWrapper.style.position = 'relative';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'searchable-select-input';
+        input.placeholder = select.options[0] ? select.options[0].textContent : 'Seleccionar...';
+        input.autocomplete = 'off';
+        
+        // Copiar estilos del select original
+        input.style.width = '100%';
+        input.style.padding = '0.75rem 2.5rem 0.75rem 1rem';
+        input.style.borderRadius = 'var(--radius-md)';
+        input.style.border = '1px solid var(--gray-300)';
+        input.style.background = 'white';
+        input.style.fontSize = '0.95rem';
+        input.style.outline = 'none';
+        
+        const arrow = document.createElement('i');
+        arrow.className = 'bi bi-chevron-down';
+        arrow.style.position = 'absolute';
+        arrow.style.right = '1rem';
+        arrow.style.top = '50%';
+        arrow.style.transform = 'translateY(-50%)';
+        arrow.style.color = 'var(--gray-400)';
+        arrow.style.pointerEvents = 'none';
+        arrow.style.transition = 'transform 0.2s';
+
+        triggerWrapper.appendChild(input);
+        triggerWrapper.appendChild(arrow);
+        wrapper.appendChild(triggerWrapper);
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'searchable-select-dropdown';
+        dropdown.style.position = 'absolute';
+        dropdown.style.maxHeight = '250px';
+        dropdown.style.overflowY = 'auto';
+        dropdown.style.background = 'white';
+        dropdown.style.border = '1px solid var(--border-color)';
+        dropdown.style.borderRadius = 'var(--radius-md)';
+        dropdown.style.boxShadow = 'var(--shadow-lg)';
+        dropdown.style.zIndex = '9999';
+        dropdown.style.display = 'none';
+        dropdown.style.marginTop = '4px';
+
+        document.body.appendChild(dropdown);
+
+        function updateDropdownPosition() {
+            const rect = input.getBoundingClientRect();
+            dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+            dropdown.style.left = (rect.left + window.scrollX) + 'px';
+            dropdown.style.width = rect.width + 'px';
+        }
+
+        function rebuildOptions() {
+            dropdown.innerHTML = '';
+            const searchVal = input.value.toLowerCase().trim();
+            const options = Array.from(select.options);
+            
+            let count = 0;
+            options.forEach((opt) => {
+                if (opt.value === "" && searchVal !== "") return;
+
+                const text = opt.textContent;
+                if (searchVal && !text.toLowerCase().includes(searchVal)) {
+                    return;
+                }
+
+                const item = document.createElement('div');
+                item.className = 'searchable-select-option';
+                item.textContent = text;
+                item.dataset.value = opt.value;
+                
+                if (opt.selected && opt.value !== "") {
+                    item.style.background = 'var(--indigo-light)';
+                    item.style.color = 'var(--indigo)';
+                    item.style.fontWeight = '600';
+                }
+
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    select.value = opt.value;
+                    input.value = opt.value === "" ? "" : text;
+                    dropdown.style.display = 'none';
+                    arrow.style.transform = 'translateY(-50%)';
+                    input.blur();
+                    
+                    const changeEvent = new Event('change', { bubbles: true });
+                    select.dispatchEvent(changeEvent);
+                });
+
+                dropdown.appendChild(item);
+                count++;
+            });
+
+            if (count === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'searchable-select-option';
+                noResults.textContent = 'Sin resultados';
+                noResults.style.color = 'var(--gray-400)';
+                noResults.style.fontStyle = 'italic';
+                noResults.style.cursor = 'default';
+                dropdown.appendChild(noResults);
+            }
+        }
+
+        function showDropdown() {
+            document.querySelectorAll('.searchable-select-dropdown').forEach(d => {
+                if (d !== dropdown) d.style.display = 'none';
+            });
+            document.querySelectorAll('.searchable-select-trigger i').forEach(a => {
+                if (a !== arrow) a.style.transform = 'translateY(-50%)';
+            });
+
+            rebuildOptions();
+            dropdown.style.display = 'block';
+            updateDropdownPosition();
+            arrow.style.transform = 'translateY(-50%) rotate(180deg)';
+
+            window.addEventListener('scroll', updateDropdownPosition, { passive: true });
+            window.addEventListener('resize', updateDropdownPosition);
+        }
+
+        function closeDropdown() {
+            dropdown.style.display = 'none';
+            arrow.style.transform = 'translateY(-50%)';
+            window.removeEventListener('scroll', updateDropdownPosition);
+            window.removeEventListener('resize', updateDropdownPosition);
+        }
+
+        input.addEventListener('focus', showDropdown);
+        input.addEventListener('input', () => {
+            dropdown.style.display = 'block';
+            updateDropdownPosition();
+            rebuildOptions();
+        });
+
+        triggerWrapper.addEventListener('click', (e) => {
+            if (e.target === input) {
+                return; // Dejar que el input maneje su propio click/enfoque
+            }
+            if (dropdown.style.display === 'block') {
+                input.blur();
+                closeDropdown();
+            } else {
+                input.focus();
+            }
+        });
+
+        // Cerrar si se hace click fuera del componente o de su dropdown
+        document.addEventListener('mousedown', (e) => {
+            if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) {
+                closeDropdown();
+                
+                const selectedOpt = select.selectedOptions[0];
+                if (selectedOpt && selectedOpt.value !== "") {
+                    input.value = selectedOpt.textContent;
+                } else {
+                    input.value = "";
+                }
+            }
+        });
+
+        // Cerrar si se pierde el foco por navegación de teclado (Tab)
+        wrapper.addEventListener('focusout', (e) => {
+            if (!wrapper.contains(e.relatedTarget) && !dropdown.contains(e.relatedTarget)) {
+                closeDropdown();
+                
+                const selectedOpt = select.selectedOptions[0];
+                if (selectedOpt && selectedOpt.value !== "") {
+                    input.value = selectedOpt.textContent;
+                } else {
+                    input.value = "";
+                }
+            }
+        });
+
+        const syncSelectedText = () => {
+            const selectedOpt = select.selectedOptions[0];
+            if (selectedOpt && selectedOpt.value !== "") {
+                input.value = selectedOpt.textContent;
+            } else {
+                input.value = "";
+            }
+        };
+        syncSelectedText();
+
+        const observer = new MutationObserver(() => {
+            if (!select.isConnected) {
+                dropdown.remove();
+                observer.disconnect();
+                return;
+            }
+            syncSelectedText();
+            rebuildOptions();
+        });
+        observer.observe(select, { childList: true, characterData: true, subtree: true, attributes: true });
+
+        select.addEventListener('change', syncSelectedText);
+
+        // Intercept properties
+        const originalValueProp = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+        Object.defineProperty(select, 'value', {
+            get() {
+                return originalValueProp.get.call(this);
+            },
+            set(val) {
+                originalValueProp.set.call(this, val);
+                syncSelectedText();
+            }
+        });
+
+        const originalSelectedIndexProp = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'selectedIndex');
+        Object.defineProperty(select, 'selectedIndex', {
+            get() {
+                return originalSelectedIndexProp.get.call(this);
+            },
+            set(val) {
+                originalSelectedIndexProp.set.call(this, val);
+                syncSelectedText();
+            }
+        });
+    }
+
     let productsList = [];
     let isEditing = false;
     let editId = null;
@@ -213,6 +495,7 @@
             customers.forEach(c => {
                 selectCliente.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
             });
+            makeSearchableSelect(selectCliente);
 
             const resProducts = await fetch('/api/v1/products/');
             productsList = await resProducts.json();
@@ -383,6 +666,7 @@
         `;
 
         tbody.appendChild(tr);
+        makeSearchableSelect(tr.querySelector('.product-select'));
     }
 
     function removeRow(id) {

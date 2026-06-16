@@ -27,10 +27,13 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Configurar CORS
+# Configurar CORS — lee orígenes desde .env (CORS_ORIGINS=http://dominio.com,http://otro.com)
+_cors_env = os.getenv("CORS_ORIGINS", "*")
+_cors_origins = [o.strip() for o in _cors_env.split(",") if o.strip()] if _cors_env != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción, especificar dominios permitidos
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,6 +53,13 @@ os.makedirs(os.path.join(BASE_DIR, "temp"), exist_ok=True)
 # Middleware de excepciones global
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
+    # Los redirects (3xx) NO deben interceptarse — deben pasar con sus headers Location intactos
+    if 300 <= exc.status_code < 400:
+        from fastapi.responses import Response
+        return Response(
+            status_code=exc.status_code,
+            headers=dict(exc.headers) if exc.headers else {},
+        )
     logger.error(f"HTTP error: {exc.status_code} - {exc.detail}")
     return JSONResponse(
         status_code=exc.status_code,
@@ -176,16 +186,18 @@ async def client_dashboard(request: Request, current_user: User = Depends(get_cu
         return RedirectResponse(url="/dashboard")
 
     from app.database import get_session
-    from sqlmodel import Session
+    from sqlmodel import select
     from sqlalchemy.orm import selectinload
-    from app.models import Customer
+    from app.models import Customer, Quote, Payment, AccountCharge
 
     db = next(get_session())
     try:
         cliente = None
+        statement_data = None
+
         if current_user.cliente_id:
             cliente = db.exec(
-                __import__('sqlmodel', fromlist=['select']).select(Customer)
+                select(Customer)
                 .where(Customer.id == current_user.cliente_id)
                 .options(
                     selectinload(Customer.pagos),
@@ -193,12 +205,60 @@ async def client_dashboard(request: Request, current_user: User = Depends(get_cu
                     selectinload(Customer.cotizaciones),
                 )
             ).first()
+
+            if cliente:
+                # Cotizaciones activas en estados con saldo pendiente
+                cotizaciones_activas = db.exec(
+                    select(Quote)
+                    .where(Quote.cliente_id == cliente.id)
+                    .where(Quote.estado.in_(["Pendiente", "Cobranza Requerida"]))
+                    .options(selectinload(Quote.pagos))
+                    .order_by(Quote.fecha_creacion.desc())
+                ).all()
+
+                # Todos los cargos del cliente
+                cargos = db.exec(
+                    select(AccountCharge)
+                    .where(AccountCharge.cliente_id == cliente.id)
+                    .options(selectinload(AccountCharge.pagos))
+                    .order_by(AccountCharge.fecha.desc())
+                ).all()
+
+                # Pagos directos sin cotización vinculada
+                pagos_directos = db.exec(
+                    select(Payment)
+                    .where(Payment.cliente_id == cliente.id)
+                    .where(Payment.quote_id.is_(None))
+                ).all()
+
+                # Cálculos unificados (idénticos al endpoint /statement/customer/{id})
+                total_comprado = sum(float(q.total) for q in cotizaciones_activas)
+                total_cargos = sum(float(c.monto) for c in cargos)
+                total_pagado_quotes = sum(
+                    sum(float(p.monto) for p in q.pagos)
+                    for q in cotizaciones_activas
+                )
+                total_abonos_directos = sum(float(p.monto) for p in pagos_directos)
+
+                deuda_total = float(cliente.saldo_inicial or 0) + total_comprado + total_cargos
+                total_pagado = total_pagado_quotes + total_abonos_directos
+                saldo_actual = deuda_total - total_pagado
+
+                statement_data = {
+                    "saldo_actual": round(saldo_actual, 2),
+                    "deuda_total": round(deuda_total, 2),
+                    "total_pagado": round(total_pagado, 2),
+                    "cotizaciones_activas": cotizaciones_activas,
+                    "cargos": cargos,
+                    "pagos_directos": pagos_directos,
+                }
     finally:
         db.close()
 
     return templates.TemplateResponse(request, "client_dashboard.html", {
         "user": current_user,
         "cliente": cliente,
+        "statement": statement_data,
     })
 
 

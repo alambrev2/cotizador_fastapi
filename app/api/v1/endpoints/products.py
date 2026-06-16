@@ -113,6 +113,7 @@ def export_template_route():
 
 @router.post("/import")
 def import_excel_route(
+    dry_run: bool = False,
     session: Session = Depends(get_session),
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_active_admin)
@@ -240,20 +241,20 @@ def import_excel_route(
                     
                     existing = session.exec(select(Product).where(Product.nombre == nombre)).first()
                     if existing:
-                        existing.precio_menudeo = precio_menudeo
-                        existing.precio_mayoreo = precio_mayoreo
-                        existing.costo = costo
-                        existing.stock = stock
-                        existing.stock_minimo = stock_minimo
-                        existing.cantidad_mayoreo = cantidad_mayoreo
-                        if marca: existing.marca = marca
-                        if categoria: existing.categoria = categoria
-                        if proveedor: existing.proveedor = proveedor
-                        if descripcion: existing.descripcion = descripcion
-                        if unidad_medida: existing.unidad_medida = unidad_medida
-                        existing.activo = activo
-                        
-                        session.add(existing)
+                        if not dry_run:
+                            existing.precio_menudeo = precio_menudeo
+                            existing.precio_mayoreo = precio_mayoreo
+                            existing.costo = costo
+                            existing.stock = stock
+                            existing.stock_minimo = stock_minimo
+                            existing.cantidad_mayoreo = cantidad_mayoreo
+                            if marca: existing.marca = marca
+                            if categoria: existing.categoria = categoria
+                            if proveedor: existing.proveedor = proveedor
+                            if descripcion: existing.descripcion = descripcion
+                            if unidad_medida: existing.unidad_medida = unidad_medida
+                            existing.activo = activo
+                            session.add(existing)
                         count_updated += 1
                     else:
                         new_prod = Product(
@@ -271,7 +272,8 @@ def import_excel_route(
                             descripcion=descripcion,
                             activo=activo
                         )
-                        session.add(new_prod)
+                        if not dry_run:
+                            session.add(new_prod)
                         count_new += 1
                         
                 except ValueError as ve:
@@ -283,7 +285,8 @@ def import_excel_route(
                     error_row = row_number
                     raise Exception(error_msg)
             
-            session.commit()
+            if not dry_run:
+                session.commit()
             
             return {"creados": count_new, "actualizados": count_updated}
             
@@ -321,7 +324,7 @@ def read_products(
     *,
     session: Session = Depends(get_session),
     offset: int = 0,
-    limit: int = Query(default=100, le=100),
+    limit: int = Query(default=5000, le=5000),
     search: str = None,
     brand: str = None,
     current_user: User = Depends(get_current_active_admin),

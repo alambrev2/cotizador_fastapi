@@ -197,14 +197,45 @@ def read_quotes(
         query = query.where(Quote.estado == estado)
         
     if search:
-        # Si es numero, buscar por ID, sino buscar por nombre de cliente
+        # Si es número, buscar por ID
         if search.isdigit():
             query = query.where(Quote.id == int(search))
+        # Si empieza con C y tiene dígitos, buscar por folio
+        elif search.upper().startswith('C') and any(c.isdigit() for c in search):
+            query = query.where(Quote.folio_cotizacion.contains(search.upper()))
         else:
-            # Join implicito o explicito para filtrar por cliente
+            # Buscar por nombre de cliente
             query = query.join(Customer).where(Customer.nombre.contains(search))
 
     quotes = session.exec(query.offset(offset).limit(limit)).all()
+    return quotes
+
+
+@router.get("/by-customer/{customer_id}", response_model=List[QuoteRead])
+def read_quotes_by_customer(
+    *,
+    session: Session = Depends(get_session),
+    customer_id: int,
+    estado: str = None,
+    current_user: User = Depends(get_current_user),
+):
+    """Obtiene todas las cotizaciones de un cliente específico.
+    El cliente solo puede ver las propias; Admin y Operativo pueden ver cualquiera.
+    """
+    if current_user.role == RoleEnum.Cliente:
+        if current_user.cliente_id != customer_id:
+            raise HTTPException(status_code=403, detail="Solo puedes ver tus propias cotizaciones")
+
+    query = (
+        select(Quote)
+        .where(Quote.cliente_id == customer_id)
+        .options(selectinload(Quote.cliente), selectinload(Quote.items))
+        .order_by(Quote.fecha_creacion.desc())
+    )
+    if estado:
+        query = query.where(Quote.estado == estado)
+
+    quotes = session.exec(query).all()
     return quotes
 
 

@@ -444,7 +444,33 @@
         </div>
     </div>
 
-    <!-- Módulo Calendario y Lista -->
+    <!-- Gráfica P&L Anual -->
+    <div class="card" style="margin-bottom: var(--space-10); padding: 1rem; width: 100%; box-sizing: border-box; overflow: hidden;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
+            <h4 style="color: var(--text-muted); font-size: var(--font-size-xs); text-transform: uppercase; margin: 0; font-weight: var(--font-weight-semibold);">
+                📊 P&L Anual — Ingresos vs Egresos vs Utilidad Neta
+            </h4>
+            <select id="pnl-year-select" onchange="loadPnlChart()" style="border-radius: 8px; border: 1px solid var(--border-color); padding: 0.35rem 0.85rem; font-size: 0.85rem; font-weight: 600; color: var(--gray-700); background: white; cursor: pointer;">
+                <!-- Años generados por JS -->
+            </select>
+        </div>
+        <div style="position: relative; height: 300px; width: 100%; min-width: 100%; box-sizing: border-box;">
+            <canvas id="pnlChart"></canvas>
+        </div>
+        <div style="display: flex; gap: 1.5rem; justify-content: center; margin-top: 0.75rem; flex-wrap: wrap;">
+            <span style="display: flex; align-items: center; gap: 5px; font-size: 0.8rem; font-weight: 600; color: var(--gray-600);">
+                <span style="width: 14px; height: 14px; border-radius: 3px; background: #10b981; display: inline-block;"></span> Ingresos
+            </span>
+            <span style="display: flex; align-items: center; gap: 5px; font-size: 0.8rem; font-weight: 600; color: var(--gray-600);">
+                <span style="width: 14px; height: 14px; border-radius: 3px; background: #ef4444; display: inline-block;"></span> Egresos
+            </span>
+            <span style="display: flex; align-items: center; gap: 5px; font-size: 0.8rem; font-weight: 600; color: var(--gray-600);">
+                <span style="width: 14px; height: 14px; border-radius: 3px; background: #6366f1; display: inline-block;"></span> Utilidad Neta
+            </span>
+        </div>
+    </div>
+
+
     <div class="card" style="margin-bottom: var(--space-10); padding: 0 1rem;">
         <!-- Tabs Header -->
         <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 1px solid var(--border-color); padding-bottom: var(--space-3);">
@@ -1048,8 +1074,113 @@
     }
     document.addEventListener("DOMContentLoaded", function() {
         initCalendarSelects();
+        initPnlYearSelect();
         loadDashboardMetrics();
+        loadPnlChart();
     });
+
+    // ─── Gráfica P&L Anual ────────────────────────────────────────────────────
+    let pnlChartInstance = null;
+
+    function initPnlYearSelect() {
+        const select = document.getElementById('pnl-year-select');
+        const currentYear = new Date().getFullYear();
+        select.innerHTML = '';
+        for (let y = currentYear - 2; y <= currentYear; y++) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            if (y === currentYear) opt.selected = true;
+            select.appendChild(opt);
+        }
+    }
+
+    async function loadPnlChart() {
+        const year = document.getElementById('pnl-year-select').value;
+        try {
+            const res = await fetch(`/api/v1/dashboard/pnl?anio=${year}`, { cache: 'no-store' });
+            if (!res.ok) return;
+            const data = await res.json();
+            const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+            const labels    = data.pnl.map(m => meses[m.mes - 1]);
+            const ingresos  = data.pnl.map(m => m.ingresos);
+            const egresos   = data.pnl.map(m => m.costos_materiales + m.egresos_operativos);
+            const utilidad  = data.pnl.map(m => m.utilidad_neta);
+
+            const ctx = document.getElementById('pnlChart').getContext('2d');
+            if (pnlChartInstance) pnlChartInstance.destroy();
+
+            const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
+
+            pnlChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Ingresos',
+                            data: ingresos,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16,185,129,0.08)',
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#10b981',
+                            tension: 0.35,
+                            fill: true
+                        },
+                        {
+                            label: 'Egresos',
+                            data: egresos,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239,68,68,0.06)',
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#ef4444',
+                            tension: 0.35,
+                            fill: true
+                        },
+                        {
+                            label: 'Utilidad Neta',
+                            data: utilidad,
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99,102,241,0.08)',
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointBackgroundColor: '#6366f1',
+                            tension: 0.35,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${fmt.format(ctx.raw)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { callback: v => fmt.format(v) }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        } catch(e) {
+            console.error('Error cargando P&L:', e);
+        }
+    }
 
     let calendarYear  = new Date().getFullYear();
     let calendarMonth = new Date().getMonth();   // 0-11
