@@ -89,6 +89,60 @@
         </tr>
     </table>
 
+    <div style="margin-bottom: 25px;">
+        {% set saldo_restante = quote.total - quote.anticipo %}
+        {% set enganche = quote.anticipo %}
+        
+        {% if quote.tipo_pago == 'Contado' %}
+            {% set plazo_str = 'Pago Único' %}
+            {% set saldo_restante = 0 %}
+            {% set enganche = quote.total %}
+        {% elif quote.tipo_pago == '2 Pagos' %}
+            {% set plazo_str = '2 Pagos' %}
+            {% set enganche = quote.total / 2 %}
+            {% set saldo_restante = quote.total - enganche %}
+        {% else %}
+            {% set pagos_regulares = (saldo_restante / quote.monto_semanal)|int %}
+            {% set resto = saldo_restante - (pagos_regulares * quote.monto_semanal) %}
+            {% if resto > 0 and pagos_regulares > 0 %}
+                {% set plazo_str = pagos_regulares ~ ' pagos de $' ~ ("%.2f"|format(quote.monto_semanal)) ~ ' y 1 de $' ~ ("%.2f"|format(resto)) %}
+            {% elif resto > 0 and pagos_regulares == 0 %}
+                {% set plazo_str = '1 pago final de $' ~ ("%.2f"|format(resto)) %}
+            {% else %}
+                {% set plazo_str = pagos_regulares ~ ' pagos semanales de $' ~ ("%.2f"|format(quote.monto_semanal)) %}
+            {% endif %}
+        {% endif %}
+
+        <table style="width: 100%; margin-bottom: 25px; table-layout: fixed;">
+            <tr>
+                <td style="padding-right: 10px;">
+                    <div style="border-left: 3px solid #1a237e; padding-left: 10px;">
+                        <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Monto Total</div>
+                        <div style="font-size: 13pt; font-weight: bold; color: #1a237e; margin-top: 4px;">${{ "%.2f"|format(quote.total) }}</div>
+                    </div>
+                </td>
+                <td style="padding-right: 10px;">
+                    <div style="border-left: 3px solid #cbd5e1; padding-left: 10px;">
+                        <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Enganche</div>
+                        <div style="font-size: 13pt; font-weight: bold; color: #0f172a; margin-top: 4px;">${{ "%.2f"|format(enganche) }}</div>
+                    </div>
+                </td>
+                <td style="padding-right: 10px;">
+                    <div style="border-left: 3px solid #1a237e; padding-left: 10px;">
+                        <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Saldo Restante</div>
+                        <div style="font-size: 13pt; font-weight: bold; color: #1a237e; margin-top: 4px;">${{ "%.2f"|format(saldo_restante) }}</div>
+                    </div>
+                </td>
+                <td>
+                    <div style="border-left: 3px solid #cbd5e1; padding-left: 10px;">
+                        <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Plazo</div>
+                        <div style="font-size: 11pt; font-weight: bold; color: #0f172a; margin-top: 4px;">{{ plazo_str }}</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
     <table class="items-table">
         <thead>
             <tr>
@@ -124,34 +178,10 @@
         {% endif %}
     </table>
 
-    <div style="margin-top: 10px;">
-        {% set saldo_restante = quote.total - quote.anticipo %}
-        {% set enganche = quote.anticipo %}
-        
-        {% if quote.tipo_pago == 'Contado' %}
-            {% set plazo_str = 'Pago Único' %}
-            {% set saldo_restante = 0 %}
-            {% set enganche = quote.total %}
-        {% elif quote.tipo_pago == '2 Pagos' %}
-            {% set plazo_str = '2 Pagos' %}
-            {% set enganche = quote.total / 2 %}
-            {% set saldo_restante = quote.total - enganche %}
-        {% else %}
-            {% set pagos_regulares = (saldo_restante / quote.monto_semanal)|int %}
-            {% set resto = saldo_restante - (pagos_regulares * quote.monto_semanal) %}
-            {% if resto > 0 and pagos_regulares > 0 %}
-                {% set plazo_str = pagos_regulares ~ ' pagos de $' ~ ("%.2f"|format(quote.monto_semanal)) ~ ' y 1 pago final de $' ~ ("%.2f"|format(resto)) %}
-            {% elif resto > 0 and pagos_regulares == 0 %}
-                {% set plazo_str = '1 pago final de $' ~ ("%.2f"|format(resto)) %}
-            {% else %}
-                {% set plazo_str = pagos_regulares ~ ' pagos semanales de $' ~ ("%.2f"|format(quote.monto_semanal)) %}
-            {% endif %}
-        {% endif %}
-
-        <table style="width: 100%; margin-top: 15px;">
+    <div style="margin-top: 20px;">
+        <table style="width: 100%;">
             <tr>
-                <td width="35%" valign="top">
-                    <!-- Espacio libre para notas del lado izquierdo -->
+                <td width="100%" valign="top">
                     <p style="color: #64748b; font-size: 9pt; border-top: 1px solid #e2e8f0; padding-top: 10px;">
                         <em>Términos y Condiciones:</em><br>
                         {% if quote.notas %}
@@ -161,38 +191,6 @@
                             - Tiempo de entrega a convenir.
                         {% endif %}
                     </p>
-                </td>
-                <td width="65%" valign="top">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td width="50%" style="padding: 8px 5px;">
-                                <div style="border-left: 3px solid #1a237e; padding-left: 12px;">
-                                    <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Monto Total</div>
-                                    <div style="font-size: 15pt; font-weight: bold; color: #1a237e;">${{ "%.2f"|format(quote.total) }}</div>
-                                </div>
-                            </td>
-                            <td width="50%" style="padding: 8px 5px;">
-                                <div style="border-left: 3px solid #cbd5e1; padding-left: 12px;">
-                                    <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Plazo</div>
-                                    <div style="font-size: 15pt; font-weight: bold; color: #0f172a;">{{ plazo_str }}</div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td width="50%" style="padding: 8px 5px;">
-                                <div style="border-left: 3px solid #1a237e; padding-left: 12px;">
-                                    <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Enganche</div>
-                                    <div style="font-size: 15pt; font-weight: bold; color: #1a237e;">${{ "%.2f"|format(enganche) }}</div>
-                                </div>
-                            </td>
-                            <td width="50%" style="padding: 8px 5px;">
-                                <div style="border-left: 3px solid #cbd5e1; padding-left: 12px;">
-                                    <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Saldo Restante</div>
-                                    <div style="font-size: 15pt; font-weight: bold; color: #0f172a;">${{ "%.2f"|format(saldo_restante) }}</div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
                 </td>
             </tr>
         </table>
