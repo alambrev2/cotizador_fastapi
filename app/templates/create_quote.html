@@ -37,11 +37,13 @@
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <label for="filial" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Filial <span style="color: var(--danger);">*</span></label>
-                    <select id="filial" name="filial" required style="width: 100%; padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); background: white;">
+                    <select id="filial" name="filial" required onchange="toggleFilialOtro()" style="width: 100%; padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); background: white;">
                         <option value="Data X Pos">Data X Pos</option>
                         <option value="General Systech">General Systech</option>
                         <option value="Estudio Design">Estudio Design</option>
+                        <option value="Otro">Otro (Especificar...)</option>
                     </select>
+                    <input type="text" id="filial_otro" name="filial_otro" placeholder="Especifica la filial..." style="display: none; width: 100%; padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--gray-300); margin-top: 8px; background: white;">
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <label for="agente" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Nombre del Agente</label>
@@ -236,9 +238,37 @@
         }
     }
 
+    function toggleFilialOtro() {
+        const filialSelect = document.getElementById('filial');
+        const filialOtroInput = document.getElementById('filial_otro');
+        if (filialSelect.value === 'Otro') {
+            filialOtroInput.style.display = 'block';
+            filialOtroInput.required = true;
+        } else {
+            filialOtroInput.style.display = 'none';
+            filialOtroInput.required = false;
+            filialOtroInput.value = '';
+        }
+    }
+
     function hydrateForm(quoteData) {
         document.getElementById('cliente_id').value = quoteData.cliente_id;
-        document.getElementById('filial').value = quoteData.filial || 'Data X Pos';
+        
+        const predefFiliales = ['Data X Pos', 'General Systech', 'Estudio Design'];
+        if (quoteData.filial && !predefFiliales.includes(quoteData.filial)) {
+            document.getElementById('filial').value = 'Otro';
+            const filialOtroInput = document.getElementById('filial_otro');
+            filialOtroInput.value = quoteData.filial;
+            filialOtroInput.style.display = 'block';
+            filialOtroInput.required = true;
+        } else {
+            document.getElementById('filial').value = quoteData.filial || 'Data X Pos';
+            const filialOtroInput = document.getElementById('filial_otro');
+            filialOtroInput.value = '';
+            filialOtroInput.style.display = 'none';
+            filialOtroInput.required = false;
+        }
+
         document.getElementById('agente').value = quoteData.agente || '';
         document.getElementById('notas').value = quoteData.notas || '';
         
@@ -578,7 +608,7 @@
         const payload = {
             cliente_id: parseInt(clienteId),
             items: items,
-            filial: document.getElementById('filial').value,
+            filial: document.getElementById('filial').value === 'Otro' ? document.getElementById('filial_otro').value : document.getElementById('filial').value,
             agente: document.getElementById('agente').value,
             notas: document.getElementById('notas').value,
             anticipo: parseFloat(document.getElementById('anticipo').value) || 0,

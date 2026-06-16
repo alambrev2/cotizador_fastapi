@@ -172,14 +172,8 @@ def create_quote(
         )
     
     # Validar que el monto semanal esté en rango razonable si es financiamiento semanal
-    if quote_in.tipo_pago == "Semanal" and quote_in.monto_semanal:
-        min_weekly = 600
-        max_weekly = 800
-        if quote_in.monto_semanal < min_weekly or quote_in.monto_semanal > max_weekly:
-            raise HTTPException(
-                status_code=400,
-                detail=f"El monto semanal (${quote_in.monto_semanal}) debe estar entre ${min_weekly} y ${max_weekly} para ser viable"
-            )
+    # Se remueve validación a petición del usuario para permitir montos inferiores a 600 o superiores sin restricciones.
+    pass
     
     session.add(db_quote)
     session.commit()
