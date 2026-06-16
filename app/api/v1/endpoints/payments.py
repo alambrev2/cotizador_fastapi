@@ -216,6 +216,10 @@ def get_customer_statement(
                 "pagado": pagado,
                 "saldo": saldo,
                 "estado": q.estado,
+                "folio_cotizacion": q.folio_cotizacion,
+                "tipo_pago": q.tipo_pago,
+                "monto_semanal": float(q.monto_semanal or 0),
+                "plazo_semanas": q.plazo_semanas,
             }
         )
 

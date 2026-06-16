@@ -135,7 +135,16 @@ def get_dashboard_summary(*, session: Session = Depends(get_session), response: 
     import datetime as dt
     hoy = dt.date.today()
     limite_5_dias = hoy + dt.timedelta(days=5)
-    alertas_proximas = [s for s in scheduled_expenses if hoy <= s.fecha_vencimiento <= limite_5_dias]
+    alertas_proximas = [
+        {
+            "id": s.id,
+            "descripcion": s.descripcion,
+            "fecha_vencimiento": str(s.fecha_vencimiento),
+            "monto": float(s.monto),
+            "recibido_en": datetime.combine(s.fecha_vencimiento, datetime.min.time()).isoformat()
+        }
+        for s in scheduled_expenses if hoy <= s.fecha_vencimiento <= limite_5_dias
+    ]
 
     from app.models import Customer
     # Alertas de Cotizaciones (Aprobación Solicitada o Rechazada)
@@ -155,7 +164,31 @@ def get_dashboard_summary(*, session: Session = Depends(get_session), response: 
             "cliente_nombre": cliente_nombre,
             "estado": q.estado,
             "total": float(q.total),
-            "notas": q.notas
+            "notas": q.notas,
+            "recibido_en": q.fecha_creacion.isoformat() if q.fecha_creacion else now.isoformat()
+        })
+
+    # Alertas de Reportes Operativos Subidos (Operador cargó PDF del proyecto en curso)
+    reportes_query = select(Quote).where(
+        Quote.estado == "Aprobada",
+        Quote.reporte_operativo_path.isnot(None),
+        Quote.reporte_operativo_path != ""
+    )
+    reportes_activos = session.exec(reportes_query).all()
+    
+    alertas_reportes = []
+    for q in reportes_activos:
+        cliente_nombre = "Cliente"
+        if q.cliente_id:
+            cliente_obj = session.get(Customer, q.cliente_id)
+            if cliente_obj:
+                cliente_nombre = cliente_obj.nombre
+        alertas_reportes.append({
+            "id": q.id,
+            "folio_cotizacion": q.folio_cotizacion or f"#{q.id}",
+            "cliente_nombre": cliente_nombre,
+            "reporte_path": q.reporte_operativo_path,
+            "recibido_en": now.isoformat()
         })
 
     return {
@@ -169,7 +202,8 @@ def get_dashboard_summary(*, session: Session = Depends(get_session), response: 
         },
         "scheduled_expenses": scheduled_expenses,
         "alertas_proximas": alertas_proximas,
-        "alertas_cotizaciones": alertas_cotizaciones
+        "alertas_cotizaciones": alertas_cotizaciones,
+        "alertas_reportes": alertas_reportes
     }
 
 @router.get("/analytics")
@@ -212,12 +246,19 @@ def get_dashboard_analytics(*, session: Session = Depends(get_session), response
                 "cliente": cliente.nombre,
                 "detalle": cargo.detalle,
                 "monto": float(cargo.monto),
-                "dias_retraso": dias_retraso
+                "dias_retraso": dias_retraso,
+                "recibido_en": cargo.fecha.isoformat()
             })
+    
+    now_ts = dt.datetime.utcnow().isoformat()
+    alertas_stock_ts = [
+        {"id": p.id, "nombre": p.nombre, "stock": p.stock, "stock_minimo": p.stock_minimo, "recibido_en": now_ts}
+        for p in low_stock_products
+    ]
     
     return {
         "conversion_metrics": conversion_metrics,
-        "alertas_stock": alertas_stock,
+        "alertas_stock": alertas_stock_ts,
         "alertas_cobranza": alertas_cobranza
     }
 

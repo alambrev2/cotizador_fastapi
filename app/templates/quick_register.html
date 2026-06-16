@@ -19,15 +19,293 @@
         70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
         100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
     }
+    @keyframes drawerSlideIn {
+        from { transform: translateX(100%); }
+        to   { transform: translateX(0); }
+    }
+    @keyframes drawerSlideOut {
+        from { transform: translateX(0); }
+        to   { transform: translateX(100%); }
+    }
+    @keyframes overlayFadeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    @keyframes notifItemIn {
+        from { opacity: 0; transform: translateX(16px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+
     .has-notifications .bi-bell-fill {
         animation: bellRing 2s infinite ease-in-out;
         color: white;
     }
     .has-notifications {
-        background-color: var(--danger) !important;
-        border-color: var(--danger) !important;
+        background-color: #ef4444 !important;
+        border-color: #ef4444 !important;
         box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
     }
+
+    /* Bell button wrapper */
+    #notif-wrapper {
+        position: absolute;
+        top: -55px;
+        right: var(--space-4);
+        z-index: 50;
+    }
+
+    /* Overlay backdrop */
+    #notif-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(3px);
+        z-index: 900;
+        animation: overlayFadeIn 0.25s ease;
+    }
+    #notif-overlay.open { display: block; }
+
+    /* Drawer panel */
+    #drawer-notificaciones {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100dvh;
+        width: 420px;
+        max-width: 100vw;
+        background: #ffffff;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -8px 0 40px rgba(0,0,0,0.18), -2px 0 12px rgba(99,102,241,0.08);
+        transform: translateX(100%);
+        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 1px solid rgba(99,102,241,0.12);
+    }
+    #drawer-notificaciones.open {
+        transform: translateX(0);
+    }
+
+    /* Drawer header */
+    .drawer-header {
+        background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        padding: 1.5rem 1.25rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+    }
+    .drawer-header::before {
+        content: '';
+        position: absolute;
+        top: -30px; right: -30px;
+        width: 120px; height: 120px;
+        background: radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .drawer-header::after {
+        content: '';
+        position: absolute;
+        bottom: -20px; left: 20px;
+        width: 80px; height: 80px;
+        background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+    .drawer-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        position: relative;
+        z-index: 1;
+    }
+    .drawer-bell-wrap {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: #fff;
+        flex-shrink: 0;
+    }
+    .drawer-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: white;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+    .drawer-subtitle {
+        font-size: 0.72rem;
+        color: rgba(255,255,255,0.55);
+        margin: 0.15rem 0 0;
+        font-weight: 500;
+    }
+    .drawer-close {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 10px;
+        color: white;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.2rem;
+        line-height: 1;
+        transition: background 0.2s;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+    }
+    .drawer-close:hover { background: rgba(255,255,255,0.22); }
+
+    /* Section divider inside drawer */
+    .drawer-section-label {
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: #0c183a;
+        background: #ffffff;
+        padding: 1rem 1.25rem 0.5rem;
+        position: sticky;
+        top: -1px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .drawer-section-label::before {
+        content: '';
+        display: inline-block;
+        width: 4px;
+        height: 18px;
+        background: #2563eb;
+        border-radius: 4px;
+    }
+
+    /* Drawer body scroll area */
+    .drawer-body {
+        flex: 1;
+        overflow-y: auto;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        padding: 0.5rem 0;
+    }
+    .drawer-body::-webkit-scrollbar { width: 4px; }
+    .drawer-body::-webkit-scrollbar-track { background: transparent; }
+    .drawer-body::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 8px; }
+
+    /* Individual notification item */
+    .notif-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.9rem;
+        padding: 1.25rem 1.25rem;
+        background: white;
+        margin: 0 1.1rem;
+        border-radius: 16px;
+        border: 1px solid #dcdcdc;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: notifItemIn 0.3s ease both;
+        cursor: default;
+    }
+    .notif-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        border-color: #b0b0b0;
+    }
+    .notif-item-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    }
+    .notif-item-content { flex: 1; min-width: 0; }
+    .notif-item-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin: 0;
+        color: #1e293b;
+    }
+    .notif-item-desc {
+        font-size: 0.8rem;
+        color: var(--gray-500);
+        margin: 0.25rem 0 0.5rem;
+        line-height: 1.4;
+    }
+    .notif-item-time {
+        font-size: 0.72rem;
+        color: var(--gray-400);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .notif-item-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.6rem;
+        flex-wrap: wrap;
+    }
+    .notif-action-btn {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    .notif-action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Color themes for icon bubbles */
+    .ni-amber  { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
+    .ni-red    { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+    .ni-blue   { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+    .ni-purple { background: #faf5ff; color: #7c3aed; border: 1px solid #ede9fe; }
+    .ni-green  { background: #ecfdf5; color: #059669; border: 1px solid #d1fae5; }
+
+    /* Empty state */
+    .drawer-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1.5rem;
+        text-align: center;
+        flex: 1;
+    }
+    .drawer-empty i { font-size: 3.5rem; color: #a5b4fc; margin-bottom: 1rem; display: block; }
+    .drawer-empty strong { font-size: 1rem; color: var(--gray-700); display: block; margin-bottom: 0.4rem; }
+    .drawer-empty p { font-size: 0.82rem; color: var(--gray-400); margin: 0; }
 
     /* Calendar layout fixes */
     .calendar-days,
@@ -41,21 +319,27 @@
     #view-calendar {
         overflow: visible !important;
     }
-    /* Mobile event dots: hidden on desktop */
     .cal-mobile-dots {
         display: none !important;
     }
-    /* Responsive: make event labels smaller on very narrow columns */
     @media (max-width: 700px) {
         .calendar-days > div {
             min-height: 70px !important;
             padding: 4px !important;
         }
     }
-    /* Show dots only on mobile */
     @media (max-width: 575.98px) {
         .cal-mobile-dots {
             display: flex !important;
+        }
+        #notif-wrapper {
+            position: fixed !important;
+            top: 11px !important;
+            right: 16px !important;
+            z-index: 1010 !important;
+        }
+        #drawer-notificaciones {
+            width: 100vw !important;
         }
     }
 </style>
@@ -64,11 +348,38 @@
 {% block content %}
 <div style="max-width: 100%; margin: 0 auto; padding: 0 var(--space-4); position: relative;">
 
-    <!-- Notification Button (Top Right) -->
-    <button id="btn-notificaciones" class="btn btn-outline" style="position: absolute; top: -10px; right: var(--space-4); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; padding: 0; z-index: 50; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: white; border: 2px solid var(--border-color);" onclick="abrirNotificaciones()" onmouseover="this.style.transform='scale(1.1) translateY(-2px)'" onmouseout="this.style.transform='scale(1) translateY(0)'">
-        <i class="bi bi-bell-fill" style="font-size: 1.4rem; color: var(--gray-600); transition: color 0.3s ease;"></i>
-        <span id="badge-notificaciones" style="display: none; position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; font-size: 0.75rem; font-weight: bold; padding: 3px 7px; border-radius: 12px; border: 2px solid white; animation: badgePulse 2s infinite;">0</span>
-    </button>
+    <!-- Notification Bell Button -->
+    <div id="notif-wrapper">
+         <button id="btn-notificaciones" style="border-radius: 10px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; padding: 0; transition: all 0.2s ease; background: #4f46e5; border: none; position: relative;" onclick="toggleNotificaciones()" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+             <i class="bi bi-bell-fill" style="font-size: 1.1rem; color: white; transition: color 0.3s ease;"></i>
+             <span id="badge-notificaciones" style="display: none; position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 0.6rem; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #4f46e5; display: flex; align-items: center; justify-content: center; animation: badgePulse 2s infinite;">0</span>
+         </button>
+    </div>
+
+    <!-- Overlay backdrop -->
+    <div id="notif-overlay" onclick="cerrarNotificaciones()"></div>
+
+    <!-- Notification Drawer (side panel) -->
+    <div id="drawer-notificaciones">
+        <!-- Drawer Header -->
+        <div class="drawer-header">
+            <div class="drawer-header-left">
+                <div class="drawer-bell-wrap" style="position: relative;">
+                    <i class="bi bi-bell-fill"></i>
+                    <span id="drawer-badge-count" style="display: none; position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 0.65rem; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid #0f0c29; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">0</span>
+                </div>
+                <div>
+                    <p class="drawer-title">Notificaciones</p>
+                    <p class="drawer-subtitle" id="drawer-count-label">Cargando alertas...</p>
+                </div>
+            </div>
+            <button class="drawer-close" onclick="cerrarNotificaciones()" title="Cerrar panel">&times;</button>
+        </div>
+
+        <!-- Drawer Body (dynamic content injected by JS) -->
+        <div class="drawer-body" id="drawer-body">
+        </div>
+    </div>
 
     <div style="display: flex; justify-content: center; align-items: center; margin-bottom: var(--space-10);">
         <h2 style="text-align: center; color: var(--gray-800); font-size: clamp(1.5rem, 5vw, 2rem); margin: 0; line-height: 1.3;">Resumen de Negocio</h2>
@@ -115,19 +426,19 @@
     </div>
 
     <!-- Analíticas de Negocio -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-10);">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-10); width: 100%; box-sizing: border-box;">
         <!-- Gráfico Financiero -->
-        <div class="card" style="margin-bottom: 0; padding: 1rem;">
+        <div class="card" style="margin-bottom: 0; padding: 1rem; width: 100%; box-sizing: border-box; overflow: hidden;">
             <h4 style="color: var(--text-muted); font-size: var(--font-size-xs); text-transform: uppercase; margin: 0 0 var(--space-4) 0; font-weight: var(--font-weight-semibold);">Balance Financiero (Mes Actual)</h4>
-            <div style="position: relative; height: 250px; width: 100%; min-height: 200px;">
+            <div style="position: relative; height: 250px; width: 100%; min-width: 100%; box-sizing: border-box;">
                 <canvas id="financeChart"></canvas>
             </div>
         </div>
 
         <!-- Funnel de Cotizaciones -->
-        <div class="card" style="margin-bottom: 0; padding: 1rem;">
+        <div class="card" style="margin-bottom: 0; padding: 1rem; width: 100%; box-sizing: border-box; overflow: hidden;">
             <h4 style="color: var(--text-muted); font-size: var(--font-size-xs); text-transform: uppercase; margin: 0 0 var(--space-4) 0; font-weight: var(--font-weight-semibold);">Embudo de Conversión (Cotizaciones)</h4>
-            <div style="position: relative; height: 250px; width: 100%; min-height: 200px;">
+            <div style="position: relative; height: 250px; width: 100%; min-width: 100%; box-sizing: border-box;">
                 <canvas id="funnelChart"></canvas>
             </div>
         </div>
@@ -351,116 +662,42 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal Notificaciones -->
-    <div id="modal-notificaciones" style="display: none; position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); overflow-y: auto; height: 100%; width: 100%; z-index: 100; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
-        <div style="display: flex; align-items: center; justify-content: center; min-height: 100%; width: 100%; padding: 1rem;">
-            <div id="modal-notificaciones-content" class="card" style="max-width: 500px; width: 100%; margin: 0; border-radius: 16px; padding: 1.5rem; border: 1px solid var(--border-color); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); transform: translateY(-20px); transition: transform 0.3s ease;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--primary-light);">
-                    <div style="display: flex; align-items: center; gap: 1rem;">
-                        <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, var(--danger) 0%, #b91c1c 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4);"><i class="bi bi-bell-fill"></i></div>
-                        <div>
-                            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--gray-800);">Notificaciones</h3>
-                            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--gray-500);">Alertas y avisos importantes</p>
-                        </div>
-                    </div>
-                    <button onclick="cerrarNotificaciones()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray-400);">&times;</button>
-                </div>
-                
-                <div id="notificaciones-container" style="display: flex; flex-direction: column; gap: 1rem; max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
-                    
-                    <div id="no-notificaciones" style="text-align: center; padding: 2rem 0; color: var(--gray-400); display: none;">
-                        <i class="bi bi-check-circle" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-                        <p style="margin: 0; font-weight: 600;">Todo está al día. No hay alertas nuevas.</p>
-                    </div>
-
-                    <!-- Alertas de Egresos Próximos -->
-                    <div id="alert_box" style="display: none; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; padding: 1rem;">
-                        <h4 style="margin: 0 0 0.5rem 0; color: #d97706; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;"><i class="bi bi-calendar-event"></i> Egresos Próximos (5 días)</h4>
-                        <ul id="alert_list" style="margin: 0; padding-left: 1.25rem; color: #92400e; font-size: 0.85rem; font-weight: 500; display: flex; flex-direction: column; gap: 0.25rem;"></ul>
-                    </div>
-
-                    <!-- Alertas de Stock Mínimo -->
-                    <div id="stock_alert_box" style="display: none; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; padding: 1rem;">
-                        <h4 style="margin: 0 0 0.5rem 0; color: #dc2626; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;"><i class="bi bi-box-seam"></i> Inventario Bajo</h4>
-                        <ul id="stock_alert_list" style="margin: 0; padding-left: 1.25rem; color: #991b1b; font-size: 0.85rem; font-weight: 500; display: flex; flex-direction: column; gap: 0.25rem;"></ul>
-                    </div>
-
-                    <!-- Alertas de Cobranza Atrasada -->
-                    <div id="cobranza_alert_box" style="display: none; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 12px; padding: 1rem;">
-                        <h4 style="margin: 0 0 0.5rem 0; color: #2563eb; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;"><i class="bi bi-cash-stack"></i> Cobranza Atrasada (>30 días)</h4>
-                        <ul id="cobranza_alert_list" style="margin: 0; padding-left: 1.25rem; color: #1e40af; font-size: 0.85rem; font-weight: 500; display: flex; flex-direction: column; gap: 0.25rem;"></ul>
-                    </div>
-
-                    <!-- Respuestas de Cotizaciones (Cliente Aceptó/Rechazó) -->
-                    <div id="quotes_alert_box" style="display: none; background: #faf5ff; border: 1px solid #f3e8ff; border-radius: 12px; padding: 1rem;">
-                        <h4 style="margin: 0 0 0.5rem 0; color: #7c3aed; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;"><i class="bi bi-file-earmark-check"></i> Respuestas de Cotizaciones</h4>
-                        <ul id="quotes_alert_list" style="margin: 0; padding-left: 0; color: #6d28d9; font-size: 0.85rem; font-weight: 500; display: flex; flex-direction: column; gap: 0.50rem; list-style-type: none;"></ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
     function actualizarBadgeNotificaciones() {
-        let count = 0;
-        const alertBox = document.getElementById('alert_box');
-        const stockAlertBox = document.getElementById('stock_alert_box');
-        const cobranzaAlertBox = document.getElementById('cobranza_alert_box');
-        const quotesAlertBox = document.getElementById('quotes_alert_box');
-        
-        if(alertBox && alertBox.style.display !== 'none') count++;
-        if(stockAlertBox && stockAlertBox.style.display !== 'none') count++;
-        if(cobranzaAlertBox && cobranzaAlertBox.style.display !== 'none') count++;
-        if(quotesAlertBox && quotesAlertBox.style.display !== 'none') count++;
-        
-        const badge = document.getElementById('badge-notificaciones');
-        const emptyState = document.getElementById('no-notificaciones');
-        if(count > 0) {
-            if(badge) {
-                badge.textContent = count;
-                badge.style.display = 'block';
-            }
-            if(emptyState) emptyState.style.display = 'none';
-            document.getElementById('btn-notificaciones').classList.add('has-notifications');
-            document.getElementById('btn-notificaciones').classList.remove('btn-outline');
-            document.getElementById('btn-notificaciones').querySelector('.bi-bell-fill').style.color = 'white';
+        // Handled directly inside loadDashboardMetrics calculation to avoid legacy placeholder element checks
+    }
+
+    function toggleNotificaciones(event) {
+        if(event) event.stopPropagation();
+        const drawer = document.getElementById('drawer-notificaciones');
+        const overlay = document.getElementById('notif-overlay');
+        if (drawer.classList.contains('open')) {
+            cerrarNotificaciones();
         } else {
-            if(badge) badge.style.display = 'none';
-            if(emptyState) emptyState.style.display = 'block';
-            document.getElementById('btn-notificaciones').classList.remove('has-notifications');
-            document.getElementById('btn-notificaciones').classList.add('btn-outline');
-            document.getElementById('btn-notificaciones').querySelector('.bi-bell-fill').style.color = 'var(--gray-600)';
+            drawer.classList.add('open');
+            if(overlay) overlay.classList.add('open');
         }
     }
 
-    function abrirNotificaciones() {
-        const modal = document.getElementById('modal-notificaciones');
-        const content = document.getElementById('modal-notificaciones-content');
-        modal.style.display = 'flex';
-        setTimeout(() => {
-            modal.style.opacity = '1';
-            content.style.transform = 'translateY(0)';
-        }, 10);
-    }
-
     function cerrarNotificaciones() {
-        const modal = document.getElementById('modal-notificaciones');
-        const content = document.getElementById('modal-notificaciones-content');
-        modal.style.opacity = '0';
-        content.style.transform = 'translateY(-20px)';
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 300);
+        const drawer = document.getElementById('drawer-notificaciones');
+        const overlay = document.getElementById('notif-overlay');
+        if(drawer) drawer.classList.remove('open');
+        if(overlay) overlay.classList.remove('open');
     }
 
-    document.getElementById('modal-notificaciones').addEventListener('click', function(e) {
-        if (e.target === this) {
-            cerrarNotificaciones();
+    // Close when clicking anywhere outside the drawer
+    document.addEventListener('click', function(e) {
+        const drawer = document.getElementById('drawer-notificaciones');
+        const btn = document.getElementById('btn-notificaciones');
+        if (drawer && drawer.classList.contains('open')) {
+            if (!drawer.contains(e.target) && (!btn || !btn.contains(e.target))) {
+                cerrarNotificaciones();
+            }
         }
     });
 
@@ -479,58 +716,200 @@
                 document.getElementById('m-quotes').textContent = data.cotizaciones_borrador;
                 document.getElementById('m-flujo').textContent = formatter.format(data.flujo_caja_real);
                 
-                // Render Alertas de 5 Días
-                const alertBox = document.getElementById('alert_box');
-                const alertList = document.getElementById('alert_list');
-                if(alertBox && alertList) {
-                    if (data.alertas_proximas && data.alertas_proximas.length > 0) {
-                        alertBox.style.display = 'block';
-                        alertList.innerHTML = data.alertas_proximas.map(a => `<li>${a.descripcion} - Vence: ${a.fecha_vencimiento} ($${a.monto})</li>`).join('');
-                    } else {
-                        alertBox.style.display = 'none';
-                    }
-                }
+                // Clear previous dynamic content and rebuild with sections
+                const drawerBody = document.getElementById('drawer-body');
+                drawerBody.innerHTML = '';
 
-                // Render Alertas de Respuestas de Cotizaciones (Cliente Aceptó/Rechazó)
-                const quotesAlertBox = document.getElementById('quotes_alert_box');
-                const quotesAlertList = document.getElementById('quotes_alert_list');
-                if(quotesAlertBox && quotesAlertList) {
-                    if (data.alertas_cotizaciones && data.alertas_cotizaciones.length > 0) {
-                        quotesAlertBox.style.display = 'block';
-                        quotesAlertList.innerHTML = data.alertas_cotizaciones.map(q => {
-                            const isAprobacion = q.estado === 'Aprobación Solicitada';
-                            const badgeBg = isAprobacion ? '#f59e0b' : '#dc2626';
-                            const badgeText = isAprobacion ? 'Aprob. Solicitada' : 'Rechazada';
-                            
-                            // Extrae snippet de nota de cliente si existe
-                            let clientComment = '';
-                            if (q.notas) {
-                                const noteLines = q.notas.split('\n');
-                                const clientNoteLine = noteLines.find(line => line.includes('[Comentario del Cliente'));
-                                if (clientNoteLine) {
-                                    clientComment = `<div style="font-size:0.75rem; color:#6b21a8; background:#faf5ff; border-left:3px solid #7c3aed; padding:4px 8px; border-radius:6px; margin-top:4px; font-style:italic;">"${clientNoteLine.split(']:').slice(1).join(']:').trim()}"</div>`;
-                                }
+                let totalAlerts = 0;
+
+                // 1. Section: Cotizaciones (Aprobación Solicitada, Rechazadas)
+                if (data.alertas_cotizaciones && data.alertas_cotizaciones.length > 0) {
+                    totalAlerts += data.alertas_cotizaciones.length;
+                    
+                    const secHeader = document.createElement('div');
+                    secHeader.className = 'drawer-section-label';
+                    secHeader.textContent = 'Respuestas de Cotizaciones';
+                    drawerBody.appendChild(secHeader);
+
+                    data.alertas_cotizaciones.forEach(q => {
+                        const isAprobacion = q.estado === 'Aprobación Solicitada';
+                        const badgeBg = isAprobacion ? '#fef3c7' : '#fee2e2';
+                        const badgeColor = isAprobacion ? '#b45309' : '#b91c1c';
+                        const badgeText = isAprobacion ? 'Por Aprobar' : 'Rechazada';
+                        const iconClass = isAprobacion ? 'bi-file-earmark-check-fill' : 'bi-file-earmark-x-fill';
+                        const themeClass = isAprobacion ? 'ni-amber' : 'ni-red';
+                        
+                        let clientComment = '';
+                        if (q.notes) {
+                            const noteLines = q.notes.split('\n');
+                            const clientNoteLine = noteLines.find(line => line.includes('[Comentario del Cliente'));
+                            if (clientNoteLine) {
+                                clientComment = `<div style="font-size:0.72rem; color:#6b21a8; background:#faf5ff; border-left:3px solid #7c3aed; padding:6px 8px; border-radius:6px; margin-top:6px; font-style:italic;">"${clientNoteLine.split(']:').slice(1).join(']:').trim()}"</div>`;
                             }
+                        }
 
-                            return `
-                            <li style="border-bottom:1px solid #f3e8ff; padding-bottom:8px; margin-bottom:8px; list-style-type:none;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                                    <span style="font-weight:600; color:#4c1d95;">${q.cliente_nombre}</span>
-                                    <span style="font-size:0.7rem; font-weight:700; background:${badgeBg}; color:white; padding:2px 6px; border-radius:4px;">${badgeText}</span>
+                        const dateObj = new Date(q.recibido_en);
+                        const formattedTime = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) + ' ' + dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                        const notifItem = document.createElement('div');
+                        notifItem.className = 'notif-item';
+                        notifItem.innerHTML = `
+                            <div class="notif-item-icon ${themeClass}">
+                                <i class="bi ${iconClass}"></i>
+                            </div>
+                            <div class="notif-item-content">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom: 4px;">
+                                    <h5 class="notif-item-title" style="color: var(--gray-800); margin:0; font-weight:700; font-size:0.9rem;">${q.cliente_nombre}</h5>
+                                    <span style="font-size: 0.65rem; font-weight: 800; background: ${badgeBg}; color: ${badgeColor}; padding: 2px 6px; border-radius: 6px; text-transform: uppercase;">${badgeText}</span>
                                 </div>
-                                <div style="font-size:0.8rem; color:#4b5563; margin-top:2px;">
-                                    Cotización: <strong>${q.folio_cotizacion}</strong> | Total: <strong>$${q.total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong>
+                                
+                                <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; font-size: 0.78rem; color: var(--gray-600); margin-bottom: 8px;">
+                                    <span style="font-weight: 600; color: var(--gray-400);">Folio:</span>
+                                    <span style="font-weight: 700; color: var(--gray-700);">${q.folio_cotizacion}</span>
+                                    
+                                    <span style="font-weight: 600; color: var(--gray-400);">Total:</span>
+                                    <span style="font-weight: 700; color: var(--primary);">$${q.total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} MXN</span>
                                 </div>
+
                                 ${clientComment}
-                                <div style="margin-top:6px; text-align:right;">
-                                    <a href="/quotes" style="font-size:0.75rem; color:#7c3aed; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:3px;">
+                                
+                                <div class="notif-item-actions" style="margin-top: 8px;">
+                                    <a href="/quotes" class="notif-action-btn" style="background:#ede9fe; color:#6d28d9; font-weight: 700;">
                                         <i class="bi bi-eye-fill"></i> Ver Cotizaciones
                                     </a>
                                 </div>
-                            </li>`;
-                        }).join('');
+                                <div class="notif-item-time" style="margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
+                                    <i class="bi bi-clock-history"></i> Recibido: ${formattedTime}
+                                </div>
+                            </div>
+                        `;
+                        drawerBody.appendChild(notifItem);
+                    });
+                }
+
+                // 2. Section: Reportes de Operador (Subidos)
+                if (data.alertas_reportes && data.alertas_reportes.length > 0) {
+                    totalAlerts += data.alertas_reportes.length;
+
+                    const secHeader = document.createElement('div');
+                    secHeader.className = 'drawer-section-label';
+                    secHeader.textContent = 'Reportes de Operador';
+                    drawerBody.appendChild(secHeader);
+
+                    data.alertas_reportes.forEach(r => {
+                        const dateObj = r.recibido_en ? new Date(r.recibido_en) : new Date();
+                        const formattedTime = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) + ' ' + dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                        const notifItem = document.createElement('div');
+                        notifItem.className = 'notif-item';
+                        notifItem.innerHTML = `
+                            <div class="notif-item-icon ni-green">
+                                <i class="bi bi-file-earmark-arrow-up-fill"></i>
+                            </div>
+                            <div class="notif-item-content">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom: 4px;">
+                                    <h5 class="notif-item-title" style="color: var(--gray-800); margin:0; font-weight:700; font-size:0.9rem;">${r.cliente_nombre}</h5>
+                                    <span style="font-size: 0.65rem; font-weight: 800; background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 6px; text-transform: uppercase;">Informe Listo</span>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; font-size: 0.78rem; color: var(--gray-600); margin-bottom: 8px;">
+                                    <span style="font-weight: 600; color: var(--gray-400);">Proyecto:</span>
+                                    <span style="font-weight: 700; color: var(--gray-700);">${r.folio_cotizacion}</span>
+                                    
+                                    <span style="font-weight: 600; color: var(--gray-400);">Estado:</span>
+                                    <span style="font-weight: 600; color: #16a34a;">Listo para finalizar</span>
+                                </div>
+
+                                <div class="notif-item-actions" style="margin-top: 8px;">
+                                    <a href="${r.reporte_path}" target="_blank" class="notif-action-btn" style="background:#d1fae5; color:#065f46; font-weight: 700;">
+                                        <i class="bi bi-file-pdf-fill"></i> Descargar PDF
+                                    </a>
+                                    <a href="/projects" class="notif-action-btn" style="background:#f1f5f9; color:#475569; font-weight: 700;">
+                                        <i class="bi bi-gear-fill"></i> Gestionar Proyecto
+                                    </a>
+                                </div>
+                                <div class="notif-item-time" style="margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 6px;">
+                                    <i class="bi bi-clock-history"></i> Subido: ${formattedTime}
+                                </div>
+                            </div>
+                        `;
+                        drawerBody.appendChild(notifItem);
+                    });
+                }
+
+                // 3. Section: Egresos Próximos
+                if (data.alertas_proximas && data.alertas_proximas.length > 0) {
+                    totalAlerts += data.alertas_proximas.length;
+
+                    const secHeader = document.createElement('div');
+                    secHeader.className = 'drawer-section-label';
+                    secHeader.textContent = 'Egresos Próximos (5 días)';
+                    drawerBody.appendChild(secHeader);
+
+                    data.alertas_proximas.forEach(a => {
+                        const dateObj = a.recibido_en ? new Date(a.recibido_en) : new Date(a.fecha_vencimiento + 'T12:00:00');
+                        const formattedTime = dateObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+
+                        const notifItem = document.createElement('div');
+                        notifItem.className = 'notif-item';
+                        notifItem.innerHTML = `
+                            <div class="notif-item-icon ni-purple">
+                                <i class="bi bi-calendar-check-fill"></i>
+                            </div>
+                            <div class="notif-item-content">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom: 4px;">
+                                    <h5 class="notif-item-title" style="color: var(--gray-800); margin:0; font-weight:700; font-size:0.9rem;">${a.descripcion}</h5>
+                                    <span style="font-size: 0.65rem; font-weight: 800; background: #f3e8ff; color: #6b21a8; padding: 2px 6px; border-radius: 6px; text-transform: uppercase;">Por Pagar</span>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; font-size: 0.78rem; color: var(--gray-600); margin-bottom: 4px;">
+                                    <span style="font-weight: 600; color: var(--gray-400);">Monto:</span>
+                                    <span style="font-weight: 700; color: #b91c1c;">$${a.monto.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} MXN</span>
+                                    
+                                    <span style="font-weight: 600; color: var(--gray-400);">Límite:</span>
+                                    <span style="font-weight: 700; color: var(--gray-700);">${formattedTime}</span>
+                                </div>
+                            </div>
+                        `;
+                        drawerBody.appendChild(notifItem);
+                    });
+                }
+
+                // Empty state if no alerts
+                if (totalAlerts === 0) {
+                    drawerBody.innerHTML = `
+                        <div class="drawer-empty">
+                            <i class="bi bi-bell-slash"></i>
+                            <strong>Sin alertas pendientes</strong>
+                            <p>Tu negocio está al día. No hay nuevas notificaciones.</p>
+                        </div>
+                    `;
+                }
+
+                // Update counts labels
+                const countLabel = document.getElementById('drawer-count-label');
+                if (countLabel) {
+                    countLabel.textContent = totalAlerts > 0 ? `${totalAlerts} alertas requieren atención` : 'Sin alertas nuevas';
+                }
+
+                // Update badge using calculated totals
+                const badge = document.getElementById('badge-notificaciones');
+                const drawerBadge = document.getElementById('drawer-badge-count');
+                if (badge) {
+                    if (totalAlerts > 0) {
+                        badge.textContent = totalAlerts;
+                        badge.style.display = 'flex';
+                        if (drawerBadge) {
+                            drawerBadge.textContent = totalAlerts;
+                            drawerBadge.style.display = 'flex';
+                        }
+                        document.getElementById('btn-notificaciones').classList.add('has-notifications');
                     } else {
-                        quotesAlertBox.style.display = 'none';
+                        badge.style.display = 'none';
+                        if (drawerBadge) {
+                            drawerBadge.style.display = 'none';
+                        }
+                        document.getElementById('btn-notificaciones').classList.remove('has-notifications');
                     }
                 }
 

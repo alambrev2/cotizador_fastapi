@@ -611,6 +611,169 @@
         </div>
         {% endif %}
 
+        {# ── Sección de Financiamientos Activos ── #}
+        {% if cliente %}
+            {# Verificar si hay cotizaciones con financiamiento #}
+            {% set tiene_financiamiento = namespace(val=false) %}
+            {% for cotizacion in cliente.cotizaciones %}
+                {% if cotizacion.tipo_pago in ['Semanal', '2 Pagos'] and cotizacion.estado != 'Borrador' %}
+                    {% set tiene_financiamiento.val = true %}
+                {% endif %}
+            {% endfor %}
+
+            {% if tiene_financiamiento.val %}
+            <div class="section-header" style="margin-top: 12px; margin-bottom: 8px;">
+                <div class="section-icon" style="background:rgba(16,185,129,0.12); color:#6ee7b7; border:1px solid rgba(16,185,129,0.2);">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+                <span class="section-title">Detalle de tus Financiamientos</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                {% for cotizacion in cliente.cotizaciones | sort(attribute='fecha_creacion', reverse=True) %}
+                    {% if cotizacion.tipo_pago in ['Semanal', '2 Pagos'] and cotizacion.estado != 'Borrador' %}
+                        {# Calcular pagos hechos a esta cotización #}
+                        {% set pagos_hechos = namespace(value=0) %}
+                        {% for p in cliente.pagos %}
+                            {% if p.quote_id == cotizacion.id %}
+                                {% set pagos_hechos.value = pagos_hechos.value + p.monto %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% set saldo_restante = cotizacion.total - pagos_hechos.value %}
+                        {% if saldo_restante < 0 %}
+                            {% set saldo_restante = 0 %}
+                        {% endif %}
+
+                        {# Calcular cuota sugerida #}
+                        {% if cotizacion.tipo_pago == 'Semanal' %}
+                            {% set cuota_estandar = cotizacion.monto_semanal if cotizacion.monto_semanal else 800 %}
+                            {% if saldo_restante < cuota_estandar %}
+                                {% set cuota_sugerida = saldo_restante %}
+                            {% else %}
+                                {% set cuota_sugerida = cuota_estandar %}
+                            {% endif %}
+                            {% set desc_esquema = "Semanal ($" ~ ("%.2f"|format(cuota_estandar)) ~ "/sem)" %}
+                        {% elif cotizacion.tipo_pago == '2 Pagos' %}
+                            {% set cuota_estandar = cotizacion.total / 2 %}
+                            {% if saldo_restante < cuota_estandar %}
+                                {% set cuota_sugerida = saldo_restante %}
+                            {% else %}
+                                {% set cuota_sugerida = cuota_estandar %}
+                            {% endif %}
+                            {% set desc_esquema = "2 Pagos ($" ~ ("%.2f"|format(cuota_estandar)) ~ ")" %}
+                        {% endif %}
+
+                        <div style="
+                            background: var(--surface);
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-lg);
+                            padding: 24px;
+                            box-shadow: var(--shadow-lg);
+                            position: relative;
+                            overflow: hidden;
+                        ">
+                            {# Glow sutil según si está liquidado o no #}
+                            {% if saldo_restante <= 0.1 %}
+                                <div style="position: absolute; right: -20px; top: -20px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
+                            {% else %}
+                                <div style="position: absolute; right: -20px; top: -20px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(79, 70, 229, 0.1) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
+                            {% endif %}
+
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                                <div>
+                                    <div style="font-size: 1.05rem; font-weight: 700; color: var(--text);">
+                                        Cotización {{ cotizacion.folio_cotizacion or ("#" ~ cotizacion.id) }}
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 8px;">
+                                        <span>Esquema: <strong>{{ desc_esquema }}</strong></span>
+                                        <span>·</span>
+                                        <span>Estado: <strong style="color: {% if cotizacion.estado in ['Aceptada', 'Aprobada', 'Pendiente', 'Cobranza Requerida'] %}#6ee7b7{% else %}var(--text-muted){% endif %};">{{ cotizacion.estado }}</strong></span>
+                                    </div>
+                                </div>
+
+                                <div style="text-align: right;">
+                                    {% if saldo_restante <= 0.1 %}
+                                        <span style="
+                                            background: rgba(16, 185, 129, 0.12);
+                                            color: #6ee7b7;
+                                            border: 1px solid rgba(16, 185, 129, 0.25);
+                                            padding: 6px 14px;
+                                            border-radius: 20px;
+                                            font-size: 0.78rem;
+                                            font-weight: 700;
+                                            display: inline-flex;
+                                            align-items: center;
+                                            gap: 6px;
+                                        ">
+                                            <i class="bi bi-check-circle-fill"></i> Liquidado
+                                        </span>
+                                    {% else %}
+                                        <span style="
+                                            background: rgba(245, 158, 11, 0.12);
+                                            color: #fcd34d;
+                                            border: 1px solid rgba(245, 158, 11, 0.25);
+                                            padding: 6px 14px;
+                                            border-radius: 20px;
+                                            font-size: 0.78rem;
+                                            font-weight: 700;
+                                            display: inline-flex;
+                                            align-items: center;
+                                            gap: 6px;
+                                        ">
+                                            <i class="bi bi-clock-history"></i> En Pago
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div style="
+                                display: grid;
+                                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                                gap: 20px;
+                                margin-top: 20px;
+                                padding-top: 16px;
+                                border-top: 1px solid var(--border);
+                            ">
+                                <div>
+                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Total de Compra</div>
+                                    <div style="font-size: 1.2rem; font-weight: 800; color: var(--text); margin-top: 4px;">
+                                        ${{ "%.2f"|format(cotizacion.total) }}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Abonado a la Fecha</div>
+                                    <div style="font-size: 1.2rem; font-weight: 800; color: #6ee7b7; margin-top: 4px;">
+                                        ${{ "%.2f"|format(pagos_hechos.value) }}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Saldo Restante</div>
+                                    <div style="font-size: 1.2rem; font-weight: 800; color: {% if saldo_restante <= 0.1 %}#6ee7b7{% else %}#fca5a5{% endif %}; margin-top: 4px;">
+                                        ${{ "%.2f"|format(saldo_restante) }}
+                                    </div>
+                                </div>
+
+                                {% if saldo_restante > 0.1 %}
+                                <div>
+                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; display: flex; align-items: center; gap: 4px;">
+                                        Próxima Cuota <i class="bi bi-info-circle-fill" style="cursor: help;" title="Monto adaptado al saldo restante para evitar pagos excesivos"></i>
+                                    </div>
+                                    <div style="font-size: 1.2rem; font-weight: 800; color: #fcd34d; margin-top: 4px;">
+                                        ${{ "%.2f"|format(cuota_sugerida) }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endif %}
+
         <!-- Movement history -->
         <div class="movements-card">
             <div class="movements-header">

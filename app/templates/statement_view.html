@@ -281,6 +281,7 @@
                                     <th class="py-3" style="color: var(--gray-500);">Fecha</th>
                                     <th class="py-3" style="color: var(--gray-500);">Estado</th>
                                     <th class="text-end py-3" style="color: var(--gray-500);">Total</th>
+                                    <th class="text-end py-3" style="color: var(--gray-500);">Esquema / Próx. Cuota</th>
                                     <th class="text-end py-3" style="color: var(--gray-500);">Saldo</th>
                                     <th class="text-center pe-4 py-3" style="color: var(--gray-500);">Acción</th>
                                 </tr>
@@ -483,7 +484,27 @@
         document.getElementById('btn-pdf-full').href = `/api/v1/payments/statement/customer/${c.id}/pdf?full=true`;
 
         const tbody = document.getElementById('client-quotes-body');
-        let quotesHtml = quotes.map(q => `
+        let quotesHtml = quotes.map(q => {
+            let esquemaText = q.tipo_pago || 'Contado';
+            let cuotaSugerida = q.saldo;
+            if (q.tipo_pago === 'Semanal' && q.monto_semanal > 0) {
+                cuotaSugerida = Math.min(q.saldo, q.monto_semanal);
+                esquemaText = `Semanal ($${q.monto_semanal.toFixed(2)}/sem)`;
+            } else if (q.tipo_pago === '2 Pagos') {
+                cuotaSugerida = Math.min(q.saldo, q.total / 2);
+                esquemaText = `2 Pagos ($${(q.total/2).toFixed(2)})`;
+            } else {
+                esquemaText = `Contado`;
+            }
+
+            let cuotaInfo = '';
+            if (q.saldo > 0.1 && q.tipo_pago !== 'Contado') {
+                cuotaInfo = `<div class="text-muted" style="font-size: 0.8rem; margin-top: 2px;">
+                    Próx. Cuota: <strong>$${cuotaSugerida.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                </div>`;
+            }
+
+            return `
             <tr class="${q.saldo < 0.1 ? 'opacity-50' : ''}" style="background: ${q.saldo < 0.1 ? 'var(--gray-50)' : 'white'}; border-bottom: 1px solid var(--border-color);">
                 <td class="ps-4 py-3 fw-bold text-primary">#${q.id}</td>
                 <td class="py-3">
@@ -493,6 +514,10 @@
                     <span style="background: var(--gray-100); color: var(--gray-800); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; border: 1px solid var(--border-color);">${q.estado}</span>
                 </td>
                 <td class="text-end py-3" style="color: var(--gray-600);">$${parseFloat(q.total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td class="text-end py-3">
+                    <div style="font-weight: 500; color: var(--gray-700);">${esquemaText}</div>
+                    ${cuotaInfo}
+                </td>
                 <td class="text-end py-3 fw-bold ${q.saldo > 0.1 ? 'text-danger' : 'text-success'}">
                     $${parseFloat(q.saldo).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
@@ -500,13 +525,14 @@
                     ${q.saldo > 0.1 ? `<button onclick="setQuoteToPay(${q.id})" class="btn btn-sm" style="background: white; border: 1px solid var(--primary); color: var(--primary); border-radius: 6px; padding: 4px 10px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">PAGAR</button>` : '<i class="bi bi-check-circle-fill text-success" style="font-size: 1.2rem;"></i>'}
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
 
         // Añadir pagos directos (abonos sin folio)
         if (data.pagos_directos && data.pagos_directos.length > 0) {
             quotesHtml += `
                 <tr style="background: #e0f2fe;">
-                    <td colspan="3" class="ps-4 py-3 fw-bold" style="color: #0369a1;"><i class="bi bi-info-circle me-2"></i>Abonos directos (Sin vincular a folio)</td>
+                    <td colspan="4" class="ps-4 py-3 fw-bold" style="color: #0369a1;"><i class="bi bi-info-circle me-2"></i>Abonos directos (Sin vincular a folio)</td>
                     <td class="text-end py-3" style="color: #0369a1;">-</td>
                     <td class="text-end py-3 fw-bold text-success">-$${parseFloat(data.global.abonos_directos).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td class="pe-4 py-3"></td>
@@ -639,8 +665,19 @@
             const id = parseInt(val.replace("quote_", ""));
             const quote = currentCustomerQuotes.find(q => q.id === id);
             if (quote) {
-                document.getElementById('pay-amount').value = parseFloat(quote.saldo).toFixed(2);
-                document.getElementById('pay-max-info').textContent = parseFloat(quote.saldo).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                let suggested = quote.saldo;
+                if (quote.tipo_pago === 'Semanal' && quote.monto_semanal > 0) {
+                    suggested = Math.min(quote.saldo, quote.monto_semanal);
+                } else if (quote.tipo_pago === '2 Pagos') {
+                    suggested = Math.min(quote.saldo, quote.total / 2);
+                }
+                document.getElementById('pay-amount').value = suggested.toFixed(2);
+                
+                let maxInfoText = parseFloat(quote.saldo).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                if (quote.tipo_pago !== 'Contado') {
+                    maxInfoText += ` | Sugerido: $${suggested.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${quote.tipo_pago})`;
+                }
+                document.getElementById('pay-max-info').textContent = maxInfoText;
             }
         } else if (val.startsWith("cargo_")) {
             const id = parseInt(val.replace("cargo_", ""));
