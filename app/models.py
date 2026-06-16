@@ -2,7 +2,6 @@ from typing import Optional, List
 from datetime import datetime, date
 from sqlmodel import Field, SQLModel, Relationship
 from decimal import Decimal
-from pydantic import EmailStr
 from enum import Enum
 
 class RoleEnum(str, Enum):
@@ -15,7 +14,7 @@ class RoleEnum(str, Enum):
 
 class CustomerBase(SQLModel):
     nombre: str = Field(min_length=1, nullable=False, description="El nombre no puede estar vacío")
-    email: EmailStr = Field(unique=True, index=True, nullable=False)
+    email: str = Field(unique=True, index=True, nullable=False)
     telefono: Optional[str] = None
     direccion: Optional[str] = None
 
@@ -118,7 +117,7 @@ class AccountChargeBase(SQLModel):
 
 class UserBase(SQLModel):
     username: str = Field(unique=True, index=True, nullable=False)
-    email: EmailStr = Field(unique=True, index=True, nullable=False)
+    email: str = Field(unique=True, index=True, nullable=False)
     role: RoleEnum = Field(default=RoleEnum.Cliente)
     is_active: bool = Field(default=True)
     cliente_id: Optional[int] = Field(default=None, foreign_key="customer.id")
