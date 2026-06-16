@@ -141,21 +141,7 @@
 
 {% block scripts %}
 <script>
-    function showSuccessNotification(message) {
-        const alertBox = document.getElementById('alert-box');
-        alertBox.textContent = message || 'Cliente creado adecuadamente';
-        alertBox.className = 'alert alert-success';
-        alertBox.style.display = 'block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
 
-    function showErrorNotification(message) {
-        const alertBox = document.getElementById('alert-box');
-        alertBox.textContent = message || 'Ocurrió un error';
-        alertBox.className = 'alert alert-error';
-        alertBox.style.display = 'block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
 
     function togglePassword(inputId, btn) {
         const input = document.getElementById(inputId);
@@ -223,7 +209,11 @@
             data.username = username;
             data.password = password;
         } else if (username || password) {
-            showErrorNotification('Para habilitar el acceso al portal, debes proporcionar tanto nombre de usuario como contraseña.');
+            const alertBox = document.getElementById('alert-box');
+            alertBox.textContent = 'Para habilitar el acceso al portal, debes proporcionar tanto nombre de usuario como contraseña.';
+            alertBox.className = 'alert alert-error';
+            alertBox.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
 
@@ -238,14 +228,26 @@
 
             if (response.ok) {
                 const result = await response.json();
-                showSuccessNotification(`¡${result.nombre} creado adecuadamente!`);
+                const alertBox = document.getElementById('alert-box');
+                alertBox.textContent = `¡${result.nombre} creado adecuadamente!`;
+                alertBox.className = 'alert alert-success';
+                alertBox.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 this.reset();
             } else {
                 const error = await response.json();
-                showErrorNotification(`Error: ${error.detail || 'No se pudo crear el cliente'}`);
+                const alertBox = document.getElementById('alert-box');
+                alertBox.textContent = `Error: ${error.detail || 'No se pudo crear el cliente'}`;
+                alertBox.className = 'alert alert-error';
+                alertBox.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         } catch (err) {
-            showErrorNotification('Error de conexión');
+            const alertBox = document.getElementById('alert-box');
+            alertBox.textContent = 'Error de conexión';
+            alertBox.className = 'alert alert-error';
+            alertBox.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     });
 </script>
