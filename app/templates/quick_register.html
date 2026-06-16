@@ -48,9 +48,6 @@
 
     /* Bell button wrapper */
     #notif-wrapper {
-        position: absolute;
-        top: -55px;
-        right: var(--space-4);
         z-index: 50;
     }
 
@@ -333,9 +330,6 @@
             display: flex !important;
         }
         #notif-wrapper {
-            position: fixed !important;
-            top: 11px !important;
-            right: 16px !important;
             z-index: 1010 !important;
         }
         #drawer-notificaciones {
@@ -344,18 +338,16 @@
     }
 </style>
 {% endblock %}
-
 {% block content %}
+<!-- Notification Bell Button (Fixed Top Right) -->
+<div id="notif-wrapper" style="position: fixed; top: 11px; right: 16px; z-index: 1070;">
+     <button id="btn-notificaciones" style="border-radius: 10px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; padding: 0; transition: all 0.2s ease; background: #4f46e5; border: none; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onclick="toggleNotificaciones()" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+         <i class="bi bi-bell-fill" style="font-size: 1.1rem; color: white; transition: color 0.3s ease;"></i>
+         <span id="badge-notificaciones" style="display: none; position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 0.6rem; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #4f46e5; display: flex; align-items: center; justify-content: center; animation: badgePulse 2s infinite;">0</span>
+     </button>
+</div>
+
 <div style="max-width: 100%; margin: 0 auto; padding: 0 var(--space-4); position: relative;">
-
-    <!-- Notification Bell Button -->
-    <div id="notif-wrapper">
-         <button id="btn-notificaciones" style="border-radius: 10px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; padding: 0; transition: all 0.2s ease; background: #4f46e5; border: none; position: relative;" onclick="toggleNotificaciones()" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-             <i class="bi bi-bell-fill" style="font-size: 1.1rem; color: white; transition: color 0.3s ease;"></i>
-             <span id="badge-notificaciones" style="display: none; position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 0.6rem; font-weight: bold; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #4f46e5; display: flex; align-items: center; justify-content: center; animation: badgePulse 2s infinite;">0</span>
-         </button>
-    </div>
-
     <!-- Overlay backdrop -->
     <div id="notif-overlay" onclick="cerrarNotificaciones()"></div>
 
@@ -976,7 +968,7 @@
                     new Chart(ctxFunnel, {
                         type: 'bar',
                         data: {
-                            labels: ['Borrador', 'Enviada', 'Aprobada', 'Rechazada/Cancelada'],
+                            labels: ['Borrador', 'Enviada', 'Aprobada', ['Rechazada', 'Cancelada']],
                             datasets: [{
                                 label: 'Cantidad de Cotizaciones',
                                 data: [
@@ -1008,6 +1000,12 @@
                                 legend: { display: false }
                             },
                             scales: {
+                                x: {
+                                    ticks: {
+                                        maxRotation: 0,
+                                        minRotation: 0
+                                    }
+                                },
                                 y: {
                                     beginAtZero: true,
                                     ticks: { stepSize: 1 }

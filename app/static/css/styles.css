@@ -1608,10 +1608,6 @@ tr:last-child td {
 /* Mobile Menu Toggle Button */
 .mobile-menu-toggle {
   display: none;
-  position: fixed !important;
-  top: var(--space-4) !important;
-  left: var(--space-4) !important;
-  z-index: 99999 !important; /* Always visible above all scrolling cards and overlays */
   background: var(--primary);
   color: var(--text-white);
   border: none;
@@ -1645,7 +1641,7 @@ tr:last-child td {
     background-color: var(--card-bg);
     border-bottom: 1px solid var(--border-color);
     padding: 0 var(--space-4);
-    z-index: 1000;
+    z-index: 1060;
     box-shadow: var(--shadow-sm);
   }
 
