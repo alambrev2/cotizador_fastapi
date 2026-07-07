@@ -120,8 +120,9 @@ def create_quote(
                 status_code=404, detail=f"Producto {item_in.producto_id} no encontrado"
             )
 
-        # Validar stock disponible
-        if producto.stock < item_in.cantidad:
+        # Validar stock disponible (solo para Productos, no para Servicios)
+        es_servicio = (producto.categoria or "").strip().lower() == "servicio"
+        if not es_servicio and producto.stock < item_in.cantidad:
             raise HTTPException(
                 status_code=400,
                 detail=f"Producto '{producto.nombre}' no tiene suficiente stock. Disponible: {producto.stock}, Solicitado: {item_in.cantidad}"
@@ -282,15 +283,17 @@ def update_quote(
             for item in quote_with_items.items:
                 producto = session.get(Product, item.producto_id)
                 if producto:
-                    # Validar que haya suficiente stock antes de descontar
-                    if producto.stock < item.cantidad:
-                        raise HTTPException(
-                            status_code=400,
-                            detail=f"Producto '{producto.nombre}' no tiene suficiente stock para aceptar la cotización. Disponible: {producto.stock}, Solicitado: {item.cantidad}"
-                        )
-                    # Descontar stock
-                    producto.stock -= item.cantidad
-                    session.add(producto)
+                    es_servicio = (producto.categoria or "").strip().lower() == "servicio"
+                    if not es_servicio:
+                        # Validar que haya suficiente stock antes de descontar
+                        if producto.stock < item.cantidad:
+                            raise HTTPException(
+                                status_code=400,
+                                detail=f"Producto '{producto.nombre}' no tiene suficiente stock para aceptar la cotización. Disponible: {producto.stock}, Solicitado: {item.cantidad}"
+                            )
+                        # Descontar stock
+                        producto.stock -= item.cantidad
+                        session.add(producto)
                     
     # Si cambió de "Aceptada" a cualquier otro estado (Cancelada, Rechazada, Borrador), devolver stock
     elif old_estado == "Aceptada" and db_quote.estado != "Aceptada":
@@ -303,9 +306,11 @@ def update_quote(
             for item in quote_with_items.items:
                 producto = session.get(Product, item.producto_id)
                 if producto:
-                    # Devolver stock
-                    producto.stock += item.cantidad
-                    session.add(producto)
+                    es_servicio = (producto.categoria or "").strip().lower() == "servicio"
+                    if not es_servicio:
+                        # Devolver stock solo para Productos
+                        producto.stock += item.cantidad
+                        session.add(producto)
 
     session.add(db_quote)
     session.commit()

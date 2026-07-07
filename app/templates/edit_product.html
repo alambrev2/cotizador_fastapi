@@ -25,12 +25,32 @@
                 <input type="text" id="nombre" name="nombre" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem;">
             </div>
 
+            <!-- Toggle Tipo: Producto / Servicio -->
             <div class="form-group" style="margin-bottom: var(--space-6);">
-                <label for="categoria" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Categoría <span style="color: var(--danger);">*</span></label>
-                <select id="categoria" name="categoria" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem; width: 100%;">
-                    <option value="Producto">Producto</option>
-                    <option value="Servicio">Servicio</option>
-                </select>
+                <label style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; display: block; margin-bottom: var(--space-3);">Tipo <span style="color: var(--danger);">*</span></label>
+                <input type="hidden" id="categoria" name="categoria" value="Producto">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+                    <div id="btn-producto" onclick="setCategoria('Producto')" style="cursor: pointer; border: 2px solid var(--indigo, #4f46e5); border-radius: var(--radius-lg); padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; background: #eef2ff; transition: all 0.2s;">
+                        <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--indigo, #4f46e5); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i class="bi bi-box-seam" style="color: white; font-size: 1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; color: var(--indigo, #4f46e5); font-size: 0.95rem;">Producto</div>
+                            <div style="font-size: 0.78rem; color: var(--gray-500);">Maneja inventario y stock</div>
+                        </div>
+                        <i class="bi bi-check-circle-fill" id="check-producto" style="margin-left: auto; color: var(--indigo, #4f46e5); font-size: 1.2rem;"></i>
+                    </div>
+                    <div id="btn-servicio" onclick="setCategoria('Servicio')" style="cursor: pointer; border: 2px solid var(--gray-200); border-radius: var(--radius-lg); padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; background: white; transition: all 0.2s;">
+                        <div style="width: 42px; height: 42px; border-radius: 50%; background: var(--gray-200); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s;" id="icon-servicio">
+                            <i class="bi bi-gear" style="color: var(--gray-500); font-size: 1.1rem;"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; color: var(--gray-500); font-size: 0.95rem;" id="label-servicio">Servicio</div>
+                            <div style="font-size: 0.78rem; color: var(--gray-400);">Sin inventario físico</div>
+                        </div>
+                        <i class="bi bi-circle" id="check-servicio" style="margin-left: auto; color: var(--gray-300); font-size: 1.2rem;"></i>
+                    </div>
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
@@ -87,9 +107,12 @@
                     <small style="color: var(--gray-500); font-size: 0.8rem; display: block; margin-top: 4px;">A partir de esta cantidad se aplicará el precio de mayoreo.</small>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 0;">
+                <div id="inventario-section" class="form-group" style="margin-bottom: 0;">
                     <label for="stock" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem;">Inventario Actual</label>
-                    <input type="number" id="stock" name="stock" min="0" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.65rem 0.85rem; background: white;">
+                    <input type="number" id="stock" name="stock" min="0" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.65rem 0.85rem; background: white;">
+                </div>
+                <div id="servicio-aviso" style="display:none; background: var(--indigo-light, #eef2ff); border: 1px solid var(--indigo, #4f46e5); border-radius: var(--radius-md); padding: 0.75rem 1rem; color: var(--indigo, #4f46e5); font-size: 0.9rem; margin-top: var(--space-2);">
+                    <i class="bi bi-info-circle me-2"></i>Los servicios no manejan inventario físico. El stock no aplica.
                 </div>
             </div>
 
@@ -114,6 +137,37 @@
     const pathParts = window.location.pathname.split('/');
     const productId = pathParts[pathParts.length - 2]; // /products/{id}/edit
 
+    function setCategoria(valor) {
+        document.getElementById('categoria').value = valor;
+        const esServicio = valor === 'Servicio';
+
+        // Tarjeta Producto
+        document.getElementById('btn-producto').style.border = esServicio ? '2px solid var(--gray-200)' : '2px solid var(--indigo, #4f46e5)';
+        document.getElementById('btn-producto').style.background = esServicio ? 'white' : '#eef2ff';
+        document.getElementById('check-producto').className = esServicio ? 'bi bi-circle' : 'bi bi-check-circle-fill';
+        document.getElementById('check-producto').style.color = esServicio ? 'var(--gray-300)' : 'var(--indigo, #4f46e5)';
+
+        // Tarjeta Servicio
+        document.getElementById('btn-servicio').style.border = esServicio ? '2px solid #7c3aed' : '2px solid var(--gray-200)';
+        document.getElementById('btn-servicio').style.background = esServicio ? '#f5f3ff' : 'white';
+        document.getElementById('icon-servicio').style.background = esServicio ? '#7c3aed' : 'var(--gray-200)';
+        document.getElementById('icon-servicio').querySelector('i').style.color = esServicio ? 'white' : 'var(--gray-500)';
+        document.getElementById('label-servicio').style.color = esServicio ? '#7c3aed' : 'var(--gray-500)';
+        document.getElementById('check-servicio').className = esServicio ? 'bi bi-check-circle-fill' : 'bi bi-circle';
+        document.getElementById('check-servicio').style.color = esServicio ? '#7c3aed' : 'var(--gray-300)';
+
+        // Inventario
+        const inventarioSection = document.getElementById('inventario-section');
+        const servicioAviso = document.getElementById('servicio-aviso');
+        inventarioSection.style.display = esServicio ? 'none' : 'block';
+        servicioAviso.style.display = esServicio ? 'block' : 'none';
+        if (esServicio) document.getElementById('stock').value = 0;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // El toggle se activa después de cargar el producto
+    });
+
     async function loadProduct() {
         try {
             const response = await fetch(`/api/v1/products/${productId}`);
@@ -122,7 +176,7 @@
             const product = await response.json();
 
             document.getElementById('nombre').value = product.nombre;
-            document.getElementById('categoria').value = product.categoria || '';
+            document.getElementById('categoria').value = product.categoria || 'Producto';
             document.getElementById('marca').value = product.marca || '';
             document.getElementById('proveedor').value = product.proveedor || '';
             document.getElementById('costo').value = product.costo || 0;
@@ -132,6 +186,13 @@
             document.getElementById('cantidad_mayoreo').value = product.cantidad_mayoreo;
             document.getElementById('stock').value = product.stock;
             document.getElementById('activo').checked = product.activo;
+
+            // Activar toggle visual según la categoría del producto
+            setCategoria(product.categoria || 'Producto');
+            // Restaurar stock real (setCategoria lo pone en 0 si es Servicio, pero ya está guardado en 0)
+            if ((product.categoria || '').toLowerCase() !== 'servicio') {
+                document.getElementById('stock').value = product.stock;
+            }
 
         } catch (error) {
             showNotification('Error cargando producto: ' + error.message);
