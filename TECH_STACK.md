@@ -1,34 +1,82 @@
 # Tech Stack - Cotizador FastAPI
 
-Este documento detalla el stack tecnológico y la arquitectura actual del proyecto `cotizador_fastapi`.
-
-## ⚙️ Backend
-- **Framework**: FastAPI - Utilizado para la construcción de la API y la exposición de la lógica de negocio.
-- **ORM**: SQLModel - Empleado para la interacción con la base de datos, combinando código de base de datos con validaciones de datos en Python.
-
-## 🗄️ Base de Datos
-- **Motor**: SQLite
-- **Archivo**: `database.db`
-- **Estructura**: La base de datos almacena la estructura de todos los modelos relacionales de nuestra aplicación, lo cual nos permite una gestión ágil de un entorno de pruebas y producción inicial.
-
-## 🎨 Frontend
-- **Motor de Plantillas**: Jinja2 - Utilizado para renderizar de forma dinámica las vistas HTML desde el servidor backend de FastAPI.
-- **Estilos e Interfaz**: Tailwind CSS - Framework CSS empleado para el diseño y maquetación de la aplicación. El sistema cuenta con un diseño particular y consistente basado en una paleta de colores **'Azul Marino'**.
-
-## 🧠 Lógica de Negocio
-- **Sistema de Folios**: La aplicación genera y controla automáticamente una secuencia alfanumérica para el seguimiento de documentos:
-  - Formato de Notas Remisorias: `N20260001`, `N20260002` ...
-  - Formato de Cotizaciones: `C20260001`, `C20260002` ...
-- **Módulos Específicos**:
-  - **Calendario de Pagos de Servicios**: Este módulo permite controlar de manera estructurada los recordatorios y fechas para realizar los pagos correspondientes a servicios, optimizando nuestra operación y tesorería.
-
-## 📦 Dependencias Principales
-Las principales librerías utilizadas para hacer funcionar nuestro ecosistema incluyen:
-- `fastapi` y `sqlmodel` (Pilares del código).
-- `uvicorn`: Servidor ASGI de alto rendimiento para ejecutar e interactuar con la aplicación.
-- `jinja2`: Para procesar nuestros templates HTML.
-- `python-multipart`: Necesario en FastAPI para soportar peticiones y el procesamiento de datos provenientes de formularios (`Form(...)`).
-- `pydantic`: Motor principal bajo FastAPI y SQLModel para validar los tipos de datos en la entrada y salida de la API.
+Stack tecnológico actual del proyecto `cotizador_fastapi`.
 
 ---
-*Nota: Este documento sirve como punto de referencia rápido para que el equipo de desarrollo conozca las bases tecnológicas fundamentales del sistema.*
+
+## Backend
+
+| Componente       | Tecnología                                           |
+| ---------------- | ---------------------------------------------------- |
+| Framework        | FastAPI                                              |
+| ORM              | SQLModel (SQLAlchemy + Pydantic)                     |
+| Servidor ASGI    | Uvicorn                                              |
+| Lenguaje         | Python 3.10+                                         |
+
+## Base de Datos
+
+| Componente | Detalle                              |
+| ---------- | ------------------------------------ |
+| Motor      | SQLite3                              |
+| Archivo    | `data/database.db`                   |
+| Migraciones| Scripts manuales en `scripts/migrations/` (sin Alembic) |
+
+## Frontend
+
+| Componente          | Tecnología                                     |
+| ------------------- | ---------------------------------------------- |
+| Motor de Plantillas | Jinja2                                         |
+| Estilos             | Design System propio con variables CSS (~2069 líneas) |
+| JavaScript          | Vanilla JS (sin frameworks)                    |
+| Gráficas            | Chart.js (vía CDN)                             |
+
+## Autenticación
+
+| Componente   | Tecnología                     |
+| ------------ | ------------------------------ |
+| Tokens       | JWT (python-jose, HS256)       |
+| Contraseñas  | bcrypt (passlib[bcrypt])       |
+| Rate Limiting| En memoria (5 intentos/bloqueo)|
+
+## Generación de PDFs
+
+| Librería   | Uso                                          |
+| ---------- | -------------------------------------------- |
+| xhtml2pdf  | Cotizaciones, notas de remisión, reportes financieros, estados de cuenta |
+
+## Procesamiento de Datos
+
+| Librería | Uso                    |
+| -------- | ---------------------- |
+| pandas   | Manipulación de datos  |
+| openpyxl | Lectura/escritura Excel|
+
+## Documentación de API
+
+| Herramienta   | URL                          |
+| ------------- | ---------------------------- |
+| Scalar        | `http://localhost:8000/scalar` |
+| Swagger UI    | `http://localhost:8000/docs`   |
+
+## Sistema de Folios
+
+- Cotizaciones: `C{AÑO}{NUMERO}` (ej. `C20260001`)
+- Versiones editadas: `C{AÑO}{NUMERO}-V{NUM}` (ej. `C20260001-V2`)
+- Notas de Remisión: `N{AÑO}{NUMERO}` (ej. `N20260001`)
+
+## Roles de Usuario
+
+| Rol              | Descripción                         |
+| ---------------- | ----------------------------------- |
+| Administrador    | Acceso total                        |
+| Operativo        | Cotizaciones, dashboard, proyectos  |
+| Cliente          | Panel propio, estado de cuenta      |
+
+## Dependencias Principales
+
+```
+fastapi, uvicorn, sqlmodel, pandas, openpyxl,
+pydantic-settings, python-dotenv, email-validator,
+scalar-fastapi, python-multipart, jinja2,
+xhtml2pdf, passlib[bcrypt], python-jose[cryptography]
+```

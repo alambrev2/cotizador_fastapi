@@ -17,7 +17,7 @@ Sistema moderno y profesional de cotizaciones, gestión de clientes, control de 
 ## 📁 Estructura del Proyecto
 
 ```text
-cotizador_fastapi-main/
+cotizador_fastapi/
 ├── app/                        # Aplicación principal
 │   ├── api/v1/endpoints/       # Controladores de la API (clientes, productos, etc.)
 │   ├── core/                   # Configuraciones del sistema y utilidades de PDF
@@ -31,8 +31,13 @@ cotizador_fastapi-main/
 ├── data/                       # Archivos de la base de datos SQLite (ignorado en Git)
 ├── logs/                       # Historial de logs del sistema (ignorado en Git)
 ├── scripts/                    # Scripts de migración y depuración
+│   ├── migrations/             # Migraciones de base de datos
+│   └── debug/                  # Scripts de depuración
 ├── tests/                      # Pruebas unitarias de la API
+├── scratch/                    # Scripts exploratorios (descartables)
+├── temp/                       # Archivos temporales
 ├── .gitignore                  # Reglas de exclusión para Git
+├── setup.py                    # Script de inicialización
 └── requirements.txt            # Dependencias del proyecto
 ```
 
@@ -112,6 +117,7 @@ FastAPI genera documentación automática para todos los endpoints. Con el servi
 
 *   **Backend**: FastAPI, SQLModel (SQLAlchemy + Pydantic)
 *   **Base de Datos**: SQLite3
-*   **Frontend**: HTML5, Vanilla JS, Bootstrap 5 (Estilos premium y adaptables)
-*   **Reportes**: FPDF2 para la generación dinámica de documentos PDF
+*   **Frontend**: HTML5, Vanilla JS, Design System CSS propio
+*   **Reportes**: xhtml2pdf (cotizaciones, remisiones, estados de cuenta, reportes financieros)
+*   **Gráficas**: Chart.js
 *   **Manejo de archivos**: Pandas y Openpyxl para procesamiento de hojas Excel

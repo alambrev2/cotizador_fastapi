@@ -9,19 +9,17 @@ from app.api.deps import get_current_active_admin
 from openpyxl.styles import Font
 import logging
 import os
-
-# Obtener el directorio base del proyecto
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from app.core.paths import LOGS_DIR
 
 # Asegurar que el directorio de logs exista
-os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Configurar logging para errores de importación
 logging.basicConfig(
     level=logging.ERROR,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(os.path.join(BASE_DIR, 'logs', 'error.log')),
+        logging.FileHandler(str(LOGS_DIR / 'error.log')),
         logging.StreamHandler()
     ]
 )
@@ -119,7 +117,7 @@ def import_excel_route(
     current_user: User = Depends(get_current_active_admin)
 ):
     # Asegurar que el directorio de logs exista
-    os.makedirs('logs', exist_ok=True)
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
     
     logger.info("Iniciando importación Excel de productos")
     

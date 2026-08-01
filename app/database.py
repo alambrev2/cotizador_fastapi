@@ -1,13 +1,12 @@
 from sqlmodel import SQLModel, create_engine, Session
 import os
+from app.core.config import settings
+from app.core.paths import DATA_DIR
 
-# Obtener el directorio base del proyecto (directorio padre de app)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sqlite_file_name = os.path.join(BASE_DIR, "data", "database.db")
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
-# Asegurar que el directorio data exista
-os.makedirs(os.path.dirname(sqlite_file_name), exist_ok=True)
+# Base de datos por defecto: data/database.db
+# Se puede apuntar a otra BD con DATABASE_URL en .env (útil para tests y despliegues)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+sqlite_url = settings.DATABASE_URL or f"sqlite:///{DATA_DIR / 'database.db'}"
 
 connect_args = {"check_same_thread": False}
 engine = create_engine(sqlite_url, connect_args=connect_args)

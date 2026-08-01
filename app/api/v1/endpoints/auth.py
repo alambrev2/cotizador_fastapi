@@ -1,10 +1,11 @@
-from datetime import timedelta, datetime
+from datetime import timedelta
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
 from app.api import deps
 from app.core import security
+from app.core.timeutils import utcnow as _utcnow
 from app.database import get_session
 from app.models import User
 from app.schemas import Token
@@ -21,13 +22,21 @@ _login_attempts: dict[str, dict] = {}
 MAX_ATTEMPTS = int(os.getenv("LOGIN_MAX_ATTEMPTS", "5"))
 BLOCK_MINUTES = int(os.getenv("LOGIN_BLOCK_MINUTES", "5"))
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+# Solo confiar en X-Forwarded-For si el backend está detrás de un proxy que
+# conozcas (p. ej. nginx/Caddy). Por defecto NO se confía para evitar spoofing.
+TRUST_PROXY = os.getenv("TRUST_PROXY", "false").lower() == "true"
 
 
 def _get_client_ip(request: Request) -> str:
-    """Extrae la IP real del cliente, considerando proxies."""
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """Extrae la IP real del cliente.
+
+    Por defecto se usa la IP del socket (request.client.host). X-Forwarded-For
+    solo se considera cuando TRUST_PROXY=true (detrás de un proxy conocido).
+    """
+    if TRUST_PROXY:
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
 
 
@@ -38,13 +47,13 @@ def _check_rate_limit(ip: str) -> None:
         return
 
     blocked_until = record.get("blocked_until")
-    if blocked_until and datetime.utcnow() < blocked_until:
-        remaining = int((blocked_until - datetime.utcnow()).total_seconds() / 60) + 1
+    if blocked_until and _utcnow() < blocked_until:
+        remaining = int((blocked_until - _utcnow()).total_seconds() / 60) + 1
         raise HTTPException(
             status_code=429,
             detail=f"Demasiados intentos fallidos. Intenta de nuevo en {remaining} minuto(s)."
         )
-    elif blocked_until and datetime.utcnow() >= blocked_until:
+    elif blocked_until and _utcnow() >= blocked_until:
         # Bloqueo expirado — reiniciar contador
         _login_attempts.pop(ip, None)
 
@@ -53,7 +62,7 @@ def _record_failed_attempt(ip: str, username: str) -> None:
     """Registra un intento fallido. Bloquea la IP si supera el límite."""
     record = _login_attempts.setdefault(ip, {"count": 0, "blocked_until": None})
     record["count"] += 1
-    record["last_attempt"] = datetime.utcnow()
+    record["last_attempt"] = _utcnow()
 
     logger.warning(
         f"Login fallido | IP: {ip} | usuario: '{username}' | "
@@ -61,7 +70,7 @@ def _record_failed_attempt(ip: str, username: str) -> None:
     )
 
     if record["count"] >= MAX_ATTEMPTS:
-        record["blocked_until"] = datetime.utcnow() + timedelta(minutes=BLOCK_MINUTES)
+        record["blocked_until"] = _utcnow() + timedelta(minutes=BLOCK_MINUTES)
         logger.warning(
             f"IP {ip} BLOQUEADA por {BLOCK_MINUTES} minutos "
             f"después de {MAX_ATTEMPTS} intentos fallidos."

@@ -14,19 +14,17 @@ from datetime import datetime
 from app.schemas import CustomerCreate, CustomerUpdate
 from app.core.security import get_password_hash
 from app.models import RoleEnum
-
-# Obtener el directorio base del proyecto
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from app.core.paths import LOGS_DIR
 
 # Asegurar que el directorio de logs exista
-os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Configurar logging para errores de importación
 logging.basicConfig(
     level=logging.ERROR,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(os.path.join(BASE_DIR, 'logs', 'error.log')),
+        logging.FileHandler(str(LOGS_DIR / 'error.log')),
         logging.StreamHandler()
     ]
 )
@@ -142,7 +140,7 @@ def import_excel_route(
     current_user: User = Depends(get_current_active_admin)
 ):
     # Asegurar que el directorio de logs exista
-    os.makedirs('logs', exist_ok=True)
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
     
     logger.info(f"Iniciando importación Excel. dry_run={dry_run}")
     
@@ -317,13 +315,14 @@ def read_customers(
     search: str = None,
     current_user: User = Depends(get_current_active_admin),
 ):
-    from app.models import Quote
+    from app.models import Quote, AccountCharge
     from sqlalchemy.orm import selectinload
+    from app.core.accounting import calcular_saldo_cliente
 
     query = select(Customer).options(
-        selectinload(Customer.cotizaciones),
+        selectinload(Customer.cotizaciones).selectinload(Quote.pagos),
         selectinload(Customer.pagos),
-        selectinload(Customer.cargos)
+        selectinload(Customer.cargos).selectinload(AccountCharge.pagos),
     )
     if search:
         query = query.where(
@@ -334,10 +333,11 @@ def read_customers(
     # Calcular consumo total y saldo pendiente (Histórico + Sistema) por cliente
     results = []
     for c in customers:
-        # Usar las relaciones precargadas para eficiencia
-        system_total_comprado = sum([float(q.total) for q in c.cotizaciones if q.estado in ['Pendiente', 'Cobranza Requerida']])
-        system_total_pagado = sum([float(p.monto) for p in c.pagos])
-        system_total_cargos = sum([float(cg.monto) for cg in c.cargos])
+        # Totales económicos unificados (misma regla que todos los endpoints)
+        fin = calcular_saldo_cliente(c)
+        system_total_comprado = float(fin["total_comprado"])
+        system_total_pagado = float(fin["total_pagado"])
+        system_total_cargos = float(fin["total_cargos"])
 
         # Consumo acumulado (Total histórico + Total sistema + Cargos)
         total_historico = (
@@ -349,10 +349,8 @@ def read_customers(
         )
         total_acumulado = total_historico + system_total_comprado + system_total_cargos
 
-        # Saldo pendiente global (Saldo inicial + Total sistema comprado + Cargos - Total sistema pagado)
-        saldo_pendiente = (
-            float(c.saldo_inicial or 0) + system_total_comprado + system_total_cargos - system_total_pagado
-        )
+        # Saldo pendiente global (regla unificada)
+        saldo_pendiente = float(fin["saldo"])
 
         # Convertir a dict y añadir campos
         c_dict = c.model_dump()

@@ -8,26 +8,28 @@ from app.database import get_session
 from app.models import Quote, QuoteItem, Product, Customer, User
 from app.schemas import QuoteCreate, QuoteRead, QuoteUpdate
 from app.core.pdf import generate_pdf_bytes
+from app.core.accounting import money
+from app.core.timeutils import now_local
+from app.core.paths import TEMPLATES_DIR, REPORTS_DIR
 from sqlalchemy.orm import selectinload
 from decimal import Decimal
-from datetime import datetime
 from app.api.deps import (
     get_current_user,
     get_current_active_admin,
     get_current_active_operativo_or_admin,
     require_role,
 )
-from app.models import RoleEnum
+from app.models import RoleEnum, QuoteEstado
+import logging
 
-# Obtener el directorio base del proyecto
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+logger = logging.getLogger(__name__)
 
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app", "templates"))
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 router = APIRouter()
 
 def get_next_quote_folio(session: Session) -> str:
-    current_year = datetime.now().year
+    current_year = now_local().year
     prefix = f"C{current_year}"
     
     # Busca cotizaciones del año actual
@@ -64,7 +66,57 @@ def create_quote(
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
 
-    # 2. Crear objeto Cotización vacio
+    # ── Validaciones y cálculos previos (sin persistir nada) ──────────────────
+    items_validados = []  # (producto, cantidad, precio, costo)
+    total_cotizacion = Decimal("0")
+    utilidad_acumulada = Decimal("0")
+
+    for item_in in quote_in.items:
+        producto = session.get(Product, item_in.producto_id)
+        if not producto:
+            raise HTTPException(status_code=404, detail=f"Producto {item_in.producto_id} no encontrado")
+
+        # Validar stock disponible (solo para Productos, no para Servicios)
+        es_servicio = (producto.categoria or "").strip().lower() == "servicio"
+        if not es_servicio and producto.stock < item_in.cantidad:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Producto '{producto.nombre}' no tiene suficiente stock. Disponible: {producto.stock}, Solicitado: {item_in.cantidad}"
+            )
+
+        # Usamos el precio unitario pactado manualmente desde el frontend
+        precio_aplicado = Decimal(str(item_in.precio_unitario))
+        costo_producto = Decimal(str(producto.costo or 0))
+        items_validados.append((producto, item_in.cantidad, precio_aplicado, costo_producto))
+
+        total_cotizacion += precio_aplicado * item_in.cantidad
+        utilidad_acumulada += (precio_aplicado - costo_producto) * item_in.cantidad
+
+    # 4. Calcular total, subtotal, IVA y utilidad
+    if quote_in.total_manual is not None and quote_in.total_manual > 0:
+        total_final = Decimal(str(quote_in.total_manual))
+        if quote_in.requiere_factura:
+            subtotal_final = total_final / Decimal("1.16")
+            iva_final = total_final - subtotal_final
+        else:
+            subtotal_final = total_final
+            iva_final = Decimal("0")
+        costo_total = sum((cantidad * costo for _, cantidad, _, costo in items_validados), Decimal("0"))
+        utilidad_final = subtotal_final - costo_total
+    else:
+        subtotal_final = total_cotizacion
+        iva_final = subtotal_final * Decimal("0.16") if quote_in.requiere_factura else Decimal("0")
+        total_final = subtotal_final + iva_final
+        utilidad_final = utilidad_acumulada
+
+    # Validar que el anticipo no exceda el total
+    if quote_in.anticipo and Decimal(str(quote_in.anticipo)) > total_final:
+        raise HTTPException(
+            status_code=400,
+            detail=f"El anticipo (${quote_in.anticipo}) no puede ser mayor que el total (${total_final})"
+        )
+
+    # ── Persistencia en una sola transacción ──────────────────────────────────
     db_quote = Quote(
         cliente_id=quote_in.cliente_id,
         filial=quote_in.filial,
@@ -79,108 +131,52 @@ def create_quote(
         monto_semanal=quote_in.monto_semanal,
         padre_id=quote_in.padre_id,
         motivo_edicion=quote_in.motivo_edicion,
-        version=1
+        version=1,
+        subtotal=subtotal_final,
+        iva=iva_final,
+        total=total_final,
+        utilidad_total=utilidad_final,
     )
 
-    # Lógica de Mutación / Versión
-    if quote_in.padre_id:
-        madre = session.get(Quote, quote_in.padre_id)
-        if madre:
-            madre.estado = "Sustituida"
+    try:
+        # Lógica de Mutación / Versión
+        if quote_in.padre_id:
+            madre = session.get(Quote, quote_in.padre_id)
+            if not madre:
+                raise HTTPException(status_code=400, detail="Cotización padre no existe")
+            madre.estado = QuoteEstado.Sustituida.value
             session.add(madre)
             db_quote.version = madre.version + 1
             # Si la madre NO tenia folio por se antigua formamos la base
             if madre.folio_cotizacion:
-                folio_base = madre.folio_cotizacion.split('-V')[0]
+                folio_base = madre.folio_cotizacion.split("-V")[0]
             else:
                 folio_base = f"C{madre.fecha_creacion.year}{(madre.id or 0):04d}"
             db_quote.folio_cotizacion = f"{folio_base}-V{db_quote.version}"
-        else:
-            raise HTTPException(status_code=400, detail="Cotización padre no existe")
 
-    session.add(db_quote)
-    session.commit()
-    session.refresh(db_quote)  # Obtener ID nuevo
-    
-    # Si es nueva 100%, asignamos su folio usando el año actual y su ID recién creado
-    if not quote_in.padre_id:
-        db_quote.folio_cotizacion = get_next_quote_folio(session)
+        session.add(db_quote)
+        session.flush()  # asigna ID dentro de la misma transacción
+
+        # Si es nueva 100%, asignamos su folio usando el año actual y su ID recién creado
+        if not quote_in.padre_id:
+            db_quote.folio_cotizacion = get_next_quote_folio(session)
+
+        # 3. Agregar items
+        for producto, cantidad, precio_aplicado, _costo in items_validados:
+            session.add(QuoteItem(
+                cotizacion_id=db_quote.id,
+                producto_id=producto.id,
+                cantidad=cantidad,
+                precio_unitario=precio_aplicado,
+            ))
+
         session.add(db_quote)
         session.commit()
         session.refresh(db_quote)
-
-    total_cotizacion = 0.0
-    utilidad_acumulada = 0.0
-
-    # 3. Procesar items
-    for item_in in quote_in.items:
-        producto = session.get(Product, item_in.producto_id)
-        if not producto:
-            raise HTTPException(
-                status_code=404, detail=f"Producto {item_in.producto_id} no encontrado"
-            )
-
-        # Validar stock disponible (solo para Productos, no para Servicios)
-        es_servicio = (producto.categoria or "").strip().lower() == "servicio"
-        if not es_servicio and producto.stock < item_in.cantidad:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Producto '{producto.nombre}' no tiene suficiente stock. Disponible: {producto.stock}, Solicitado: {item_in.cantidad}"
-            )
-
-        # Usamos el precio unitario pactado manualmente desde el frontend
-        precio_aplicado = Decimal(str(item_in.precio_unitario))
-
-        subtotal = precio_aplicado * item_in.cantidad
-        total_cotizacion += float(subtotal)
-        
-        # Lógica de Utilidad basada en costo real actual
-        utilidad_item = (precio_aplicado - producto.costo) * item_in.cantidad
-        utilidad_acumulada += float(utilidad_item)
-
-        db_item = QuoteItem(
-            cotizacion_id=db_quote.id,
-            producto_id=producto.id,
-            cantidad=item_in.cantidad,
-            precio_unitario=precio_aplicado,
-        )
-        session.add(db_item)
-
-    # 4. Actualizar total y utilidades de la cotización
-    if quote_in.total_manual is not None and quote_in.total_manual > 0:
-        db_quote.total = Decimal(str(quote_in.total_manual))
-        if quote_in.requiere_factura:
-            db_quote.subtotal = db_quote.total / Decimal('1.16')
-            db_quote.iva = db_quote.total - db_quote.subtotal
-        else:
-            db_quote.subtotal = db_quote.total
-            db_quote.iva = Decimal('0')
-            
-        # Recalcular utilidad: Subtotal - Costo Total de los productos
-        costo_total = sum((item.cantidad * session.get(Product, item.producto_id).costo) for item in quote_in.items)
-        db_quote.utilidad_total = db_quote.subtotal - costo_total
-    else:
-        db_quote.subtotal = Decimal(str(total_cotizacion))
-        db_quote.iva = db_quote.subtotal * Decimal('0.16') if quote_in.requiere_factura else Decimal('0')
-        db_quote.total = db_quote.subtotal + db_quote.iva
-        db_quote.utilidad_total = Decimal(str(utilidad_acumulada))
-    
-    # Validar que el anticipo no exceda el total
-    if quote_in.anticipo and quote_in.anticipo > db_quote.total:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"El anticipo (${quote_in.anticipo}) no puede ser mayor que el total (${db_quote.total})"
-        )
-    
-    # Validar que el monto semanal esté en rango razonable si es financiamiento semanal
-    # Se remueve validación a petición del usuario para permitir montos inferiores a 600 o superiores sin restricciones.
-    pass
-    
-    session.add(db_quote)
-    session.commit()
-    session.refresh(db_quote)
-
-    return db_quote
+        return db_quote
+    except HTTPException:
+        session.rollback()
+        raise
 
 
 @router.get("/", response_model=List[QuoteRead])
@@ -271,8 +267,8 @@ def update_quote(
     for key, value in quote_data.items():
         setattr(db_quote, key, value)
 
-    # Si cambió a "Aceptada", actualizar stock de productos
-    if old_estado != "Aceptada" and db_quote.estado == "Aceptada":
+    # Si cambió a "Aprobada", actualizar stock de productos
+    if old_estado != QuoteEstado.Aprobada.value and db_quote.estado == QuoteEstado.Aprobada.value:
         # Cargar items de la cotización
         from sqlalchemy.orm import selectinload
         quote_with_items = session.exec(
@@ -295,8 +291,8 @@ def update_quote(
                         producto.stock -= item.cantidad
                         session.add(producto)
                     
-    # Si cambió de "Aceptada" a cualquier otro estado (Cancelada, Rechazada, Borrador), devolver stock
-    elif old_estado == "Aceptada" and db_quote.estado != "Aceptada":
+    # Si cambió de "Aprobada" a cualquier otro estado (Cancelada, Rechazada, Borrador), devolver stock
+    elif old_estado == QuoteEstado.Aprobada.value and db_quote.estado != QuoteEstado.Aprobada.value:
         from sqlalchemy.orm import selectinload
         quote_with_items = session.exec(
             select(Quote).where(Quote.id == quote_id).options(selectinload(Quote.items))
@@ -355,10 +351,8 @@ def generate_quote_pdf(
             headers={"Content-Disposition": f'inline; filename="{pdf_name}"'},
         )
     except Exception as e:
-        import traceback
-
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error generando PDF: {str(e)}")
+        logger.error("Error generando PDF de cotización: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno generando el PDF")
 
 @router.get("/public/{quote_id}/pdf")
 def generate_quote_pdf_public(
@@ -392,10 +386,8 @@ def generate_quote_pdf_public(
             headers={"Content-Disposition": f'inline; filename="{pdf_name}"'},
         )
     except Exception as e:
-        import traceback
-
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error generando PDF: {str(e)}")
+        logger.error("Error generando PDF público de cotización: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno generando el PDF")
 
 from pydantic import BaseModel
 class ClientStatusUpdate(BaseModel):
@@ -418,16 +410,16 @@ def client_update_quote_status(
         if current_user.cliente_id != quote.cliente_id:
             raise HTTPException(status_code=403, detail="No tienes permiso para modificar esta cotización")
 
-    if quote.estado != "Enviada":
+    if quote.estado != QuoteEstado.Enviada.value:
         raise HTTPException(status_code=400, detail="Solo puedes responder a cotizaciones enviadas")
 
-    if payload.estado not in ["Aprobación Solicitada", "Rechazada"]:
+    if payload.estado not in [QuoteEstado.Aprobacion_Solicitada.value, QuoteEstado.Rechazada.value]:
         raise HTTPException(status_code=400, detail="Estado de respuesta no permitido")
 
     quote.estado = payload.estado
     if payload.notas:
         existing_notes = quote.notas or ""
-        quote.notas = f"{existing_notes}\n[Comentario del Cliente {datetime.now().strftime('%d/%m/%Y')}]: {payload.notas}".strip()
+        quote.notas = f"{existing_notes}\n[Comentario del Cliente {now_local().strftime('%d/%m/%Y')}]: {payload.notas}".strip()
 
     session.add(quote)
     session.commit()
@@ -483,7 +475,7 @@ def send_quote_email(
 
 Adjunto encontrarás la cotización solicitada ({folio}).
 
-Total: ${float(quote.total):,.2f}
+Total: ${money(quote.total):,.2f}
 
 Si tienes alguna duda, responde a este correo.
 
@@ -497,17 +489,16 @@ El equipo de Cotizador Pro""")
             server.send_message(msg)
 
         # Si se quiere, actualizar el estado a "Enviada" si estaba en Borrador
-        if quote.estado == "Borrador":
-            quote.estado = "Enviada"
+        if quote.estado == QuoteEstado.Borrador.value:
+            quote.estado = QuoteEstado.Enviada.value
             session.add(quote)
             session.commit()
 
         return {"message": "Correo enviado con éxito"}
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error enviando correo: {str(e)}")
+        logger.error("Error enviando correo de cotización: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno enviando el correo")
 
 @router.post("/{quote_id}/report", response_model=QuoteRead)
 async def upload_operative_report(
@@ -521,10 +512,25 @@ async def upload_operative_report(
     if not db_quote:
         raise HTTPException(status_code=404, detail="Cotización no encontrada")
 
-    reports_dir = os.path.join(BASE_DIR, "app", "static", "reports")
-    os.makedirs(reports_dir, exist_ok=True)
-    # Reemplazar espacios y sanitizar un poco
-    safe_filename = file.filename.replace(" ", "_")
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    reports_dir = str(REPORTS_DIR)
+
+    import unicodedata, re
+
+    allowed_extensions = {".pdf", ".png", ".jpg", ".jpeg", ".doc", ".docx", ".xls", ".xlsx"}
+
+    # Sanitizar: quitar rutas, normalizar nombre y validar extensión
+    raw_name = os.path.basename(file.filename or "")
+    base, ext = os.path.splitext(raw_name)
+    if ext.lower() not in allowed_extensions:
+        raise HTTPException(status_code=400, detail=f"Extensión no permitida. Permitidas: {', '.join(sorted(allowed_extensions))}")
+
+    nfkd = unicodedata.normalize("NFKD", base)
+    ascii_name = nfkd.encode("ascii", "ignore").decode("ascii")
+    safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", ascii_name).strip("_")
+    safe_name = re.sub(r"_+", "_", safe_name) or "reporte"
+    safe_filename = f"{safe_name}{ext.lower()}"
+
     file_path = os.path.join(reports_dir, f"quote_{quote_id}_{safe_filename}")
 
     with open(file_path, "wb") as buffer:

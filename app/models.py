@@ -4,10 +4,30 @@ from sqlmodel import Field, SQLModel, Relationship
 from decimal import Decimal
 from enum import Enum
 
+from app.core.timeutils import utcnow as _utcnow
+
 class RoleEnum(str, Enum):
     Administrador = "Administrador"
     Operativo = "Operativo"
     Cliente = "Cliente"
+
+
+class QuoteEstado(str, Enum):
+    """Estados canónicos de una cotización.
+
+    Nota: la columna ``estado`` se mantiene como VARCHAR (str) en BD por
+    compatibilidad; este enum es la fuente única de verdad de los valores.
+    """
+    Borrador = "Borrador"
+    Enviada = "Enviada"
+    Aprobacion_Solicitada = "Aprobación Solicitada"
+    Aprobada = "Aprobada"  # Aprobada/Aceptada unificados
+    Pendiente = "Pendiente"
+    Cobranza_Requerida = "Cobranza Requerida"
+    Rechazada = "Rechazada"
+    Sustituida = "Sustituida"
+    Finalizada = "Finalizada"
+    Cancelada = "Cancelada"
 
 # --- Modelos Base ---
 
@@ -48,12 +68,12 @@ class ProductBase(SQLModel):
 class ExpenseBase(SQLModel):
     descripcion: str = Field(min_length=1, nullable=False)
     monto: Decimal = Field(default=0, max_digits=10, decimal_places=2, gt=0)
-    fecha: datetime = Field(default_factory=datetime.utcnow)
+    fecha: datetime = Field(default_factory=_utcnow)
     categoria: Optional[str] = "Gasto General"
 
 
 class QuoteBase(SQLModel):
-    estado: str = "Borrador"  # Borrador, Enviada, Aceptada, Rechazada
+    estado: str = "Borrador"  # Usar QuoteEstado (app.models) como fuente única de valores
     cliente_id: Optional[int] = Field(default=None, foreign_key="customer.id")
 
     # Contabilidad e Impuestos
@@ -96,7 +116,7 @@ class QuoteItemBase(SQLModel):
 
 class PaymentBase(SQLModel):
     monto: Decimal = Field(default=0, max_digits=10, decimal_places=2, gt=0)
-    fecha_pago: datetime = Field(default_factory=datetime.utcnow)
+    fecha_pago: datetime = Field(default_factory=_utcnow)
     metodo_pago: str = "Transferencia"  # Efectivo, Transferencia, Tarjeta
     referencia: Optional[str] = None
     nota: Optional[str] = None
@@ -108,7 +128,7 @@ class PaymentBase(SQLModel):
 class AccountChargeBase(SQLModel):
     detalle: str = Field(min_length=1, nullable=False)
     monto: Decimal = Field(default=0, max_digits=10, decimal_places=2, gt=0)
-    fecha: datetime = Field(default_factory=datetime.utcnow)
+    fecha: datetime = Field(default_factory=_utcnow)
     documentado: bool = Field(default=False)
     cliente_id: Optional[int] = Field(default=None, foreign_key="customer.id")
     folio_nota: Optional[str] = Field(default=None)
@@ -147,7 +167,7 @@ class Product(ProductBase, table=True):
 
 class Quote(QuoteBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    fecha_creacion: datetime = Field(default_factory=datetime.utcnow)
+    fecha_creacion: datetime = Field(default_factory=_utcnow)
     total: Decimal = Field(default=0, max_digits=10, decimal_places=2)
 
     cliente: Optional[Customer] = Relationship(back_populates="cotizaciones")
@@ -178,7 +198,7 @@ class Expense(ExpenseBase, table=True):
 class OtherIncomeBase(SQLModel):
     descripcion: str
     monto: Decimal = Field(default=0, max_digits=10, decimal_places=2)
-    fecha: datetime = Field(default_factory=datetime.utcnow)
+    fecha: datetime = Field(default_factory=_utcnow)
     categoria: Optional[str] = "Ingreso General"
 
 

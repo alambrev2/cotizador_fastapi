@@ -10,6 +10,7 @@ from app.api.deps import (
     get_operativo_or_admin_page,
 )
 from app.models import User, RoleEnum
+from app.core.paths import BASE_DIR, LOGS_DIR, TEMP_DIR, STATIC_DIR, TEMPLATES_DIR, REPORTS_DIR
 from scalar_fastapi import get_scalar_api_reference
 import logging
 import os
@@ -28,13 +29,24 @@ app = FastAPI(
 )
 
 # Configurar CORS — lee orígenes desde .env (CORS_ORIGINS=http://dominio.com,http://otro.com)
-_cors_env = os.getenv("CORS_ORIGINS", "*")
-_cors_origins = [o.strip() for o in _cors_env.split(",") if o.strip()] if _cors_env != "*" else ["*"]
+_cors_env = os.getenv("CORS_ORIGINS", "").strip()
+
+if not _cors_env:
+    # Sin config: permitir solo localhost (dev seguro). Nunca "*" con credentials.
+    _cors_origins = ["http://localhost:8000", "http://127.0.0.1:8000"]
+    _cors_credentials = True
+elif _cors_env == "*":
+    # "*" explícito: los navegadores no permiten credentials con wildcard.
+    _cors_origins = ["*"]
+    _cors_credentials = False
+else:
+    _cors_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
+    _cors_credentials = True
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
-    allow_credentials=True,
+    allow_credentials=_cors_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -42,12 +54,10 @@ app.add_middleware(
 logger.info("Iniciando aplicación Cotizador API")
 
 # Obtener el directorio base del proyecto
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 # Asegurar que los directorios necesarios existan
-os.makedirs(os.path.join(BASE_DIR, "app", "static", "reports"), exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, "temp"), exist_ok=True)
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # Middleware de excepciones global
@@ -76,9 +86,9 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "app", "static")), name="static")
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app", "templates"))
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 app.include_router(api_router, prefix="/api/v1")
 
@@ -89,9 +99,9 @@ app.include_router(api_router, prefix="/api/v1")
 async def login_magico(token: str, request: Request):
     from app.database import get_session
     from sqlmodel import select
-    from datetime import datetime
     from fastapi.responses import RedirectResponse
     from app.core import security
+    from app.core.timeutils import utcnow as _utcnow
     from datetime import timedelta
     from app.models import User
 
@@ -100,7 +110,7 @@ async def login_magico(token: str, request: Request):
         user = db.exec(
             select(User)
             .where(User.magic_token == token)
-            .where(User.magic_token_expires > datetime.utcnow())
+            .where(User.magic_token_expires > _utcnow())
         ).first()
 
         if not user or not user.is_active:
@@ -111,6 +121,12 @@ async def login_magico(token: str, request: Request):
         session_token = security.create_access_token(
             user.id, expires_delta=access_token_expires
         )
+
+        # Invalidar el magic token (uso único)
+        user.magic_token = None
+        user.magic_token_expires = None
+        db.add(user)
+        db.commit()
 
         response = RedirectResponse(url="/dashboard")
         response.set_cookie(
@@ -189,6 +205,7 @@ async def client_dashboard(request: Request, current_user: User = Depends(get_cu
     from sqlmodel import select
     from sqlalchemy.orm import selectinload
     from app.models import Customer, Quote, Payment, AccountCharge
+    from app.core.accounting import DEBT_ESTADOS
 
     db = next(get_session())
     try:
@@ -201,8 +218,8 @@ async def client_dashboard(request: Request, current_user: User = Depends(get_cu
                 .where(Customer.id == current_user.cliente_id)
                 .options(
                     selectinload(Customer.pagos),
-                    selectinload(Customer.cargos),
-                    selectinload(Customer.cotizaciones),
+                    selectinload(Customer.cargos).selectinload(AccountCharge.pagos),
+                    selectinload(Customer.cotizaciones).selectinload(Quote.pagos),
                 )
             ).first()
 
@@ -211,7 +228,7 @@ async def client_dashboard(request: Request, current_user: User = Depends(get_cu
                 cotizaciones_activas = db.exec(
                     select(Quote)
                     .where(Quote.cliente_id == cliente.id)
-                    .where(Quote.estado.in_(["Pendiente", "Cobranza Requerida"]))
+                    .where(Quote.estado.in_(DEBT_ESTADOS))
                     .options(selectinload(Quote.pagos))
                     .order_by(Quote.fecha_creacion.desc())
                 ).all()
@@ -231,23 +248,17 @@ async def client_dashboard(request: Request, current_user: User = Depends(get_cu
                     .where(Payment.quote_id.is_(None))
                 ).all()
 
-                # Cálculos unificados (idénticos al endpoint /statement/customer/{id})
-                total_comprado = sum(float(q.total) for q in cotizaciones_activas)
-                total_cargos = sum(float(c.monto) for c in cargos)
-                total_pagado_quotes = sum(
-                    sum(float(p.monto) for p in q.pagos)
-                    for q in cotizaciones_activas
-                )
-                total_abonos_directos = sum(float(p.monto) for p in pagos_directos)
-
-                deuda_total = float(cliente.saldo_inicial or 0) + total_comprado + total_cargos
-                total_pagado = total_pagado_quotes + total_abonos_directos
-                saldo_actual = deuda_total - total_pagado
+                # Cálculos unificados (misma regla que todos los endpoints)
+                from app.core.accounting import calcular_saldo_cliente, money
+                fin = calcular_saldo_cliente(cliente)
+                deuda_total = money(fin["deuda_total"])
+                total_pagado = money(fin["total_pagado"])
+                saldo_actual = money(fin["saldo"])
 
                 statement_data = {
-                    "saldo_actual": round(saldo_actual, 2),
-                    "deuda_total": round(deuda_total, 2),
-                    "total_pagado": round(total_pagado, 2),
+                    "saldo_actual": saldo_actual,
+                    "deuda_total": deuda_total,
+                    "total_pagado": total_pagado,
                     "cotizaciones_activas": cotizaciones_activas,
                     "cargos": cargos,
                     "pagos_directos": pagos_directos,

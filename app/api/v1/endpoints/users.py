@@ -19,6 +19,9 @@ from app.database import get_session
 from app.models import User, Customer, RoleEnum
 from app.core.security import get_password_hash
 from app.schemas import UserCreate, UserRead, UserUpdate, UserAdminCreate
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -129,7 +132,8 @@ def generar_cuentas_clientes(
         password = _generar_contrasena()
 
         import secrets
-        from datetime import datetime, timedelta
+        from datetime import timedelta
+        from app.core.timeutils import utcnow as _utcnow
         token = secrets.token_urlsafe(32)
 
         nuevo = User(
@@ -140,7 +144,7 @@ def generar_cuentas_clientes(
             cliente_id=cliente.id,
             is_active=True,
             magic_token=token,
-            magic_token_expires=datetime.utcnow() + timedelta(days=30),
+            magic_token_expires=_utcnow() + timedelta(days=30),
         )
         db.add(nuevo)
         creados.append({
@@ -272,25 +276,15 @@ def reset_password(
     db: Session = Depends(get_session),
     _admin: User = Depends(get_current_active_admin),
 ):
-    import secrets
-    from datetime import datetime, timedelta
     user = _get_user_or_404(user_id, db)
     new_password = payload.get("password", "")
     if len(new_password) < 6:
         raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres")
     user.hashed_password = get_password_hash(new_password)
-    
-    # También generar y guardar el token mágico
-    token = secrets.token_urlsafe(32)
-    user.magic_token = token
-    user.magic_token_expires = datetime.utcnow() + timedelta(days=30)
-    
+
     db.add(user)
     db.commit()
-    return {
-        "detail": "Contraseña actualizada correctamente",
-        "magic_token": token
-    }
+    return {"detail": "Contraseña actualizada correctamente"}
 
 @router.post("/{user_id}/magic-token")
 def generate_user_magic_token(
@@ -299,11 +293,12 @@ def generate_user_magic_token(
     _admin: User = Depends(get_current_active_admin),
 ):
     import secrets
-    from datetime import datetime, timedelta
+    from datetime import timedelta
+    from app.core.timeutils import utcnow as _utcnow
     user = _get_user_or_404(user_id, db)
     token = secrets.token_urlsafe(32)
     user.magic_token = token
-    user.magic_token_expires = datetime.utcnow() + timedelta(days=30)
+    user.magic_token_expires = _utcnow() + timedelta(days=30)
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -370,4 +365,5 @@ def delete_user(
         return {"detail": "Usuario eliminado exitosamente"}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+        logger.error("Error eliminando usuario: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno del servidor")

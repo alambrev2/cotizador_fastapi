@@ -1,37 +1,25 @@
-import os
-from fastapi import FastAPI, Request
-from fastapi.templating import Jinja2Templates
-import uvicorn
-from sqlmodel import SQLModel, create_engine
-import scalar_fastapi
-import httpx
+"""Smoke tests de la API real usando una BD temporal (pytest + TestClient)."""
+from fastapi.testclient import TestClient
 
-app = FastAPI(title="Sistema de Gestión y Cotización Pro (v2026.1)")
 
-# Esto asegura que encuentre la carpeta app/templates sin importar la terminal
-base_dir = os.path.dirname(os.path.abspath(__file__))
-templates = Jinja2Templates(directory=os.path.join(base_dir, "app", "templates"))
+def test_health(client: TestClient):
+    resp = client.get("/health")
+    assert resp.status_code == 200
 
-# Base de Datos: conexión a database.db mediante SQLModel para persistencia
-sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-engine = create_engine(sqlite_url, echo=False)
 
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
+def test_root_ok(client: TestClient):
+    resp = client.get("/")
+    assert resp.status_code == 200
 
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
 
-@app.get("/dashboard")
-async def dashboard(request: Request):
-    # Datos de Helena recuperados
-    cliente_data = {"nombre": "HELENA", "saldo": 4847.19, "cotizaciones": 10}
-    
-    return templates.TemplateResponse(
-        request, "dashboard.html", {"cliente": cliente_data}
+def test_protected_endpoint_requires_auth(client: TestClient):
+    resp = client.get("/api/v1/customers/")
+    assert resp.status_code == 401
+
+
+def test_login_wrong_credentials(client: TestClient):
+    resp = client.post(
+        "/api/v1/auth/login",
+        data={"username": "admin", "password": "incorrecta"},
     )
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8001)
+    assert resp.status_code == 400

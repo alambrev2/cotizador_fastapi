@@ -72,7 +72,7 @@ Esto instalará todas las dependencias incluyendo:
 - fastapi, uvicorn
 - sqlmodel
 - pandas, openpyxl
-- xhtml2pdf, fpdf2 (para generación de PDFs)
+- xhtml2pdf (para generación de PDFs)
 - y todas las demás dependencias necesarias
 
 ## Paso 5: Inicializar la base de datos

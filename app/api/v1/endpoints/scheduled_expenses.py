@@ -2,6 +2,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 from app.database import get_session
+from app.models import User
+from app.api.deps import get_current_active_admin
 from datetime import datetime
 import datetime as dt
 from dateutil.relativedelta import relativedelta
@@ -14,7 +16,7 @@ class ScheduledExpenseCreate(ScheduledExpenseBase):
     pass
 
 @router.post("/", response_model=ScheduledExpense)
-def create_scheduled_expense(*, session: Session = Depends(get_session), expense: ScheduledExpenseCreate):
+def create_scheduled_expense(*, session: Session = Depends(get_session), expense: ScheduledExpenseCreate, current_user: User = Depends(get_current_active_admin)):
     base_obj = ScheduledExpense.from_orm(expense)
     session.add(base_obj)
     
@@ -50,6 +52,7 @@ def create_scheduled_expense(*, session: Session = Depends(get_session), expense
 def read_scheduled_expenses(
     *,
     session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_active_admin),
     offset: int = 0,
     limit: int = Query(default=100, le=100),
 ):
@@ -61,7 +64,8 @@ def update_scheduled_expense(
     *,
     session: Session = Depends(get_session),
     expense_id: int,
-    expense_update: ScheduledExpenseCreate
+    expense_update: ScheduledExpenseCreate,
+    current_user: User = Depends(get_current_active_admin),
 ):
     db_obj = session.get(ScheduledExpense, expense_id)
     if not db_obj:
@@ -77,7 +81,7 @@ def update_scheduled_expense(
     return db_obj
 
 @router.delete("/{expense_id}")
-def delete_scheduled_expense(*, session: Session = Depends(get_session), expense_id: int):
+def delete_scheduled_expense(*, session: Session = Depends(get_session), expense_id: int, current_user: User = Depends(get_current_active_admin)):
     expense = session.get(ScheduledExpense, expense_id)
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")

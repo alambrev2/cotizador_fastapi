@@ -16,14 +16,16 @@ from app.api.deps import (
     get_current_active_operativo_or_admin,
 )
 from app.models import RoleEnum
+from app.core.accounting import DEBT_ESTADOS, calcular_saldo_cliente, saldo_de_cotizacion, money, sum_decimal, _decimal
+from app.core.timeutils import now_local
+from app.core.paths import BASE_DIR, TEMPLATES_DIR, REPORTS_DIR
+from decimal import Decimal
 import unicodedata, re
+import logging
 
-import os
+logger = logging.getLogger(__name__)
 
-# Obtener el directorio base del proyecto
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "app", "templates"))
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 router = APIRouter()
 
@@ -51,7 +53,7 @@ def read_active_statements(
         select(Quote)
         .options(selectinload(Quote.pagos))
         .options(selectinload(Quote.cliente))
-        .where(Quote.estado.in_(['Pendiente', 'Cobranza Requerida']))
+        .where(Quote.estado.in_(DEBT_ESTADOS))
         .order_by(Quote.id.desc())
     )
     quotes = session.exec(query).all()
@@ -59,17 +61,17 @@ def read_active_statements(
     active_accounts = []
 
     for q in quotes:
-        total_pagado = sum([p.monto for p in q.pagos])
-        saldo = float(q.total) - float(total_pagado)
+        total_pagado = sum_decimal(p.monto for p in q.pagos)
+        saldo = _decimal(q.total) - total_pagado
 
-        if saldo > 0.1:  # Tolerancia de centavos
+        if saldo > Decimal("0.1"):  # Tolerancia de centavos
             active_accounts.append(
                 {
                     "id": q.id,
                     "cliente": q.cliente.nombre if q.cliente else "N/A",
-                    "total": float(q.total),
-                    "pagado": float(total_pagado),
-                    "saldo": saldo,
+                    "total": money(q.total),
+                    "pagado": money(total_pagado),
+                    "saldo": money(saldo),
                     "estado": q.estado,
                 }
             )
@@ -89,7 +91,7 @@ def read_active_customers(
     query = select(Customer).options(
         selectinload(Customer.cotizaciones).selectinload(Quote.pagos),
         selectinload(Customer.pagos),
-        selectinload(Customer.cargos),
+        selectinload(Customer.cargos).selectinload(AccountCharge.pagos),
     )
     customers = session.exec(query).all()
 
@@ -99,52 +101,42 @@ def read_active_customers(
         active_counts = 0
 
         for q in c.cotizaciones:
-            if q.estado not in ['Pendiente', 'Cobranza Requerida']:
+            if q.estado not in DEBT_ESTADOS:
                 continue
-            pagado_q = sum([float(p.monto) for p in q.pagos])
-            saldo_q = float(q.total) - pagado_q
-            if saldo_q > 0.1:
+            if saldo_de_cotizacion(q) > Decimal("0.1"):
                 active_counts += 1
 
         # Para los cargos (sin vinculación directa de pagos), se pagan con Abonos Globales
-        abonos_globales = sum([float(p.monto) for p in c.pagos if not p.quote_id and not p.cargo_id])
-        saldo_ini = float(c.saldo_inicial or 0)
+        abonos_globales = sum_decimal(p.monto for p in c.pagos if not p.quote_id and not p.cargo_id)
+        saldo_ini = _decimal(c.saldo_inicial or 0)
         
         # Pagar saldo inicial primero
         if abonos_globales >= saldo_ini:
             abonos_globales -= saldo_ini
         else:
-            abonos_globales = 0
+            abonos_globales = Decimal("0")
 
         # Ver qué cargos quedaron sin pagar o pagados parcialmente
         sorted_cargos = sorted(c.cargos, key=lambda x: x.fecha)
         for cg in sorted_cargos:
-            costo = float(cg.monto)
+            costo = _decimal(cg.monto)
             if abonos_globales >= costo:
                 abonos_globales -= costo
             else:
-                if (costo - abonos_globales) > 0.1:
+                if (costo - abonos_globales) > Decimal("0.1"):
                     active_counts += 1
-                abonos_globales = 0
+                abonos_globales = Decimal("0")
 
-        # Cálculos Económicos Exactos (Sin saldo_inicial estático)
-        total_pagado_cliente = sum([float(p.monto) for p in c.pagos])
-        total_comprado_sistema = sum([float(q.total) for q in c.cotizaciones if q.estado in ['Pendiente', 'Cobranza Requerida']])
-        total_cargos_extra = sum([float(cg.monto) for cg in c.cargos])
+        # Totales económicos unificados (misma regla que todos los endpoints)
+        fin = calcular_saldo_cliente(c)
 
-        # Deuda Histórica = Suma de todo lo cobrable + saldo inicial
-        deuda_historica_cliente = total_comprado_sistema + total_cargos_extra + float(c.saldo_inicial or 0)
-        
-        # Saldo Global Pendiente = Deuda Total - Todo lo Pagado
-        saldo_global_calculado = deuda_historica_cliente - total_pagado_cliente
-
-        if saldo_global_calculado > 0.01:
+        if fin["saldo"] > Decimal("0.01"):
             active_accounts.append(
                 {
                     "cliente_id": c.id,
                     "cliente_nombre": c.nombre,
-                    "total_deuda_global": deuda_historica_cliente,
-                    "saldo_global": saldo_global_calculado,
+                    "total_deuda_global": money(fin["deuda_total"]),
+                    "saldo_global": money(fin["saldo"]),
                     "cotizaciones_activas": active_counts,
                 }
             )
@@ -175,7 +167,7 @@ def get_customer_statement(
     query = (
         select(Quote)
         .where(Quote.cliente_id == customer_id)
-        .where(Quote.estado.in_(['Pendiente', 'Cobranza Requerida']))
+        .where(Quote.estado.in_(DEBT_ESTADOS))
         .options(selectinload(Quote.pagos))
         .order_by(Quote.fecha_creacion.desc())
     )
@@ -185,7 +177,7 @@ def get_customer_statement(
     from app.models import AccountCharge
     cargos_query = select(AccountCharge).where(AccountCharge.cliente_id == customer_id).options(selectinload(AccountCharge.pagos)).order_by(AccountCharge.fecha.desc())
     cargos = session.exec(cargos_query).all()
-    total_cargos = sum([float(c.monto) for c in cargos])
+    total_cargos = sum_decimal(c.monto for c in cargos)
 
     # 3. Calcular pagos directos (sin cotización vinculada)
     from app.models import Payment
@@ -196,20 +188,20 @@ def get_customer_statement(
         .where(Payment.quote_id.is_(None))
     )
     direct_payments = session.exec(direct_payments_query).all()
-    total_abonos_directos = sum([float(p.monto) for p in direct_payments])
+    total_abonos_directos = sum_decimal(p.monto for p in direct_payments)
 
     # 4. Calcular totales
-    total_comprado = 0.0
-    total_pagado_quotes = 0.0
-    saldo_quotes = 0.0
+    total_comprado = Decimal("0")
+    total_pagado_quotes = Decimal("0")
+    saldo_quotes = Decimal("0")
 
     quotes_data = []
 
     for q in quotes:
-        pagado = sum([float(p.monto) for p in q.pagos])
-        saldo = float(q.total) - pagado
+        pagado = sum_decimal(p.monto for p in q.pagos)
+        saldo = _decimal(q.total) - pagado
 
-        total_comprado += float(q.total)
+        total_comprado += _decimal(q.total)
         total_pagado_quotes += pagado
         saldo_quotes += saldo
 
@@ -217,22 +209,20 @@ def get_customer_statement(
             {
                 "id": q.id,
                 "fecha": q.fecha_creacion,
-                "total": float(q.total),
-                "pagado": pagado,
-                "saldo": saldo,
+                "total": money(q.total),
+                "pagado": money(pagado),
+                "saldo": money(saldo),
                 "estado": q.estado,
                 "folio_cotizacion": q.folio_cotizacion,
                 "tipo_pago": q.tipo_pago,
-                "monto_semanal": float(q.monto_semanal or 0),
+                "monto_semanal": money(q.monto_semanal or 0),
                 "plazo_semanas": q.plazo_semanas,
             }
         )
 
-    # El saldo global incluye puramente la suma: Saldo Inicial + Total Comprado + Total Cargos - Total Pagado
-    deuda_historica = float(customer.saldo_inicial or 0) + total_comprado + total_cargos
-    total_pagado = total_pagado_quotes + total_abonos_directos
-    saldo_global = deuda_historica - total_pagado
-    
+    # Totales globales unificados (misma regla que todos los endpoints)
+    fin = calcular_saldo_cliente(customer)
+
     # Todos los pagos para el historial
     all_payments_query = select(Payment).where(Payment.cliente_id == customer_id).order_by(Payment.fecha_pago.desc())
     all_payments = session.exec(all_payments_query).all()
@@ -245,10 +235,10 @@ def get_customer_statement(
             "telefono": customer.telefono,
         },
         "global": {
-            "total_comprado": total_comprado + total_cargos,
-            "total_pagado": total_pagado_quotes + total_abonos_directos,
-            "saldo_pendiente": saldo_global,
-            "abonos_directos": total_abonos_directos,
+            "total_comprado": money(fin["total_comprado"] + fin["total_cargos"]),
+            "total_pagado": money(fin["total_pagado"]),
+            "saldo_pendiente": money(fin["saldo"]),
+            "abonos_directos": money(total_abonos_directos),
         },
         "cotizaciones": quotes_data,
         "cargos": [
@@ -256,9 +246,9 @@ def get_customer_statement(
                 "id": c.id,
                 "fecha": c.fecha,
                 "detalle": c.detalle,
-                "monto": float(c.monto),
-                "pagado": sum([float(p.monto) for p in c.pagos]),
-                "saldo": float(c.monto) - sum([float(p.monto) for p in c.pagos]),
+                "monto": money(c.monto),
+                "pagado": money(sum_decimal(p.monto for p in c.pagos)),
+                "saldo": money(_decimal(c.monto) - sum_decimal(p.monto for p in c.pagos)),
                 "documentado": c.documentado,
                 "folio_nota": c.folio_nota,
                 "estatus": c.estatus,
@@ -269,7 +259,7 @@ def get_customer_statement(
             {
                 "id": p.id,
                 "fecha": p.fecha_pago,
-                "monto": float(p.monto),
+                "monto": money(p.monto),
                 "metodo": p.metodo_pago,
                 "ref": p.referencia,
             }
@@ -279,7 +269,7 @@ def get_customer_statement(
             {
                 "id": p.id,
                 "fecha": p.fecha_pago,
-                "monto": float(p.monto),
+                "monto": money(p.monto),
                 "metodo": p.metodo_pago,
                 "ref": p.referencia,
                 "quote_id": p.quote_id,
@@ -304,7 +294,6 @@ def get_customer_statement_pdf(
     elif current_user.role == RoleEnum.Operativo:
         raise HTTPException(status_code=403, detail="No tienes permisos para esta acción")
     from app.models import Customer, AccountCharge
-    from datetime import datetime
 
     customer = session.get(Customer, customer_id)
     if not customer:
@@ -313,7 +302,7 @@ def get_customer_statement_pdf(
     # Obtener cotizaciones aprobadas
     quotes_query = select(Quote).where(
         Quote.cliente_id == customer_id,
-        Quote.estado.in_(['Pendiente', 'Cobranza Requerida'])
+        Quote.estado.in_(DEBT_ESTADOS)
     ).options(selectinload(Quote.pagos))
     quotes = session.exec(quotes_query).all()
 
@@ -325,42 +314,40 @@ def get_customer_statement_pdf(
     payments_query = select(Payment).where(Payment.cliente_id == customer_id)
     payments = session.exec(payments_query).all()
 
-    total_comprado = sum([float(q.total) for q in quotes])
-    total_cargos = sum([float(c.monto) for c in cargos])
-    total_pagos = sum([float(p.monto) for p in payments])
-
-    deuda_historica = float(customer.saldo_inicial or 0) + total_comprado + total_cargos
-    saldo_pendiente = deuda_historica - total_pagos
+    # Totales globales unificados (misma regla que todos los endpoints)
+    fin = calcular_saldo_cliente(customer)
+    deuda_historica = money(fin["deuda_total"])
+    saldo_pendiente = money(fin["saldo"])
 
     # Build movements timeline
     movements = []
 
     for q in quotes:
-        if float(q.total) > 0:
+        if _decimal(q.total) > 0:
             movements.append({
                 "raw_date": q.fecha_creacion,
                 "fecha": q.fecha_creacion.strftime('%d/%m/%Y'),
                 "origen": f"Cotización #{q.id}",
                 "descripcion": f"Proyecto (Estado: {q.estado})",
                 "tipo": "Cargo",
-                "cargo": float(q.total),
+                "cargo": money(q.total),
                 "abono": 0.0
             })
 
     for c in cargos:
-        if float(c.monto) > 0:
+        if _decimal(c.monto) > 0:
             movements.append({
                 "raw_date": c.fecha,
                 "fecha": c.fecha.strftime('%d/%m/%Y'),
                 "origen": "Servicio Directo",
                 "descripcion": c.detalle,
                 "tipo": "Cargo",
-                "cargo": float(c.monto),
+                "cargo": money(c.monto),
                 "abono": 0.0
             })
 
     for p in payments:
-        if float(p.monto) > 0:
+        if _decimal(p.monto) > 0:
             ref = f" - Ref: {p.referencia}" if p.referencia else ""
             if p.quote_id:
                 vinculo = f" Cot. #{p.quote_id}"
@@ -375,7 +362,7 @@ def get_customer_statement_pdf(
                 "descripcion": f"Método: {p.metodo_pago}{ref}",
                 "tipo": "Abono",
                 "cargo": 0.0,
-                "abono": float(p.monto)
+                "abono": money(p.monto)
             })
 
     # Ordenar del más reciente al menos reciente
@@ -390,8 +377,8 @@ def get_customer_statement_pdf(
             client_id=customer.id,
             client_email=customer.email,
             client_telefono=customer.telefono,
-            fecha_generacion=datetime.now().strftime('%d/%m/%Y'),
-            saldo_inicial=float(customer.saldo_inicial or 0),
+            fecha_generacion=now_local().strftime('%d/%m/%Y'),
+            saldo_inicial=money(customer.saldo_inicial or 0),
             deuda_historica=deuda_historica,
             saldo_pendiente=saldo_pendiente,
             movements=movements
@@ -405,9 +392,8 @@ def get_customer_statement_pdf(
             headers={"Content-Disposition": f'inline; filename="{pdf_name}"'}
         )
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error generando PDF de Estado de Cuenta: {str(e)}")
+        logger.error("Error generando PDF de Estado de Cuenta: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno generando el estado de cuenta")
 
 
 @router.post("/charges", response_model=AccountCharge)
@@ -463,15 +449,13 @@ def download_remission_by_folio(
     nombre_safe = _safe_name(cliente.nombre)
     pdf_filename = f"Remision_{folio}_CLI{cliente.id:04d}_{nombre_safe}.pdf"
 
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    reports_dir = os.path.join(BASE_DIR, "app", "static", "reports")
-    os.makedirs(reports_dir, exist_ok=True)
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
     # 2. Buscar cualquier variante del PDF en disco
-    existing = [f for f in os.listdir(reports_dir)
+    existing = [f for f in os.listdir(str(REPORTS_DIR))
                 if f.lower().startswith(f"remision_{folio.lower()}")]
     if existing:
-        with open(os.path.join(reports_dir, existing[0]), "rb") as f:
+        with open(str(REPORTS_DIR / existing[0]), "rb") as f:
             pdf_bytes = f.read()
         return Response(
             content=pdf_bytes,
@@ -480,16 +464,16 @@ def download_remission_by_folio(
         )
 
     # 3. Regenerar desde BD
-    total_remission = sum([float(c.monto) for c in cargos])
+    total_remission = sum_decimal(c.monto for c in cargos)
     try:
         html_content = templates.get_template("pdf/remission.html").render(
             cliente=cliente,
             cargos=cargos,
-            total=total_remission,
+            total=money(total_remission),
             folio=folio,
         )
         pdf_bytes = generate_pdf_bytes(html_content)
-        pdf_path = os.path.join(reports_dir, pdf_filename)
+        pdf_path = str(REPORTS_DIR / pdf_filename)
         with open(pdf_path, "wb") as f:
             f.write(pdf_bytes)
         return Response(
@@ -498,9 +482,8 @@ def download_remission_by_folio(
             headers={"Content-Disposition": f'attachment; filename="{pdf_filename}"'},
         )
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error regenerando PDF: {str(e)}")
+        logger.error("Error regenerando PDF de remisión: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno regenerando el PDF")
 
 @router.post("/remission")
 def generate_charge_remission(
@@ -517,55 +500,65 @@ def generate_charge_remission(
         raise HTTPException(status_code=404, detail="No se encontraron los cargos seleccionados.")
 
     cliente = cargos[0].cliente
-    
-    current_year = datetime.now().year
-    prefix = f"N{current_year}"
-    
-    # Encontrar el último folio_nota con formato N2026XXX
-    all_folios = session.exec(select(AccountCharge.folio_nota).where(AccountCharge.folio_nota.like(f"{prefix}%"))).all()
-    max_num = 0
-    for f in all_folios:
-        if f:
-            core = f.split('-')[0]
-            if core.startswith(prefix):
-                try:
-                    num_str = core[len(prefix):]
-                    if num_str.isdigit():
-                        num = int(num_str)
-                        if num > max_num:
-                            max_num = num
-                except ValueError:
-                    pass
-                
-    nuevo_folio = f"{prefix}{(max_num + 1):04d}"
-    
-    for c in cargos:
-        c.documentado = True
-        c.folio_nota = nuevo_folio
-        c.estatus = 'Remisión Emitida'
-        session.add(c)
-        
-    session.commit()
 
-    total_remission = sum([float(c.monto) for c in cargos])
+    # ── Folio atómico ─────────────────────────────────────────────────────────
+    # Para evitar carreras (dos remisiones concurrentes con el mismo folio),
+    # primero adquirimos el lock de escritura con un flush, y SOLO después
+    # calculamos el folio dentro de la misma transacción. SQLite serializa
+    # escritores, así que el SELECT del folio ve el estado ya bloqueado.
+    current_year = now_local().year
+    prefix = f"N{current_year}"
+
+    try:
+        for c in cargos:
+            c.documentado = True
+            session.add(c)
+        session.flush()  # adquiere el lock de escritura
+
+        # Encontrar el último folio_nota con formato N{year}XXXX
+        all_folios = session.exec(select(AccountCharge.folio_nota).where(AccountCharge.folio_nota.like(f"{prefix}%"))).all()
+        max_num = 0
+        for f in all_folios:
+            if f:
+                core = f.split('-')[0]
+                if core.startswith(prefix):
+                    try:
+                        num_str = core[len(prefix):]
+                        if num_str.isdigit():
+                            num = int(num_str)
+                            if num > max_num:
+                                max_num = num
+                    except ValueError:
+                        pass
+
+        nuevo_folio = f"{prefix}{(max_num + 1):04d}"
+
+        for c in cargos:
+            c.folio_nota = nuevo_folio
+            c.estatus = 'Remisión Emitida'
+            session.add(c)
+
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+
+    total_remission = sum_decimal(c.monto for c in cargos)
 
     # Generar PDF
     try:
         html_content = templates.get_template("pdf/remission.html").render(
             cliente=cliente,
             cargos=cargos,
-            total=total_remission,
+            total=money(total_remission),
             folio=nuevo_folio
         )
         pdf_bytes = generate_pdf_bytes(html_content)
 
         # ── Guardar PDF permanentemente en disco ──────────────────────────────
-        import os
-        BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-        reports_dir = os.path.join(BASE_DIR, "app", "static", "reports")
-        os.makedirs(reports_dir, exist_ok=True)
+        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
         pdf_filename = f"Remision_{nuevo_folio}_CLI{cliente.id:04d}_{_safe_name(cliente.nombre)}.pdf"
-        pdf_path = os.path.join(reports_dir, pdf_filename)
+        pdf_path = str(REPORTS_DIR / pdf_filename)
         with open(pdf_path, "wb") as f:
             f.write(pdf_bytes)
         # ─────────────────────────────────────────────────────────────────────
@@ -581,9 +574,8 @@ def generate_charge_remission(
             }
         )
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error generando PDF: {str(e)}")
+        logger.error("Error generando PDF de remisión: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Error interno generando el PDF")
 
 
 @router.post("/", response_model=Payment)
@@ -597,15 +589,58 @@ def create_payment(
             detail="Debe vincular el pago a una cotización, a un cargo o a un cliente directamente.",
         )
 
+    monto_pago = _decimal(payment_in.monto)
+    if monto_pago <= 0:
+        raise HTTPException(status_code=400, detail="El monto del pago debe ser mayor a cero")
+
+    quote = None
+    cargo = None
+    cliente = None
+
     if payment_in.quote_id:
         quote = session.get(Quote, payment_in.quote_id)
         if not quote:
             raise HTTPException(status_code=404, detail="Cotización no encontrada")
+        # Coherencia: el pago debe pertenecer al mismo cliente de la cotización
+        if payment_in.cliente_id and payment_in.cliente_id != quote.cliente_id:
+            raise HTTPException(
+                status_code=400,
+                detail="El cliente del pago no coincide con el cliente de la cotización",
+            )
+        # Sin sobrepago sobre el saldo de la cotización
+        if quote.estado in DEBT_ESTADOS:
+            saldo = saldo_de_cotizacion(quote)
+            if monto_pago > saldo + Decimal("0.01"):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"El pago excede el saldo pendiente de la cotización (saldo: ${money(saldo)})",
+                )
 
     if payment_in.cargo_id:
         cargo = session.get(AccountCharge, payment_in.cargo_id)
         if not cargo:
             raise HTTPException(status_code=404, detail="Cargo o Servicio no encontrado")
+        # Coherencia: el pago debe pertenecer al mismo cliente del cargo
+        if payment_in.cliente_id and payment_in.cliente_id != cargo.cliente_id:
+            raise HTTPException(
+                status_code=400,
+                detail="El cliente del pago no coincide con el cliente del cargo",
+            )
+        # Sin sobrepago sobre el saldo del cargo
+        pagado_cargo = sum_decimal(p.monto for p in (cargo.pagos or []))
+        saldo_cargo = _decimal(cargo.monto) - pagado_cargo
+        if monto_pago > saldo_cargo + Decimal("0.01"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"El pago excede el saldo pendiente del cargo (saldo: ${money(saldo_cargo)})",
+            )
+
+    if not quote and not cargo:
+        # Abono global: debe existir el cliente vinculado
+        from app.models import Customer
+        cliente = session.get(Customer, payment_in.cliente_id)
+        if not cliente:
+            raise HTTPException(status_code=404, detail="Cliente no encontrado")
 
     db_payment = Payment.model_validate(payment_in.model_dump())
     session.add(db_payment)
@@ -646,11 +681,21 @@ def read_payments(
 
 
 @router.get("/statement/{quote_id}")
-def get_account_statement(*, session: Session = Depends(get_session), quote_id: int):
+def get_account_statement(
+    *, session: Session = Depends(get_session), quote_id: int,
+    current_user: User = Depends(get_current_user)
+):
     # Obtener cotizacion con pagos
     quote = session.get(Quote, quote_id)
     if not quote:
         raise HTTPException(status_code=404, detail="Cotización no encontrada")
+
+    # El cliente solo puede ver sus propias cotizaciones
+    if current_user.role == RoleEnum.Cliente:
+        if current_user.cliente_id != quote.cliente_id:
+            raise HTTPException(status_code=403, detail="Solo puedes ver tu propio estado de cuenta")
+    elif current_user.role == RoleEnum.Operativo:
+        raise HTTPException(status_code=403, detail="No tienes permisos para esta acción")
 
     # query payments explicitly to ensure fresh data
     query = (
