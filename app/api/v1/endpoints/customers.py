@@ -5,9 +5,7 @@ from app.database import get_session
 from app.models import Customer, User
 from fastapi import UploadFile, File, Response
 from app.api.deps import get_current_active_admin, get_current_active_operativo_or_admin
-import pandas as pd
 from io import BytesIO
-from openpyxl.styles import Font
 import logging
 import os
 from datetime import datetime
@@ -80,6 +78,8 @@ def export_excel_route(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_active_admin)
 ):
+    import pandas as pd
+    from openpyxl.styles import Font
     customers = session.exec(select(Customer)).all()
     data = [{
         "Nombre Completo": c.nombre,
@@ -109,6 +109,8 @@ def export_excel_route(
 def export_template_route(
     current_user: User = Depends(get_current_active_admin)
 ):
+    import pandas as pd
+    from openpyxl.styles import Font
     data = [{
         "Nombre Completo": "Juan Perez",
         "Correo Electrónico": "juan@ejemplo.com",
@@ -139,6 +141,7 @@ def import_excel_route(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_active_admin)
 ):
+    import pandas as pd
     # Asegurar que el directorio de logs exista
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     

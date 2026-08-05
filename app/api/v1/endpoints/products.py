@@ -1,12 +1,10 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Response
-import pandas as pd
 from io import BytesIO
 from sqlmodel import Session, select
 from app.database import get_session
 from app.models import Product, User
 from app.api.deps import get_current_active_admin
-from openpyxl.styles import Font
 import logging
 import os
 from app.core.paths import LOGS_DIR
@@ -45,6 +43,8 @@ def export_excel_route(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_active_admin)
 ):
+    import pandas as pd
+    from openpyxl.styles import Font
     products = session.exec(select(Product)).all()
     data = [{
         "Nombre del Producto": p.nombre,
@@ -79,6 +79,8 @@ def export_excel_route(
 
 @router.get("/template")
 def export_template_route():
+    import pandas as pd
+    from openpyxl.styles import Font
     data = [{
         "Nombre del Producto": "Ejemplo Producto",
         "Categoría": "Herramientas",
@@ -116,6 +118,7 @@ def import_excel_route(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_active_admin)
 ):
+    import pandas as pd
     # Asegurar que el directorio de logs exista
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     
