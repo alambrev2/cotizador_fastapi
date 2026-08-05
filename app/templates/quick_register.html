@@ -50,6 +50,14 @@
     #notif-wrapper {
         z-index: 50;
     }
+    /* Ocultar la campana cuando el panel está abierto (evita tapar el botón X) */
+    #notif-wrapper.drawer-open {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: scale(0.85);
+        transition: all 0.2s ease;
+    }
 
     /* Overlay backdrop */
     #notif-overlay {
@@ -72,7 +80,7 @@
         width: 420px;
         max-width: 100vw;
         background: #ffffff;
-        z-index: 1000;
+        z-index: 1080;
         display: flex;
         flex-direction: column;
         box-shadow: -8px 0 40px rgba(0,0,0,0.18), -2px 0 12px rgba(99,102,241,0.08);
@@ -693,19 +701,23 @@
         if(event) event.stopPropagation();
         const drawer = document.getElementById('drawer-notificaciones');
         const overlay = document.getElementById('notif-overlay');
+        const wrapper = document.getElementById('notif-wrapper');
         if (drawer.classList.contains('open')) {
             cerrarNotificaciones();
         } else {
             drawer.classList.add('open');
             if(overlay) overlay.classList.add('open');
+            if(wrapper) wrapper.classList.add('drawer-open');
         }
     }
 
     function cerrarNotificaciones() {
         const drawer = document.getElementById('drawer-notificaciones');
         const overlay = document.getElementById('notif-overlay');
+        const wrapper = document.getElementById('notif-wrapper');
         if(drawer) drawer.classList.remove('open');
         if(overlay) overlay.classList.remove('open');
+        if(wrapper) wrapper.classList.remove('drawer-open');
     }
 
     // Close when clicking anywhere outside the drawer
