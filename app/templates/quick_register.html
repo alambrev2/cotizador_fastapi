@@ -559,6 +559,8 @@
                     <thead>
                         <tr style="background: var(--gray-100);">
                             <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">CONCEPTO</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">CATEGORÍA</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">TIPO DE DATO</th>
                             <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">VENCIMIENTO</th>
                             <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">FRECUENCIA</th>
                             <th style="padding: 12px; text-align: right; font-weight: 600; color: var(--gray-700); font-size: 0.85rem; border-bottom: 2px solid var(--border-color);">MONTO</th>
@@ -604,13 +606,44 @@
                             <input type="date" id="sch-fecha" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         </div>
                     </div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%;">
+                        <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                            <label for="sch-tipo" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Tipo de Dato <span style="color: var(--danger);">*</span></label>
+                            <select id="sch-tipo" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
+                                <option value="Fijo">Fijo</option>
+                                <option value="Variable">Variable</option>
+                                <option value="Operativo">Operativo</option>
+                                <option value="Administrativo">Administrativo</option>
+                                <option value="Ventas">Ventas</option>
+                                <option value="Financiero">Financiero</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                            <label for="sch-cat" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Categoría <span style="color: var(--danger);">*</span></label>
+                            <select id="sch-cat" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
+                                <option value="General">General</option>
+                                <option value="Servicios">Servicios (Luz, Agua, Internet)</option>
+                                <option value="Nómina">Nómina / Sueldos</option>
+                                <option value="Renta">Renta / Alquiler</option>
+                                <option value="Proveedores">Proveedores / Insumos</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Impuestos">Impuestos / SAT</option>
+                                <option value="Publicidad">Publicidad / Marketing</option>
+                                <option value="Otros">Otros</option>
+                            </select>
+                        </div>
+                    </div>
                     
                     <div class="form-group" style="margin-bottom: 0;">
                         <label for="sch-freq" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Frecuencia <span style="color: var(--danger);">*</span></label>
                         <select id="sch-freq" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
                             <option value="Único">Único</option>
+                            <option value="Semanal">Semanal</option>
+                            <option value="Quincenal">Quincenal</option>
                             <option value="Mensual">Mensual</option>
                             <option value="Bimestral">Bimestral</option>
+                            <option value="Trimestral">Trimestral</option>
                             <option value="Semestral">Semestral</option>
                             <option value="Anual">Anual</option>
                         </select>
@@ -656,14 +689,45 @@
                             <input type="date" id="edit-sch-fecha" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         </div>
                     </div>
+
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%;">
+                        <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                            <label for="edit-sch-tipo" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Tipo de Dato <span style="color: var(--danger);">*</span></label>
+                            <select id="edit-sch-tipo" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
+                                <option value="Fijo">Fijo</option>
+                                <option value="Variable">Variable</option>
+                                <option value="Operativo">Operativo</option>
+                                <option value="Administrativo">Administrativo</option>
+                                <option value="Ventas">Ventas</option>
+                                <option value="Financiero">Financiero</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                            <label for="edit-sch-cat" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Categoría <span style="color: var(--danger);">*</span></label>
+                            <select id="edit-sch-cat" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
+                                <option value="General">General</option>
+                                <option value="Servicios">Servicios (Luz, Agua, Internet)</option>
+                                <option value="Nómina">Nómina / Sueldos</option>
+                                <option value="Renta">Renta / Alquiler</option>
+                                <option value="Proveedores">Proveedores / Insumos</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Impuestos">Impuestos / SAT</option>
+                                <option value="Publicidad">Publicidad / Marketing</option>
+                                <option value="Otros">Otros</option>
+                            </select>
+                        </div>
+                    </div>
                     
                     <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%;">
                         <div class="form-group" style="margin-bottom: 0; width: 100%;">
                             <label for="edit-sch-freq" style="font-weight: 600; color: var(--gray-700); font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Frecuencia <span style="color: var(--danger);">*</span></label>
                             <select id="edit-sch-freq" required style="border-radius: 10px; border: 2px solid var(--gray-200); padding: 0.75rem 1rem; width: 100%; font-size: 0.95rem; transition: all 0.2s; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer;">
                                 <option value="Único">Único</option>
+                                <option value="Semanal">Semanal</option>
+                                <option value="Quincenal">Quincenal</option>
                                 <option value="Mensual">Mensual</option>
                                 <option value="Bimestral">Bimestral</option>
+                                <option value="Trimestral">Trimestral</option>
                                 <option value="Semestral">Semestral</option>
                                 <option value="Anual">Anual</option>
                             </select>
@@ -1355,6 +1419,8 @@
         document.getElementById('edit-sch-fecha').value = exp.fecha_vencimiento;
         document.getElementById('edit-sch-freq').value = exp.frecuencia;
         document.getElementById('edit-sch-estatus').value = exp.estatus;
+        document.getElementById('edit-sch-tipo').value = exp.tipo_dato || exp.tipo_gasto || 'Fijo';
+        document.getElementById('edit-sch-cat').value = exp.categoria || 'General';
         
         document.getElementById('modal-editar-egreso').style.display = 'flex';
     }
@@ -1417,11 +1483,15 @@
 
                 const formattedDate = new Date(exp.fecha_vencimiento + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
                 const formattedAmount = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(exp.monto);
+                const tipoDato = exp.tipo_dato || exp.tipo_gasto || 'Fijo';
+                const cat = exp.categoria || 'General';
 
                 const row = document.createElement('tr');
                 row.style.borderBottom = '1px solid var(--border-color)';
                 row.innerHTML = `
-                    <td style="padding: 12px; font-size: 0.9rem; color: var(--gray-700);">${exp.descripcion}</td>
+                    <td style="padding: 12px; font-size: 0.9rem; color: var(--gray-700); font-weight: 600;">${exp.descripcion}</td>
+                    <td style="padding: 12px; font-size: 0.85rem; color: var(--gray-600);"><span style="background: var(--gray-100); padding: 4px 8px; border-radius: 6px; font-weight: 600;">${cat}</span></td>
+                    <td style="padding: 12px; font-size: 0.85rem; color: var(--gray-600);"><span style="background: #eff6ff; color: #2563eb; padding: 4px 8px; border-radius: 6px; font-weight: 600;">${tipoDato}</span></td>
                     <td style="padding: 12px; font-size: 0.9rem; color: var(--gray-700);">${formattedDate}</td>
                     <td style="padding: 12px; font-size: 0.9rem; color: var(--gray-700);">${exp.frecuencia}</td>
                     <td style="padding: 12px; text-align: right; font-size: 0.9rem; color: var(--gray-700); font-weight: 600;">${formattedAmount}</td>
@@ -1461,7 +1531,9 @@
             monto: parseFloat(document.getElementById('sch-monto').value),
             fecha_vencimiento: document.getElementById('sch-fecha').value,
             frecuencia: document.getElementById('sch-freq').value,
-            categoria: 'General',
+            tipo_dato: document.getElementById('sch-tipo').value,
+            tipo_gasto: document.getElementById('sch-tipo').value,
+            categoria: document.getElementById('sch-cat').value,
             estatus: 'Pendiente'
         };
         const res = await fetch('/api/v1/scheduled-expenses/', {
@@ -1491,7 +1563,9 @@
             fecha_vencimiento: document.getElementById('edit-sch-fecha').value,
             frecuencia: document.getElementById('edit-sch-freq').value,
             estatus: document.getElementById('edit-sch-estatus').value,
-            categoria: 'General'
+            tipo_dato: document.getElementById('edit-sch-tipo').value,
+            tipo_gasto: document.getElementById('edit-sch-tipo').value,
+            categoria: document.getElementById('edit-sch-cat').value
         };
         const res = await fetch(`/api/v1/scheduled-expenses/${id}`, {
             method: 'PATCH',

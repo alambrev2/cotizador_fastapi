@@ -25,24 +25,34 @@ def create_scheduled_expense(*, session: Session = Depends(get_session), expense
         current_date = expense.fecha_vencimiento
         limit_date = dt.date(2026, 12, 31)
         
-        step_months = 1
-        if expense.frecuencia == 'Bimestral': step_months = 2
+        step_months = 0
+        step_days = 0
+        step_weeks = 0
+        
+        if expense.frecuencia == 'Semanal': step_weeks = 1
+        elif expense.frecuencia == 'Quincenal': step_days = 15
+        elif expense.frecuencia == 'Mensual': step_months = 1
+        elif expense.frecuencia == 'Bimestral': step_months = 2
+        elif expense.frecuencia == 'Trimestral': step_months = 3
         elif expense.frecuencia == 'Semestral': step_months = 6
         elif expense.frecuencia == 'Anual': step_months = 12
+        else: step_months = 1 # Fallback
             
-        next_date = current_date + relativedelta(months=step_months)
+        next_date = current_date + relativedelta(months=step_months, days=step_days, weeks=step_weeks)
         while next_date <= limit_date:
             cloned = ScheduledExpense(
                 descripcion=expense.descripcion,
                 monto=expense.monto,
                 fecha_vencimiento=next_date,
                 categoria=expense.categoria,
+                tipo_gasto=expense.tipo_gasto or expense.tipo_dato,
+                tipo_dato=expense.tipo_dato or expense.tipo_gasto,
                 clabe=expense.clabe,
                 estatus='Pendiente',
                 frecuencia=expense.frecuencia
             )
             session.add(cloned)
-            next_date += relativedelta(months=step_months)
+            next_date += relativedelta(months=step_months, days=step_days, weeks=step_weeks)
             
     session.commit()
     session.refresh(base_obj)

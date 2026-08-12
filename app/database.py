@@ -21,8 +21,17 @@ try:
             conn.execute(text("ALTER TABLE user ADD COLUMN magic_token VARCHAR"))
         if "magic_token_expires" not in columns:
             conn.execute(text("ALTER TABLE user ADD COLUMN magic_token_expires DATETIME"))
+
+        res_sch = conn.execute(text("PRAGMA table_info(scheduledexpense)")).fetchall()
+        sch_columns = [row[1] for row in res_sch]
+        if "categoria" not in sch_columns:
+            conn.execute(text("ALTER TABLE scheduledexpense ADD COLUMN categoria VARCHAR DEFAULT 'General'"))
+        if "tipo_gasto" not in sch_columns:
+            conn.execute(text("ALTER TABLE scheduledexpense ADD COLUMN tipo_gasto VARCHAR DEFAULT 'Fijo'"))
+        if "tipo_dato" not in sch_columns:
+            conn.execute(text("ALTER TABLE scheduledexpense ADD COLUMN tipo_dato VARCHAR DEFAULT 'Fijo'"))
 except Exception as e:
-    print(f"Error checking/altering user table: {e}")
+    print(f"Error checking/altering tables: {e}")
 
 
 def create_db_and_tables():

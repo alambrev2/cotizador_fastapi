@@ -224,9 +224,11 @@ class ScheduledExpenseBase(SQLModel):
     monto: Decimal = Field(default=0, max_digits=10, decimal_places=2, gt=0)
     fecha_vencimiento: date = Field(nullable=False)
     categoria: Optional[str] = Field(default='General')
+    tipo_gasto: Optional[str] = Field(default='Fijo')
+    tipo_dato: Optional[str] = Field(default='Fijo')
     clabe: Optional[str] = None
     estatus: str = Field(default='Pendiente') # Pendiente / Pagado
-    frecuencia: str = Field(default='Único') # Único, Mensual, Bimestral, Semestral, Anual
+    frecuencia: str = Field(default='Único') # Único, Semanal, Quincenal, Mensual, Bimestral, Trimestral, Semestral, Anual
 
 class ScheduledExpense(ScheduledExpenseBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
