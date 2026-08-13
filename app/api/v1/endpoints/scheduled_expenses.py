@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Optional
+from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 from app.database import get_session
@@ -11,18 +12,21 @@ router = APIRouter()
 from app.models import ScheduledExpense, ScheduledExpenseBase
 
 class ScheduledExpenseCreate(ScheduledExpenseBase):
-    pass
+    fecha_fin: Optional[date] = None  # Fin opcional de la serie; si falta, clona 12 meses
 
 @router.post("/", response_model=ScheduledExpense)
 def create_scheduled_expense(*, session: Session = Depends(get_session), expense: ScheduledExpenseCreate, current_user: User = Depends(get_current_active_admin)):
-    base_obj = ScheduledExpense.from_orm(expense)
+    base_obj = ScheduledExpense(**expense.model_dump(exclude={"fecha_fin"}))
     session.add(base_obj)
     
-    # Manejar recurrencia: clona hasta 12 meses despues de la fecha base
-    # (horizonte dinamico, sin fecha fija, para que funcione en cualquier año)
+    # Recurrencia: clona desde la fecha de inicio hasta fecha_fin (si se indica),
+    # o hasta 12 meses despues del inicio (horizonte dinamico, funciona en cualquier año)
     if expense.frecuencia != 'Único':
         current_date = expense.fecha_vencimiento
-        limit_date = current_date + relativedelta(months=12)
+        if expense.fecha_fin:
+            limit_date = expense.fecha_fin
+        else:
+            limit_date = current_date + relativedelta(months=12)
         
         step_months = 0
         step_days = 0

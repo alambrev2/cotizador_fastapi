@@ -109,3 +109,34 @@ def test_recurrencia_mensual_sigue_funcionando(client, db):
     for a, b in zip(rows, rows[1:]):
         assert b.fecha_vencimiento.month == (a.fecha_vencimiento.month % 12) + 1
         assert b.fecha_vencimiento.year == a.fecha_vencimiento.year + (1 if a.fecha_vencimiento.month == 12 else 0)
+
+
+def test_recurrencia_respeta_fecha_fin(client, db):
+    _admin(db)
+    _login(client)
+
+    resp = client.post(
+        "/api/v1/scheduled-expenses/",
+        json={
+            "descripcion": "Pago con fin",
+            "monto": 300,
+            "fecha_vencimiento": "2027-08-13",
+            "frecuencia": "Semanal",
+            "fecha_fin": "2027-09-10",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+
+    rows = sorted(_scheduled(db, "Pago con fin"), key=lambda r: r.fecha_vencimiento)
+    fechas = [r.fecha_vencimiento for r in rows]
+    # Inicio + clones dentro del plazo: 13, 20, 27 ago; 3, 10 sep
+    assert fechas == [
+        dt.date(2027, 8, 13),
+        dt.date(2027, 8, 20),
+        dt.date(2027, 8, 27),
+        dt.date(2027, 9, 3),
+        dt.date(2027, 9, 10),
+    ], f"fechas inesperadas: {fechas}"
+    for r in rows:
+        assert r.fecha_vencimiento.weekday() == 4  # viernes
+        assert r.fecha_vencimiento <= dt.date(2027, 9, 10)
