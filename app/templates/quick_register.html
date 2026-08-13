@@ -1530,14 +1530,18 @@
         }
     }
 
-    // Delete expense
+    // Delete expense (borra TODA la serie, no solo la ocurrencia mostrada)
     async function deleteExpense(id) {
-        if (!(await showConfirmDialog('¿Estás seguro de eliminar este egreso?'))) return;
+        const exp = listExpenses.find(e => e.id === id) || currentExpenses.find(e => e.id === id);
+        if (!exp) return;
+        const series = listExpenses.filter(e => e.descripcion === exp.descripcion);
+        const total = series.length;
+        if (!(await showConfirmDialog(`Se eliminarán las ${total} ${total === 1 ? 'ocurrencia' : 'ocurrencias'} de "${exp.descripcion}". ¿Continuar?`))) return;
 
         try {
-            await fetch(`/api/v1/scheduled-expenses/${id}`, {
+            await Promise.all(series.map(e => fetch(`/api/v1/scheduled-expenses/${e.id}`, {
                 method: 'DELETE'
-            });
+            })));
             renderExpensesList();
             loadDashboardMetrics(); // Refresh calendar
         } catch (error) {
