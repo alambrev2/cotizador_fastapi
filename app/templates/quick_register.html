@@ -801,6 +801,20 @@
         }
     });
 
+    function showConfirmDialog(message, title = '¿Confirmar acción?', confirmText = 'Confirmar') {
+        return Swal.fire({
+            title: title,
+            text: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: 'var(--danger)',
+            cancelButtonColor: 'var(--gray-500)',
+            confirmButtonText: confirmText,
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        }).then(result => result.isConfirmed);
+    }
+
     async function loadDashboardMetrics() {
         try {
             const res = await fetch('/api/v1/dashboard/summary', { cache: 'no-store' });
@@ -1414,9 +1428,10 @@
 
     // Almacenamos temporalmente los gastos para poder editarlos
     let currentExpenses = [];
+    let listExpenses = [];
     
     function openEditModal(id) {
-        const exp = currentExpenses.find(e => e.id === id);
+        const exp = currentExpenses.find(e => e.id === id) || listExpenses.find(e => e.id === id);
         if(!exp) return;
         
         document.getElementById('edit-sch-id').value = exp.id;
@@ -1468,6 +1483,7 @@
         try {
             const res = await fetch('/api/v1/scheduled-expenses/');
             const expenses = await res.json();
+            listExpenses = expenses;
 
             // Filter to show only unique monthly payments (group by description)
             const uniqueExpenses = {};
