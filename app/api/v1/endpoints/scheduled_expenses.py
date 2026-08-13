@@ -4,8 +4,6 @@ from sqlmodel import Session, select
 from app.database import get_session
 from app.models import User
 from app.api.deps import get_current_active_admin
-from datetime import datetime
-import datetime as dt
 from dateutil.relativedelta import relativedelta
 
 router = APIRouter()
@@ -20,10 +18,11 @@ def create_scheduled_expense(*, session: Session = Depends(get_session), expense
     base_obj = ScheduledExpense.from_orm(expense)
     session.add(base_obj)
     
-    # Manejar recurrencia hasta el limite establecido por el usuario (Dic 2026)
+    # Manejar recurrencia: clona hasta 12 meses despues de la fecha base
+    # (horizonte dinamico, sin fecha fija, para que funcione en cualquier año)
     if expense.frecuencia != 'Único':
         current_date = expense.fecha_vencimiento
-        limit_date = dt.date(2026, 12, 31)
+        limit_date = current_date + relativedelta(months=12)
         
         step_months = 0
         step_days = 0

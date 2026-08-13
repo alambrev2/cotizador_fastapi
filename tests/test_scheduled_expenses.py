@@ -51,7 +51,7 @@ def test_recurrencia_semanal_respeta_dia_de_semana(client, db):
     assert resp.status_code == 200, resp.text
 
     rows = sorted(_scheduled(db, "Pago semanal"), key=lambda r: r.fecha_vencimiento)
-    # Original + clones semanales hasta Dic 2026
+    # Original + clones semanales hasta 12 meses despues de la fecha base
     assert len(rows) >= 3, f"esperaba al menos 3 filas, hay {len(rows)}"
     assert rows[0].frecuencia == "Semanal"
     for r in rows:
@@ -59,6 +59,32 @@ def test_recurrencia_semanal_respeta_dia_de_semana(client, db):
         assert r.fecha_vencimiento.weekday() == 0, f"{r.fecha_vencimiento} no es lunes"
     for a, b in zip(rows, rows[1:]):
         # Diferencia exacta de 7 días entre ocurrencias
+        assert (b.fecha_vencimiento - a.fecha_vencimiento).days == 7
+
+
+def test_recurrencia_semanal_funciona_despues_de_2026(client, db):
+    _admin(db)
+    _login(client)
+
+    fecha = dt.date(2027, 8, 13)  # viernes, año futuro
+    resp = client.post(
+        "/api/v1/scheduled-expenses/",
+        json={
+            "descripcion": "Prueba semanal 2027",
+            "monto": 100,
+            "fecha_vencimiento": str(fecha),
+            "frecuencia": "Semanal",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+
+    rows = sorted(_scheduled(db, "Prueba semanal 2027"), key=lambda r: r.fecha_vencimiento)
+    # El horizonte debe ser dinamico: la fecha base (2027) no puede quedarse sin clones
+    assert len(rows) >= 3, f"esperaba al menos 3 filas, hay {len(rows)}"
+    assert rows[0].fecha_vencimiento == fecha
+    for r in rows:
+        assert r.fecha_vencimiento.weekday() == fecha.weekday()
+    for a, b in zip(rows, rows[1:]):
         assert (b.fecha_vencimiento - a.fecha_vencimiento).days == 7
 
 
