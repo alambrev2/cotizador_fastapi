@@ -70,6 +70,11 @@ class ExpenseBase(SQLModel):
     monto: Decimal = Field(default=0, max_digits=10, decimal_places=2, gt=0)
     fecha: datetime = Field(default_factory=_utcnow)
     categoria: Optional[str] = "Gasto General"
+    # Campos de pago
+    fecha_pago: Optional[datetime] = Field(default=None, description="Fecha efectiva del pago")
+    forma_pago: Optional[str] = Field(default="Efectivo", description="Efectivo, Tarjeta, Transferencia")
+    referencia_pago: Optional[str] = Field(default=None, description="Referencia/últimos dígitos/banco según forma de pago")
+    responsable: Optional[str] = Field(default=None, description="Responsable del pago")
 
 
 class QuoteBase(SQLModel):
@@ -200,6 +205,11 @@ class OtherIncomeBase(SQLModel):
     monto: Decimal = Field(default=0, max_digits=10, decimal_places=2)
     fecha: datetime = Field(default_factory=_utcnow)
     categoria: Optional[str] = "Ingreso General"
+    # Campos de pago
+    fecha_pago: Optional[datetime] = Field(default=None, description="Fecha efectiva del pago")
+    forma_pago: Optional[str] = Field(default="Efectivo", description="Efectivo, Tarjeta, Transferencia")
+    referencia_pago: Optional[str] = Field(default=None, description="Referencia/últimos dígitos/banco según forma de pago")
+    responsable: Optional[str] = Field(default=None, description="Responsable del pago")
 
 
 class OtherIncome(OtherIncomeBase, table=True):

@@ -31,7 +31,7 @@
                 <label for="inc-descripcion" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Descripción <span style="color: var(--danger);">*</span></label>
                 <input type="text" id="inc-descripcion" required placeholder="Ej. Venta de equipo, Intereses..." style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem; width: 100%;">
             </div>
-            
+
             <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); width: 100%;">
                 <div class="form-group" style="margin-bottom: 0; width: 100%;">
                     <label for="inc-monto" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Monto <span style="color: var(--danger);">*</span></label>
@@ -45,6 +45,50 @@
                     <input type="text" id="inc-categoria" placeholder="Ej. Otros" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem; width: 100%;">
                 </div>
             </div>
+
+            <!-- Fecha de pago + Responsable -->
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); width: 100%;">
+                <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                    <label for="inc-fecha-pago" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Fecha de Pago <span style="color: var(--danger);">*</span></label>
+                    <input type="date" id="inc-fecha-pago" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem; width: 100%;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                    <label for="inc-responsable" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Responsable del Pago <span style="color: var(--danger);">*</span></label>
+                    <input type="text" id="inc-responsable" required placeholder="Nombre de quien recibe" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem; width: 100%;">
+                </div>
+            </div>
+
+            <!-- Forma de pago -->
+            <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                <label for="inc-forma-pago" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Forma de Pago <span style="color: var(--danger);">*</span></label>
+                <select id="inc-forma-pago" required onchange="togglePaymentDetails('inc')" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem; width: 100%;">
+                    <option value="Efectivo">💵 Efectivo</option>
+                    <option value="Tarjeta">💳 Tarjeta</option>
+                    <option value="Transferencia">🏦 Transferencia</option>
+                </select>
+            </div>
+
+            <!-- Datos adicionales (Tarjeta / Transferencia) -->
+            <div id="inc-payment-details" style="display: none; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-md); padding: var(--space-4); gap: var(--space-3); flex-direction: column;">
+                <div id="inc-card-fields" style="display: none;">
+                    <label style="font-weight: 600; color: var(--gray-700); font-size: 0.88rem; display: block; margin-bottom: 6px;">Últimos 4 dígitos de la tarjeta</label>
+                    <input type="text" id="inc-card-digits" maxlength="4" placeholder="Ej. 4321" inputmode="numeric" pattern="[0-9]{4}"
+                        style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.65rem 1rem; width: 100%; letter-spacing: 0.15em;">
+                </div>
+                <div id="inc-transfer-fields" style="display: none;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+                        <div>
+                            <label style="font-weight: 600; color: var(--gray-700); font-size: 0.88rem; display: block; margin-bottom: 6px;">Banco / Institución</label>
+                            <input type="text" id="inc-transfer-bank" placeholder="Ej. BBVA, HSBC" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.65rem 1rem; width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-weight: 600; color: var(--gray-700); font-size: 0.88rem; display: block; margin-bottom: 6px;">Referencia / Folio</label>
+                            <input type="text" id="inc-transfer-ref" placeholder="Ej. 00123456" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.65rem 1rem; width: 100%;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div style="margin-top: auto; padding-top: var(--space-4);">
                 <button type="submit" class="btn btn-success" style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);">✓ Guardar Ingreso</button>
             </div>
@@ -65,7 +109,7 @@
                 <label for="exp-descripcion" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Descripción <span style="color: var(--danger);">*</span></label>
                 <input type="text" id="exp-descripcion" required placeholder="Ej. Pago de Renta, Luz..." style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem; width: 100%;">
             </div>
-            
+
             <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); width: 100%;">
                 <div class="form-group" style="margin-bottom: 0; width: 100%;">
                     <label for="exp-monto" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Monto <span style="color: var(--danger);">*</span></label>
@@ -79,6 +123,50 @@
                     <input type="text" id="exp-categoria" placeholder="Ej. Servicios" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem; width: 100%;">
                 </div>
             </div>
+
+            <!-- Fecha de pago + Responsable -->
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); width: 100%;">
+                <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                    <label for="exp-fecha-pago" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Fecha de Pago <span style="color: var(--danger);">*</span></label>
+                    <input type="date" id="exp-fecha-pago" required style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem; width: 100%;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                    <label for="exp-responsable" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem; width: 100%;">Responsable del Pago <span style="color: var(--danger);">*</span></label>
+                    <input type="text" id="exp-responsable" required placeholder="Nombre de quien paga" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem; width: 100%;">
+                </div>
+            </div>
+
+            <!-- Forma de pago -->
+            <div class="form-group" style="margin-bottom: 0; width: 100%;">
+                <label for="exp-forma-pago" style="font-weight: 600; color: var(--gray-700); font-size: 0.95rem;">Forma de Pago <span style="color: var(--danger);">*</span></label>
+                <select id="exp-forma-pago" required onchange="togglePaymentDetails('exp')" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.75rem 1rem; width: 100%;">
+                    <option value="Efectivo">💵 Efectivo</option>
+                    <option value="Tarjeta">💳 Tarjeta</option>
+                    <option value="Transferencia">🏦 Transferencia</option>
+                </select>
+            </div>
+
+            <!-- Datos adicionales (Tarjeta / Transferencia) -->
+            <div id="exp-payment-details" style="display: none; background: #fff5f5; border: 1px solid #fecaca; border-radius: var(--radius-md); padding: var(--space-4); gap: var(--space-3); flex-direction: column;">
+                <div id="exp-card-fields" style="display: none;">
+                    <label style="font-weight: 600; color: var(--gray-700); font-size: 0.88rem; display: block; margin-bottom: 6px;">Últimos 4 dígitos de la tarjeta</label>
+                    <input type="text" id="exp-card-digits" maxlength="4" placeholder="Ej. 4321" inputmode="numeric" pattern="[0-9]{4}"
+                        style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.65rem 1rem; width: 100%; letter-spacing: 0.15em;">
+                </div>
+                <div id="exp-transfer-fields" style="display: none;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);">
+                        <div>
+                            <label style="font-weight: 600; color: var(--gray-700); font-size: 0.88rem; display: block; margin-bottom: 6px;">Banco / Institución</label>
+                            <input type="text" id="exp-transfer-bank" placeholder="Ej. BBVA, HSBC" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.65rem 1rem; width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-weight: 600; color: var(--gray-700); font-size: 0.88rem; display: block; margin-bottom: 6px;">Referencia / Folio</label>
+                            <input type="text" id="exp-transfer-ref" placeholder="Ej. 00123456" style="border-radius: var(--radius-md); border: 1px solid var(--gray-300); padding: 0.65rem 1rem; width: 100%;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div style="margin-top: auto; padding-top: var(--space-4);">
                 <button type="submit" class="btn btn-danger" style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); font-weight: 600; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4);">✓ Guardar Gasto</button>
             </div>
@@ -382,34 +470,97 @@
         });
     }
 
-    // Forms Handlers
+    // ── Helper: show/hide payment detail fields ──────────────────────────────
+    function togglePaymentDetails(prefix) {
+        const forma = document.getElementById(`${prefix}-forma-pago`).value;
+        const details   = document.getElementById(`${prefix}-payment-details`);
+        const cardFields = document.getElementById(`${prefix}-card-fields`);
+        const transferFields = document.getElementById(`${prefix}-transfer-fields`);
+
+        if (forma === 'Tarjeta') {
+            details.style.display = 'flex';
+            cardFields.style.display = 'block';
+            transferFields.style.display = 'none';
+        } else if (forma === 'Transferencia') {
+            details.style.display = 'flex';
+            cardFields.style.display = 'none';
+            transferFields.style.display = 'block';
+        } else {
+            details.style.display = 'none';
+            cardFields.style.display = 'none';
+            transferFields.style.display = 'none';
+        }
+    }
+
+    // ── Helper: build referencia_pago string ─────────────────────────────────
+    function buildReferencia(prefix) {
+        const forma = document.getElementById(`${prefix}-forma-pago`).value;
+        if (forma === 'Tarjeta') {
+            const digits = document.getElementById(`${prefix}-card-digits`).value.trim();
+            return digits ? `**** ${digits}` : null;
+        }
+        if (forma === 'Transferencia') {
+            const bank = document.getElementById(`${prefix}-transfer-bank`).value.trim();
+            const ref  = document.getElementById(`${prefix}-transfer-ref`).value.trim();
+            const parts = [bank, ref].filter(Boolean);
+            return parts.length ? parts.join(' | ') : null;
+        }
+        return null;
+    }
+
+    // ── Form Handlers ─────────────────────────────────────────────────────────
     document.getElementById('income-form').addEventListener('submit', async function (e) {
         e.preventDefault();
+        const fechaPago = document.getElementById('inc-fecha-pago').value;
         const res = await fetch('/api/v1/incomes/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                descripcion: document.getElementById('inc-descripcion').value,
-                monto: parseFloat(document.getElementById('inc-monto').value),
-                categoria: document.getElementById('inc-categoria').value || 'Otros'
+                descripcion:      document.getElementById('inc-descripcion').value,
+                monto:            parseFloat(document.getElementById('inc-monto').value),
+                categoria:        document.getElementById('inc-categoria').value || 'Otros',
+                fecha_pago:       fechaPago ? new Date(fechaPago).toISOString() : null,
+                forma_pago:       document.getElementById('inc-forma-pago').value,
+                referencia_pago:  buildReferencia('inc'),
+                responsable:      document.getElementById('inc-responsable').value,
             })
         });
-        if (res.ok) { this.reset(); fetchData(); }
+        if (res.ok) {
+            this.reset();
+            document.getElementById('inc-payment-details').style.display = 'none';
+            fetchData();
+        }
     });
 
     document.getElementById('expense-form').addEventListener('submit', async function (e) {
         e.preventDefault();
+        const fechaPago = document.getElementById('exp-fecha-pago').value;
         const res = await fetch('/api/v1/expenses/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                descripcion: document.getElementById('exp-descripcion').value,
-                monto: parseFloat(document.getElementById('exp-monto').value),
-                categoria: document.getElementById('exp-categoria').value || 'Servicios'
+                descripcion:      document.getElementById('exp-descripcion').value,
+                monto:            parseFloat(document.getElementById('exp-monto').value),
+                categoria:        document.getElementById('exp-categoria').value || 'Servicios',
+                fecha_pago:       fechaPago ? new Date(fechaPago).toISOString() : null,
+                forma_pago:       document.getElementById('exp-forma-pago').value,
+                referencia_pago:  buildReferencia('exp'),
+                responsable:      document.getElementById('exp-responsable').value,
             })
         });
-        if (res.ok) { this.reset(); fetchData(); }
+        if (res.ok) {
+            this.reset();
+            document.getElementById('exp-payment-details').style.display = 'none';
+            fetchData();
+        }
     });
+
+    // ── Set today's date as default ───────────────────────────────────────────
+    (function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('inc-fecha-pago').value = today;
+        document.getElementById('exp-fecha-pago').value = today;
+    })();
 
     monthSelector.addEventListener('change', fetchData);
     fetchData();

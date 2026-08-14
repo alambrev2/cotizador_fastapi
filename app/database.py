@@ -30,6 +30,31 @@ try:
             conn.execute(text("ALTER TABLE scheduledexpense ADD COLUMN tipo_gasto VARCHAR DEFAULT 'Fijo'"))
         if "tipo_dato" not in sch_columns:
             conn.execute(text("ALTER TABLE scheduledexpense ADD COLUMN tipo_dato VARCHAR DEFAULT 'Fijo'"))
+
+        # ── Columnas de trazabilidad de pago en expense ──────────────────────
+        res_exp = conn.execute(text("PRAGMA table_info(expense)")).fetchall()
+        exp_columns = [row[1] for row in res_exp]
+        if "fecha_pago" not in exp_columns:
+            conn.execute(text("ALTER TABLE expense ADD COLUMN fecha_pago DATETIME"))
+        if "forma_pago" not in exp_columns:
+            conn.execute(text("ALTER TABLE expense ADD COLUMN forma_pago VARCHAR DEFAULT 'Efectivo'"))
+        if "referencia_pago" not in exp_columns:
+            conn.execute(text("ALTER TABLE expense ADD COLUMN referencia_pago VARCHAR"))
+        if "responsable" not in exp_columns:
+            conn.execute(text("ALTER TABLE expense ADD COLUMN responsable VARCHAR"))
+
+        # ── Columnas de trazabilidad de pago en otherincome ──────────────────
+        res_inc = conn.execute(text("PRAGMA table_info(otherincome)")).fetchall()
+        inc_columns = [row[1] for row in res_inc]
+        if "fecha_pago" not in inc_columns:
+            conn.execute(text("ALTER TABLE otherincome ADD COLUMN fecha_pago DATETIME"))
+        if "forma_pago" not in inc_columns:
+            conn.execute(text("ALTER TABLE otherincome ADD COLUMN forma_pago VARCHAR DEFAULT 'Efectivo'"))
+        if "referencia_pago" not in inc_columns:
+            conn.execute(text("ALTER TABLE otherincome ADD COLUMN referencia_pago VARCHAR"))
+        if "responsable" not in inc_columns:
+            conn.execute(text("ALTER TABLE otherincome ADD COLUMN responsable VARCHAR"))
+
 except Exception as e:
     print(f"Error checking/altering tables: {e}")
 
