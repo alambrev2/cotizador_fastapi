@@ -368,8 +368,11 @@ def get_customer_statement_pdf(
     # Ordenar del más reciente al menos reciente
     movements.sort(key=lambda x: x["raw_date"], reverse=True)
 
-    if not full and len(movements) > 9:
+    full_history = full  # alias semántico para el template
+    if not full_history and len(movements) > 9:
         movements = movements[:9]
+
+    tipo_documento = "Historial Completo" if full_history else "Últimos 9 Movimientos"
 
     try:
         html_content = templates.get_template("pdf/statement.html").render(
@@ -381,11 +384,18 @@ def get_customer_statement_pdf(
             saldo_inicial=money(customer.saldo_inicial or 0),
             deuda_historica=deuda_historica,
             saldo_pendiente=saldo_pendiente,
-            movements=movements
+            movements=movements,
+            full_history=full_history,
+            tipo_documento=tipo_documento,
         )
-        pdf_bytes = generate_pdf_bytes(html_content)
+        bg_file_path = BASE_DIR / "FORMATO BASE PARA ESTADOS DE CUENTA (2) (2).pdf"
+        pdf_bytes = generate_pdf_bytes(
+            html_content,
+            bg_pdf_path=str(bg_file_path) if bg_file_path.exists() else None
+        )
         nombre_safe = _safe_name(customer.nombre)
-        pdf_name = f"Estado_Cuenta_CLI{customer.id:04d}_{nombre_safe}.pdf"
+        suffix = "_Completo" if full_history else "_Ultimos9"
+        pdf_name = f"Estado_Cuenta_CLI{customer.id:04d}_{nombre_safe}{suffix}.pdf"
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
