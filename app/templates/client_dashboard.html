@@ -554,11 +554,11 @@
 
             {% if saldo_actual <= 0 %}
             <div class="balance-pill">
-                <i class="bi bi-check-circle-fill"></i> Sin deuda pendiente
+                <i class="bi bi-check-circle-fill"></i> Cuenta liquidada
             </div>
             {% else %}
             <div class="balance-pill debt">
-                <i class="bi bi-exclamation-triangle-fill"></i> Saldo pendiente por liquidar
+                <i class="bi bi-exclamation-triangle-fill"></i> Te falta por pagar: ${{ "%.2f"|format(saldo_actual) }}
             </div>
             {% endif %}
 
@@ -581,8 +581,8 @@
 
             <div class="progress-wrap">
                 <div class="progress-meta">
-                    <span class="progress-pct {{ bar_class }}">{{ "%.0f"|format(pct) }}% pagado</span>
-                    <span class="progress-label">Progreso de pago</span>
+                    <span class="progress-pct {{ bar_class }}">{{ "%.0f"|format(pct) }}% liquidado</span>
+                    <span class="progress-label">Progreso de liquidación</span>
                 </div>
                 <div class="progress-track">
                     <div class="progress-fill {{ bar_class }}"
@@ -591,8 +591,8 @@
                          data-target="{{ "%.2f"|format(pct) }}"></div>
                 </div>
                 <div class="progress-amounts">
-                    <span><i class="bi bi-check2-circle" style="color:#6ee7b7; margin-right:3px;"></i>Pagado: ${{ "%.2f"|format(total_pagos.value) }}</span>
-                    <span>Total: ${{ "%.2f"|format(deuda_total) }}</span>
+                    <span><i class="bi bi-check2-circle" style="color:#6ee7b7; margin-right:3px;"></i>Abonado: ${{ "%.2f"|format(total_pagos.value) }}</span>
+                    <span style="font-weight:700; color:{% if saldo_actual > 0 %}#fca5a5{% else %}#6ee7b7{% endif %};">Resta: ${{ "%.2f"|format(saldo_actual if saldo_actual > 0 else 0) }}</span>
                 </div>
             </div>
         </div>
