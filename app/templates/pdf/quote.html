@@ -5,22 +5,32 @@
     <style>
         @page {
             size: letter;
-            margin: 8.3cm 1.3cm 3.2cm 1.3cm;
+            margin-top: 8.0cm;
+            margin-bottom: 2.7cm;
+            margin-left: 1.3cm;
+            margin-right: 1.3cm;
+            @frame info_frame {
+                -pdf-frame-content: customerHeader;
+                top: 2.6cm;
+                height: 4.8cm;
+                left: 1.3cm;
+                width: 18.9cm;
+            }
         }
         body {
             font-family: Helvetica, sans-serif;
-            font-size: 8.5pt;
+            font-size: 8pt;
             color: #2d3748;
         }
 
         .info-table {
             width: 100%;
-            margin-bottom: 12px;
             border-collapse: collapse;
         }
         .info-table td {
-            line-height: 1.4;
+            line-height: 1.3;
             vertical-align: top;
+            font-size: 8pt;
         }
 
         .items-table {
@@ -48,12 +58,12 @@
 
         .section-title {
             color: #4a3e91;
-            font-size: 10pt;
+            font-size: 9.5pt;
             font-weight: bold;
             border-bottom: 1.5px solid #5b50a0;
             padding-bottom: 2px;
             margin-bottom: 8px;
-            margin-top: 10px;
+            margin-top: 5px;
         }
 
         .text-right { text-align: right; }
@@ -62,51 +72,53 @@
         .finance-card {
             border: 1px solid #cbd5e1;
             border-left: 4px solid #5b50a0;
-            padding: 6px 8px;
+            padding: 5px 7px;
             background-color: #f8fafc;
         }
         .finance-label {
-            font-size: 7.5pt;
+            font-size: 7pt;
             color: #64748b;
             text-transform: uppercase;
             font-weight: bold;
         }
         .finance-val {
-            font-size: 11pt;
+            font-size: 10.5pt;
             font-weight: bold;
             color: #4a3e91;
-            margin-top: 2px;
+            margin-top: 1px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Encabezado de Datos de la Cotización -->
-    <table class="info-table">
-        <tr>
-            <td width="55%">
-                <div style="font-size: 11pt; font-weight: bold; color: #4a3e91; margin-bottom: 4px;">DATOS DEL CLIENTE</div>
-                <strong>No. de Cliente:</strong> {{ quote.cliente.id if quote.cliente else 'N/D' }}<br>
-                <strong>Nombre:</strong> {{ quote.cliente.nombre if quote.cliente else 'N/D' }}<br>
-                <strong>Teléfono:</strong> {{ quote.cliente.telefono or 'N/D' }}<br>
-                <strong>Correo:</strong> {{ quote.cliente.email or 'N/D' }}<br>
-                {% if quote.cliente.direccion %}
-                <strong>Dirección:</strong> {{ quote.cliente.direccion }}
-                {% endif %}
-            </td>
-            <td width="45%" class="text-right">
-                <div style="font-size: 14pt; font-weight: bold; color: #4a3e91; margin-bottom: 4px;">FOLIO: {{ quote.folio_cotizacion or ("COT%04d" % quote.id) }}</div>
-                <strong>Fecha de Emisión:</strong> {{ quote.fecha_creacion.strftime('%d/%m/%Y') }}<br>
-                <strong>Válido hasta:</strong> 15 días posteriores a emisión<br>
-                <strong>Agente:</strong> {{ quote.agente or 'Asesor de Ventas' }}<br>
-                {% if quote.filial %}
-                <strong>Filial:</strong> {{ quote.filial }}
-                {% endif %}
-            </td>
-        </tr>
-    </table>
+    <!-- Frame estático para Encabezado de Datos del Cliente arriba de la línea morada -->
+    <div id="customerHeader">
+        <table class="info-table">
+            <tr>
+                <td width="55%">
+                    <div style="font-size: 10.5pt; font-weight: bold; color: #4a3e91; margin-bottom: 3px;">DATOS DEL CLIENTE</div>
+                    <strong>No. de Cliente:</strong> {{ quote.cliente.id if quote.cliente else 'N/D' }}<br>
+                    <strong>Nombre:</strong> {{ quote.cliente.nombre if quote.cliente else 'N/D' }}<br>
+                    <strong>Teléfono:</strong> {{ quote.cliente.telefono or 'N/D' }}<br>
+                    <strong>Correo:</strong> {{ quote.cliente.email or 'N/D' }}<br>
+                    {% if quote.cliente.direccion %}
+                    <strong>Dirección:</strong> {{ quote.cliente.direccion }}
+                    {% endif %}
+                </td>
+                <td width="45%" class="text-right">
+                    <div style="font-size: 13pt; font-weight: bold; color: #4a3e91; margin-bottom: 3px;">FOLIO: {{ quote.folio_cotizacion or ("COT%04d" % quote.id) }}</div>
+                    <strong>Fecha de Emisión:</strong> {{ quote.fecha_creacion.strftime('%d/%m/%Y') }}<br>
+                    <strong>Válido hasta:</strong> 15 días posteriores a emisión<br>
+                    <strong>Agente:</strong> {{ quote.agente or 'Asesor de Ventas' }}<br>
+                    {% if quote.filial %}
+                    <strong>Filial:</strong> {{ quote.filial }}
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
 
-    <!-- Resumen Financiero -->
+    <!-- Contenido principal que fluye siempre DEBAJO de la línea morada -->
     {% set saldo_restante = quote.total - (quote.anticipo or 0) %}
     {% set enganche = quote.anticipo or 0 %}
     
@@ -130,21 +142,21 @@
         {% endif %}
     {% endif %}
 
-    <table style="width: 100%; margin-bottom: 15px; border-collapse: collapse;">
+    <table style="width: 100%; margin-bottom: 12px; border-collapse: collapse;">
         <tr>
-            <td width="24%" style="padding-right: 6px;">
+            <td width="24%" style="padding-right: 5px;">
                 <div class="finance-card">
                     <div class="finance-label">Monto Total</div>
                     <div class="finance-val">${{ "%.2f"|format(quote.total or 0) }}</div>
                 </div>
             </td>
-            <td width="24%" style="padding-right: 6px;">
+            <td width="24%" style="padding-right: 5px;">
                 <div class="finance-card" style="border-left-color: #64748b;">
                     <div class="finance-label">Enganche / Anticipo</div>
                     <div class="finance-val" style="color: #0f172a;">${{ "%.2f"|format(enganche) }}</div>
                 </div>
             </td>
-            <td width="24%" style="padding-right: 6px;">
+            <td width="24%" style="padding-right: 5px;">
                 <div class="finance-card">
                     <div class="finance-label">Saldo Restante</div>
                     <div class="finance-val">${{ "%.2f"|format(saldo_restante) }}</div>
@@ -153,7 +165,7 @@
             <td width="28%">
                 <div class="finance-card" style="border-left-color: #64748b;">
                     <div class="finance-label">Esquema de Pago</div>
-                    <div class="finance-val" style="font-size: 9.5pt; color: #0f172a;">{{ plazo_str }}</div>
+                    <div class="finance-val" style="font-size: 9pt; color: #0f172a;">{{ plazo_str }}</div>
                 </div>
             </td>
         </tr>
@@ -188,24 +200,24 @@
     </table>
 
     <!-- Totales y Desglose -->
-    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 15px;">
+    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 12px;">
         <tr>
             <td width="65%"></td>
             <td width="35%">
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td class="text-right" style="padding: 3px 6px; font-weight: bold; color: #64748b;">Subtotal:</td>
-                        <td class="text-right" style="padding: 3px 6px; font-weight: bold;">${{ "%.2f"|format(quote.subtotal or 0) }}</td>
+                        <td class="text-right" style="padding: 2px 5px; font-weight: bold; color: #64748b;">Subtotal:</td>
+                        <td class="text-right" style="padding: 2px 5px; font-weight: bold;">${{ "%.2f"|format(quote.subtotal or 0) }}</td>
                     </tr>
                     {% if quote.requiere_factura %}
                     <tr>
-                        <td class="text-right" style="padding: 3px 6px; font-weight: bold; color: #64748b;">IVA (16%):</td>
-                        <td class="text-right" style="padding: 3px 6px; font-weight: bold;">${{ "%.2f"|format(quote.iva or 0) }}</td>
+                        <td class="text-right" style="padding: 2px 5px; font-weight: bold; color: #64748b;">IVA (16%):</td>
+                        <td class="text-right" style="padding: 2px 5px; font-weight: bold;">${{ "%.2f"|format(quote.iva or 0) }}</td>
                     </tr>
                     {% endif %}
                     <tr style="border-top: 1.5px solid #5b50a0;">
-                        <td class="text-right" style="padding: 5px 6px; font-weight: bold; color: #4a3e91; font-size: 10pt;">TOTAL:</td>
-                        <td class="text-right" style="padding: 5px 6px; font-weight: bold; color: #4a3e91; font-size: 10pt;">${{ "%.2f"|format(quote.total or 0) }}</td>
+                        <td class="text-right" style="padding: 4px 5px; font-weight: bold; color: #4a3e91; font-size: 9.5pt;">TOTAL:</td>
+                        <td class="text-right" style="padding: 4px 5px; font-weight: bold; color: #4a3e91; font-size: 9.5pt;">${{ "%.2f"|format(quote.total or 0) }}</td>
                     </tr>
                 </table>
             </td>
@@ -214,16 +226,16 @@
 
     <!-- Notas y Condiciones -->
     {% if quote.notas %}
-    <div style="margin-top: 10px; border-top: 1px solid #cbd5e1; padding-top: 8px;">
-        <div style="font-size: 8.5pt; font-weight: bold; color: #4a3e91; margin-bottom: 3px;">Términos y Condiciones / Notas:</div>
-        <div style="font-size: 8pt; color: #475569; line-height: 1.4;">
+    <div style="margin-top: 8px; border-top: 1px solid #cbd5e1; padding-top: 6px;">
+        <div style="font-size: 8pt; font-weight: bold; color: #4a3e91; margin-bottom: 2px;">Términos y Condiciones / Notas:</div>
+        <div style="font-size: 7.5pt; color: #475569; line-height: 1.3;">
             {{ quote.notas | replace('\n', '<br>') | safe }}
         </div>
     </div>
     {% else %}
-    <div style="margin-top: 10px; border-top: 1px solid #cbd5e1; padding-top: 8px;">
-        <div style="font-size: 8.5pt; font-weight: bold; color: #4a3e91; margin-bottom: 3px;">Términos y Condiciones:</div>
-        <div style="font-size: 8pt; color: #475569; line-height: 1.4;">
+    <div style="margin-top: 8px; border-top: 1px solid #cbd5e1; padding-top: 6px;">
+        <div style="font-size: 8pt; font-weight: bold; color: #4a3e91; margin-bottom: 2px;">Términos y Condiciones:</div>
+        <div style="font-size: 7.5pt; color: #475569; line-height: 1.3;">
             • Precios expresados en moneda nacional (MXN) sujetos a cambio sin previo aviso.<br>
             • Validez de la presente cotización: 15 días naturales a partir de la fecha de emisión.
         </div>
