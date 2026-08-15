@@ -1,154 +1,173 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Cotización {{ quote.folio_cotizacion or quote.id }} - {{ quote.cliente.nombre if quote.cliente else 'Cliente' }}</title>
     <style>
         @page {
             size: letter;
-            margin: 2cm;
-            @frame footer_frame {
-                -pdf-frame-content: footerContent;
-                bottom: 1cm;
-                margin-left: 2cm;
-                margin-right: 2cm;
-                height: 1cm;
-            }
+            margin: 8.3cm 1.3cm 3.2cm 1.3cm;
         }
         body {
-            font-family: 'Helvetica Neue', Roboto, sans-serif;
-            font-size: 10pt;
-            color: #333;
+            font-family: Helvetica, sans-serif;
+            font-size: 8.5pt;
+            color: #2d3748;
         }
-        .header-tbl { width: 100%; border-bottom: 2px solid #1a237e; padding-bottom: 10px; margin-bottom: 20px; }
-        .header-tbl h1 { color: #1a237e; font-size: 24pt; margin: 0; }
-        
-        .section-title { color: #1a237e; font-size: 12pt; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 8px;}
-        
-        table.info-table { width: 100%; margin-bottom: 25px; }
-        table.info-table td { line-height: 1.4; }
 
-        table.items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        table.items-table th { background-color: #f8fafc; color: #1e293b; font-weight: bold; padding: 10px; text-align: left; border-bottom: 2px solid #cbd5e1; }
-        table.items-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
+        .info-table {
+            width: 100%;
+            margin-bottom: 12px;
+            border-collapse: collapse;
+        }
+        .info-table td {
+            line-height: 1.4;
+            vertical-align: top;
+        }
 
-        .finance-box {
-            display: inline-block;
-            width: 23%;
-            margin-right: 1.5%;
-            padding: 15px 5px;
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .items-table th {
+            background-color: #5b50a0;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 8pt;
+            padding: 6px 8px;
+            text-align: left;
+            border: 1px solid #5b50a0;
+        }
+        .items-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 8pt;
+        }
+        .items-table tr:nth-child(even) td {
             background-color: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            text-align: center;
         }
-        .finance-box.highlight {
-            background-color: #e8eaf6;
-            border-color: #c5cae9;
+
+        .section-title {
+            color: #4a3e91;
+            font-size: 10pt;
+            font-weight: bold;
+            border-bottom: 1.5px solid #5b50a0;
+            padding-bottom: 2px;
+            margin-bottom: 8px;
+            margin-top: 10px;
         }
-        .grid-header { font-size: 9pt; color: #64748b; text-transform: uppercase; font-weight: bold; margin-bottom: 8px; }
-        .grid-val { font-size: 14pt; font-weight: bold; color: #0f172a; }
-        .grid-val.blue { color: #1a237e; }
 
         .text-right { text-align: right; }
         .text-center { text-align: center; }
-        #footerContent { text-align: center; color: #94a3b8; font-size: 8pt; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+
+        .finance-card {
+            border: 1px solid #cbd5e1;
+            border-left: 4px solid #5b50a0;
+            padding: 6px 8px;
+            background-color: #f8fafc;
+        }
+        .finance-label {
+            font-size: 7.5pt;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .finance-val {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #4a3e91;
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
-    <table class="header-tbl">
-        <tr>
-            <td width="60%">
-                <h1>COTIZACIÓN</h1>
-                <p style="margin-top: 5px; font-size: 10pt; color: #64748b;">
-                    <strong>SMART SITE COMPANY</strong><br>
-                    WhatsApp: 7225705637<br>
-                    Web: smartsitecompany.com
-                </p>
-            </td>
-            <td width="40%" class="text-right" valign="bottom">
-                <h2 style="color: #1a237e; margin: 0; font-size: 16pt;"># {{ quote.folio_cotizacion or quote.id }}</h2>
-            </td>
-        </tr>
-    </table>
 
+    <!-- Encabezado de Datos de la Cotización -->
     <table class="info-table">
         <tr>
-            <td width="50%" valign="top" style="padding-right: 20px;">
-                <strong>No. de Cliente:</strong> {{ quote.cliente.id }}<br>
-                <strong>Nombre:</strong> {{ quote.cliente.nombre }}<br>
-                <strong>Dirección:</strong> {{ quote.cliente.direccion or 'N/D' }}<br>
-                <strong>Ciudad/Estado:</strong> N/D<br>
+            <td width="55%">
+                <div style="font-size: 11pt; font-weight: bold; color: #4a3e91; margin-bottom: 4px;">DATOS DEL CLIENTE</div>
+                <strong>No. de Cliente:</strong> {{ quote.cliente.id if quote.cliente else 'N/D' }}<br>
+                <strong>Nombre:</strong> {{ quote.cliente.nombre if quote.cliente else 'N/D' }}<br>
                 <strong>Teléfono:</strong> {{ quote.cliente.telefono or 'N/D' }}<br>
-                <strong>Correo:</strong> {{ quote.cliente.email }}
+                <strong>Correo:</strong> {{ quote.cliente.email or 'N/D' }}<br>
+                {% if quote.cliente.direccion %}
+                <strong>Dirección:</strong> {{ quote.cliente.direccion }}
+                {% endif %}
             </td>
-            <td width="50%" valign="top" class="text-right">
-                <strong>Realizó la cotización:</strong> {{ quote.agente or 'Asesor de Ventas' }}<br>
-                <strong>No. de Cotización:</strong> {{ quote.folio_cotizacion or quote.id }}<br>
-                <strong>Fecha:</strong> {{ quote.fecha_creacion.strftime('%Y-%m-%d') }}<br>
-                <strong>Válido hasta:</strong> 15 días posteriores a su emisión
+            <td width="45%" class="text-right">
+                <div style="font-size: 14pt; font-weight: bold; color: #4a3e91; margin-bottom: 4px;">FOLIO: {{ quote.folio_cotizacion or ("COT%04d" % quote.id) }}</div>
+                <strong>Fecha de Emisión:</strong> {{ quote.fecha_creacion.strftime('%d/%m/%Y') }}<br>
+                <strong>Válido hasta:</strong> 15 días posteriores a emisión<br>
+                <strong>Agente:</strong> {{ quote.agente or 'Asesor de Ventas' }}<br>
+                {% if quote.filial %}
+                <strong>Filial:</strong> {{ quote.filial }}
+                {% endif %}
             </td>
         </tr>
     </table>
 
-    <div style="margin-bottom: 25px;">
-        {% set saldo_restante = quote.total - quote.anticipo %}
-        {% set enganche = quote.anticipo %}
-        
-        {% if quote.tipo_pago == 'Contado' %}
-            {% set plazo_str = 'Pago Único' %}
-            {% set saldo_restante = 0 %}
-            {% set enganche = quote.total %}
-        {% elif quote.tipo_pago == '2 Pagos' %}
-            {% set plazo_str = '2 Pagos' %}
-            {% set enganche = quote.total / 2 %}
-            {% set saldo_restante = quote.total - enganche %}
+    <!-- Resumen Financiero -->
+    {% set saldo_restante = quote.total - (quote.anticipo or 0) %}
+    {% set enganche = quote.anticipo or 0 %}
+    
+    {% if quote.tipo_pago == 'Contado' %}
+        {% set plazo_str = 'Pago Único' %}
+        {% set saldo_restante = 0 %}
+        {% set enganche = quote.total %}
+    {% elif quote.tipo_pago == '2 Pagos' %}
+        {% set plazo_str = '2 Pagos' %}
+        {% set enganche = quote.total / 2 %}
+        {% set saldo_restante = quote.total - enganche %}
+    {% else %}
+        {% set pagos_regulares = (saldo_restante / quote.monto_semanal)|int if quote.monto_semanal and quote.monto_semanal > 0 else 0 %}
+        {% set resto = saldo_restante - (pagos_regulares * (quote.monto_semanal or 0)) %}
+        {% if resto > 0 and pagos_regulares > 0 %}
+            {% set plazo_str = pagos_regulares ~ ' pagos de $' ~ ("%.2f"|format(quote.monto_semanal)) ~ ' y 1 de $' ~ ("%.2f"|format(resto)) %}
+        {% elif resto > 0 and pagos_regulares == 0 %}
+            {% set plazo_str = '1 pago final de $' ~ ("%.2f"|format(resto)) %}
         {% else %}
-            {% set pagos_regulares = (saldo_restante / quote.monto_semanal)|int %}
-            {% set resto = saldo_restante - (pagos_regulares * quote.monto_semanal) %}
-            {% if resto > 0 and pagos_regulares > 0 %}
-                {% set plazo_str = pagos_regulares ~ ' pagos de $' ~ ("%.2f"|format(quote.monto_semanal)) ~ ' y 1 de $' ~ ("%.2f"|format(resto)) %}
-            {% elif resto > 0 and pagos_regulares == 0 %}
-                {% set plazo_str = '1 pago final de $' ~ ("%.2f"|format(resto)) %}
-            {% else %}
-                {% set plazo_str = pagos_regulares ~ ' pagos semanales de $' ~ ("%.2f"|format(quote.monto_semanal)) %}
-            {% endif %}
+            {% set plazo_str = pagos_regulares ~ ' pagos semanales de $' ~ ("%.2f"|format(quote.monto_semanal)) %}
         {% endif %}
+    {% endif %}
 
-        <table style="width: 100%; margin-bottom: 25px; table-layout: fixed;">
-            <tr>
-                <td style="padding-right: 10px;">
-                    <div style="border-left: 3px solid #1a237e; padding-left: 10px;">
-                        <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Monto Total</div>
-                        <div style="font-size: 13pt; font-weight: bold; color: #1a237e; margin-top: 4px;">${{ "%.2f"|format(quote.total) }}</div>
-                    </div>
-                </td>
-                <td style="padding-right: 10px;">
-                    <div style="border-left: 3px solid #cbd5e1; padding-left: 10px;">
-                        <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Enganche</div>
-                        <div style="font-size: 13pt; font-weight: bold; color: #0f172a; margin-top: 4px;">${{ "%.2f"|format(enganche) }}</div>
-                    </div>
-                </td>
-                <td style="padding-right: 10px;">
-                    <div style="border-left: 3px solid #1a237e; padding-left: 10px;">
-                        <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Saldo Restante</div>
-                        <div style="font-size: 13pt; font-weight: bold; color: #1a237e; margin-top: 4px;">${{ "%.2f"|format(saldo_restante) }}</div>
-                    </div>
-                </td>
-                <td>
-                    <div style="border-left: 3px solid #cbd5e1; padding-left: 10px;">
-                        <div style="font-size: 8pt; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Plazo</div>
-                        <div style="font-size: 11pt; font-weight: bold; color: #0f172a; margin-top: 4px;">{{ plazo_str }}</div>
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </div>
+    <table style="width: 100%; margin-bottom: 15px; border-collapse: collapse;">
+        <tr>
+            <td width="24%" style="padding-right: 6px;">
+                <div class="finance-card">
+                    <div class="finance-label">Monto Total</div>
+                    <div class="finance-val">${{ "%.2f"|format(quote.total or 0) }}</div>
+                </div>
+            </td>
+            <td width="24%" style="padding-right: 6px;">
+                <div class="finance-card" style="border-left-color: #64748b;">
+                    <div class="finance-label">Enganche / Anticipo</div>
+                    <div class="finance-val" style="color: #0f172a;">${{ "%.2f"|format(enganche) }}</div>
+                </div>
+            </td>
+            <td width="24%" style="padding-right: 6px;">
+                <div class="finance-card">
+                    <div class="finance-label">Saldo Restante</div>
+                    <div class="finance-val">${{ "%.2f"|format(saldo_restante) }}</div>
+                </div>
+            </td>
+            <td width="28%">
+                <div class="finance-card" style="border-left-color: #64748b;">
+                    <div class="finance-label">Esquema de Pago</div>
+                    <div class="finance-val" style="font-size: 9.5pt; color: #0f172a;">{{ plazo_str }}</div>
+                </div>
+            </td>
+        </tr>
+    </table>
 
+    <!-- Tabla de Conceptos / Productos -->
+    <div class="section-title">DETALLE DE CONCEPTOS</div>
     <table class="items-table">
         <thead>
             <tr>
-                <th width="10%" class="text-center">#</th>
-                <th width="70%">Descripción</th>
-                <th width="20%" class="text-center">Cantidad</th>
+                <th width="8%" class="text-center">#</th>
+                <th width="62%">Descripción / Producto</th>
+                <th width="15%" class="text-center">Cantidad</th>
+                <th width="15%" class="text-right">Precio Unit.</th>
             </tr>
         </thead>
         <tbody>
@@ -156,48 +175,60 @@
             <tr>
                 <td class="text-center">{{ loop.index }}</td>
                 <td>
-                    <strong>{{ item.producto.nombre }}</strong>
-                    {% if item.producto.descripcion %}<br><small style="color: #64748b;">{{ item.producto.descripcion }}</small>{% endif %}
+                    <strong>{{ item.producto.nombre if item.producto else 'Concepto' }}</strong>
+                    {% if item.producto and item.producto.descripcion %}
+                    <br><small style="color: #64748b;">{{ item.producto.descripcion }}</small>
+                    {% endif %}
                 </td>
                 <td class="text-center">{{ item.cantidad }}</td>
+                <td class="text-right">${{ "%.2f"|format(item.precio_unitario or 0) }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px;">
+    <!-- Totales y Desglose -->
+    <table style="width: 100%; border-collapse: collapse; margin-top: 5px; margin-bottom: 15px;">
         <tr>
-            <td width="70%" class="text-right" style="padding: 5px; font-weight: bold; color: #64748b;">Subtotal:</td>
-            <td width="30%" class="text-right" style="padding: 5px; font-weight:bold;">${{ "%.2f"|format(quote.subtotal) }}</td>
+            <td width="65%"></td>
+            <td width="35%">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td class="text-right" style="padding: 3px 6px; font-weight: bold; color: #64748b;">Subtotal:</td>
+                        <td class="text-right" style="padding: 3px 6px; font-weight: bold;">${{ "%.2f"|format(quote.subtotal or 0) }}</td>
+                    </tr>
+                    {% if quote.requiere_factura %}
+                    <tr>
+                        <td class="text-right" style="padding: 3px 6px; font-weight: bold; color: #64748b;">IVA (16%):</td>
+                        <td class="text-right" style="padding: 3px 6px; font-weight: bold;">${{ "%.2f"|format(quote.iva or 0) }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr style="border-top: 1.5px solid #5b50a0;">
+                        <td class="text-right" style="padding: 5px 6px; font-weight: bold; color: #4a3e91; font-size: 10pt;">TOTAL:</td>
+                        <td class="text-right" style="padding: 5px 6px; font-weight: bold; color: #4a3e91; font-size: 10pt;">${{ "%.2f"|format(quote.total or 0) }}</td>
+                    </tr>
+                </table>
+            </td>
         </tr>
-        {% if quote.requiere_factura %}
-        <tr>
-            <td width="70%" class="text-right" style="padding: 5px; font-weight: bold; color: #64748b;">IVA (16%):</td>
-            <td width="30%" class="text-right" style="padding: 5px; font-weight:bold;">${{ "%.2f"|format(quote.iva) }}</td>
-        </tr>
-        {% endif %}
     </table>
 
-    <div style="margin-top: 20px;">
-        <table style="width: 100%;">
-            <tr>
-                <td width="100%" valign="top">
-                    <p style="color: #64748b; font-size: 9pt; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-                        <em>Términos y Condiciones:</em><br>
-                        {% if quote.notas %}
-                            {{ quote.notas | replace('\n', '<br>') | safe }}
-                        {% else %}
-                            - Precios sujetos a cambio sin previo aviso.<br>
-                            - Tiempo de entrega a convenir.
-                        {% endif %}
-                    </p>
-                </td>
-            </tr>
-        </table>
+    <!-- Notas y Condiciones -->
+    {% if quote.notas %}
+    <div style="margin-top: 10px; border-top: 1px solid #cbd5e1; padding-top: 8px;">
+        <div style="font-size: 8.5pt; font-weight: bold; color: #4a3e91; margin-bottom: 3px;">Términos y Condiciones / Notas:</div>
+        <div style="font-size: 8pt; color: #475569; line-height: 1.4;">
+            {{ quote.notas | replace('\n', '<br>') | safe }}
+        </div>
     </div>
+    {% else %}
+    <div style="margin-top: 10px; border-top: 1px solid #cbd5e1; padding-top: 8px;">
+        <div style="font-size: 8.5pt; font-weight: bold; color: #4a3e91; margin-bottom: 3px;">Términos y Condiciones:</div>
+        <div style="font-size: 8pt; color: #475569; line-height: 1.4;">
+            • Precios expresados en moneda nacional (MXN) sujetos a cambio sin previo aviso.<br>
+            • Validez de la presente cotización: 15 días naturales a partir de la fecha de emisión.
+        </div>
+    </div>
+    {% endif %}
 
-    <div id="footerContent">
-        Este documento es una cotización informativa y no representa un comprobante fiscal. Los precios y disponibilidad están sujetos a cambios. Válido por 15 días.
-    </div>
 </body>
 </html>

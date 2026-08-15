@@ -51,6 +51,7 @@ temp/
 *.bak
 *.pdf
 !FORMATO BASE PARA ESTADOS DE CUENTA (2) (2).pdf
+!FORMATO COTIZACIÓN.pdf
 
 # OS
 .DS_Store

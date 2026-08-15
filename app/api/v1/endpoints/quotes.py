@@ -10,7 +10,8 @@ from app.schemas import QuoteCreate, QuoteRead, QuoteUpdate
 from app.core.pdf import generate_pdf_bytes
 from app.core.accounting import money
 from app.core.timeutils import now_local
-from app.core.paths import TEMPLATES_DIR, REPORTS_DIR
+from app.core.paths import BASE_DIR, TEMPLATES_DIR, REPORTS_DIR
+from urllib.parse import quote as quote_url
 from sqlalchemy.orm import selectinload
 from decimal import Decimal
 from app.api.deps import (
@@ -333,22 +334,33 @@ def generate_quote_pdf(
         # Renderizar HTML con datos reales
         html_content = templates.get_template("pdf/quote.html").render(quote=quote)
 
-        # Generar bytes PDF
-        pdf_bytes = generate_pdf_bytes(html_content)
-
-        # Nomenclatura: Cotizacion_FOLIO_CLI0001_nombre.pdf
         import unicodedata, re
         def _safe(t, n=20):
             s = unicodedata.normalize('NFKD', t or '').encode('ascii','ignore').decode()
             return re.sub(r'_+','_', re.sub(r'[^\w]','_', s)).strip('_')[:n]
+
         folio = quote.folio_cotizacion or f"COT{quote_id:04d}"
-        nombre = _safe(quote.cliente.nombre) if quote.cliente else "cliente"
-        pdf_name = f"Cotizacion_{folio}_CLI{quote.cliente_id:04d}_{nombre}.pdf"
+        cliente_nombre = quote.cliente.nombre if quote.cliente else "Cliente"
+        pdf_title = f"Cotización {folio} - CLI{quote.cliente_id:04d}_{cliente_nombre}"
+        filename_utf8 = f"Cotización {folio} CLI{quote.cliente_id:04d}_{cliente_nombre}.pdf"
+        filename_ascii = f"Cotizacion_{folio}_CLI{quote.cliente_id:04d}_{_safe(cliente_nombre)}.pdf"
+
+        bg_file_path = BASE_DIR / "FORMATO COTIZACIÓN.pdf"
+        pdf_bytes = generate_pdf_bytes(
+            html_content,
+            bg_pdf_path=str(bg_file_path) if bg_file_path.exists() else None,
+            title=pdf_title
+        )
 
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'inline; filename="{pdf_name}"'},
+            headers={
+                "Content-Disposition": f'inline; filename="{filename_ascii}"; filename*=UTF-8\'\'{quote_url(filename_utf8)}',
+                "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            },
         )
     except Exception as e:
         logger.error("Error generando PDF de cotización: %s", e, exc_info=True)
@@ -368,22 +380,33 @@ def generate_quote_pdf_public(
         # Renderizar HTML con datos reales
         html_content = templates.get_template("pdf/quote.html").render(quote=quote)
 
-        # Generar bytes PDF
-        pdf_bytes = generate_pdf_bytes(html_content)
-
-        # Nomenclatura: Cotizacion_FOLIO_CLI0001_nombre.pdf
         import unicodedata, re
         def _safe(t, n=20):
             s = unicodedata.normalize('NFKD', t or '').encode('ascii','ignore').decode()
             return re.sub(r'_+','_', re.sub(r'[^\w]','_', s)).strip('_')[:n]
+
         folio = quote.folio_cotizacion or f"COT{quote_id:04d}"
-        nombre = _safe(quote.cliente.nombre) if quote.cliente else "cliente"
-        pdf_name = f"Cotizacion_{folio}_CLI{quote.cliente_id:04d}_{nombre}.pdf"
+        cliente_nombre = quote.cliente.nombre if quote.cliente else "Cliente"
+        pdf_title = f"Cotización {folio} - CLI{quote.cliente_id:04d}_{cliente_nombre}"
+        filename_utf8 = f"Cotización {folio} CLI{quote.cliente_id:04d}_{cliente_nombre}.pdf"
+        filename_ascii = f"Cotizacion_{folio}_CLI{quote.cliente_id:04d}_{_safe(cliente_nombre)}.pdf"
+
+        bg_file_path = BASE_DIR / "FORMATO COTIZACIÓN.pdf"
+        pdf_bytes = generate_pdf_bytes(
+            html_content,
+            bg_pdf_path=str(bg_file_path) if bg_file_path.exists() else None,
+            title=pdf_title
+        )
 
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'inline; filename="{pdf_name}"'},
+            headers={
+                "Content-Disposition": f'inline; filename="{filename_ascii}"; filename*=UTF-8\'\'{quote_url(filename_utf8)}',
+                "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            },
         )
     except Exception as e:
         logger.error("Error generando PDF público de cotización: %s", e, exc_info=True)
