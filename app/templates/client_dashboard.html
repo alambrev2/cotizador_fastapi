@@ -547,14 +547,15 @@
                 {% endfor %}
             {% endif %}
             {% set saldo_actual = (cliente.saldo_inicial if cliente else 0) + total_cargos.value - total_pagos.value %}
+            {% set saldo_display = saldo_actual if saldo_actual > 0 else 0 %}
 
-            <div class="balance-amount {% if saldo_actual <= 0 %}positive{% elif saldo_actual > 0 %}negative{% endif %}">
-                ${{ "%.2f"|format(saldo_actual) }}
+            <div class="balance-amount {% if saldo_display <= 0 %}positive{% else %}negative{% endif %}">
+                ${{ "%.2f"|format(saldo_display) }}
             </div>
 
             {% if saldo_actual <= 0 %}
             <div class="balance-pill">
-                <i class="bi bi-check-circle-fill"></i> Cuenta liquidada
+                <i class="bi bi-check-circle-fill"></i> {% if saldo_actual < 0 %}Cuenta liquidada — Tu saldo a favor es ${{ "%.2f"|format(saldo_actual | abs) }}{% else %}Cuenta liquidada{% endif %}
             </div>
             {% else %}
             <div class="balance-pill debt">
@@ -567,15 +568,16 @@
             {% if deuda_total > 0 %}
                 {% set pct_raw = (total_pagos.value / deuda_total * 100) %}
                 {% set pct = [pct_raw, 100] | min %}
-                {% if pct < 30 %}
-                    {% set bar_class = 'low' %}
-                {% elif pct < 70 %}
-                    {% set bar_class = 'mid' %}
-                {% else %}
-                    {% set bar_class = 'high' %}
-                {% endif %}
+            {% elif total_pagos.value > 0 %}
+                {% set pct = 100 %}
             {% else %}
                 {% set pct = 0 %}
+            {% endif %}
+            {% if pct < 30 %}
+                {% set bar_class = 'low' %}
+            {% elif pct < 70 %}
+                {% set bar_class = 'mid' %}
+            {% else %}
                 {% set bar_class = 'high' %}
             {% endif %}
 
