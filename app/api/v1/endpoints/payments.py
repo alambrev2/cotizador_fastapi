@@ -21,6 +21,7 @@ from app.core.timeutils import now_local
 from app.core.paths import BASE_DIR, TEMPLATES_DIR, REPORTS_DIR
 from decimal import Decimal
 import unicodedata, re
+from urllib.parse import quote
 import logging
 
 logger = logging.getLogger(__name__)
@@ -393,14 +394,13 @@ def get_customer_statement_pdf(
             html_content,
             bg_pdf_path=str(bg_file_path) if bg_file_path.exists() else None
         )
-        nombre_safe = _safe_name(customer.nombre)
-        suffix = "_Completo" if full_history else "_Ultimos9"
-        pdf_name = f"Estado_Cuenta_CLI{customer.id:04d}_{nombre_safe}{suffix}.pdf"
+        filename_utf8 = f"Estado de cuenta (No. {customer.id}) ({customer.nombre}).pdf"
+        filename_ascii = f"Estado_de_cuenta_No_{customer.id}_{_safe_name(customer.nombre)}.pdf"
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'inline; filename="{pdf_name}"',
+                "Content-Disposition": f'inline; filename="{filename_ascii}"; filename*=UTF-8\'\'{quote(filename_utf8)}',
                 "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
                 "Pragma": "no-cache",
                 "Expires": "0"
