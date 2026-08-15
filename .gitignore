@@ -50,6 +50,7 @@ temp/
 *.tmp
 *.bak
 *.pdf
+!FORMATO BASE PARA ESTADOS DE CUENTA (2) (2).pdf
 
 # OS
 .DS_Store
