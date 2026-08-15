@@ -345,14 +345,27 @@
         }
     }
     /* Modal de egreso: responsive en móvil */
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
         #modal-egreso .form-row,
         #modal-editar-egreso .form-row {
             grid-template-columns: 1fr !important;
         }
+        #modal-egreso .form-row > div,
+        #modal-editar-egreso .form-row > div {
+            min-width: 0 !important;
+        }
+        #modal-egreso input,
+        #modal-editar-egreso input,
+        #modal-egreso select,
+        #modal-editar-egreso select {
+            max-width: 100% !important;
+            min-width: 0 !important;
+            width: 100% !important;
+        }
         #modal-egreso .card,
         #modal-editar-egreso .card {
             padding: 1.25rem 1rem !important;
+            max-width: 100% !important;
         }
         #modal-egreso form > div:last-child {
             flex-direction: column !important;
@@ -361,6 +374,16 @@
         #modal-egreso form > div:last-child button {
             width: 100% !important;
             justify-content: center !important;
+        }
+    }
+    @media (max-width: 420px) {
+        #modal-egreso .form-row,
+        #modal-editar-egreso .form-row {
+            gap: 0.75rem !important;
+        }
+        #modal-egreso .card,
+        #modal-editar-egreso .card {
+            padding: 1rem 0.85rem !important;
         }
     }
 </style>
