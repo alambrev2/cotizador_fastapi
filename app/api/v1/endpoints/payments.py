@@ -399,7 +399,12 @@ def get_customer_statement_pdf(
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'inline; filename="{pdf_name}"'}
+            headers={
+                "Content-Disposition": f'inline; filename="{pdf_name}"',
+                "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
         )
     except Exception as e:
         logger.error("Error generando PDF de Estado de Cuenta: %s", e, exc_info=True)
