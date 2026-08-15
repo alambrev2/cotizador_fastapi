@@ -376,9 +376,15 @@
     function updateView(expenses, payments, otherIncomes) {
         const monthStr = monthSelector.value;
 
-        const filteredExpenses = expenses.filter(e => e.fecha.startsWith(monthStr));
-        const filteredPayments = payments.filter(p => p.fecha_pago.startsWith(monthStr));
-        const filteredOther = otherIncomes.filter(i => i.fecha.startsWith(monthStr));
+        const filteredExpenses = expenses.filter(e => {
+            const dt = e.fecha_pago || e.fecha;
+            return dt && dt.startsWith(monthStr);
+        });
+        const filteredPayments = payments.filter(p => p.fecha_pago && p.fecha_pago.startsWith(monthStr));
+        const filteredOther = otherIncomes.filter(i => {
+            const dt = i.fecha_pago || i.fecha;
+            return dt && dt.startsWith(monthStr);
+        });
 
         // Income table content
         const combinedIncome = [
@@ -389,7 +395,7 @@
                 tipo: 'Pago'
             })),
             ...filteredOther.map(i => ({
-                fecha: i.fecha,
+                fecha: i.fecha_pago || i.fecha,
                 desc: i.descripcion,
                 monto: i.monto,
                 tipo: 'Otro'
@@ -397,7 +403,7 @@
         ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
         renderIncome(combinedIncome);
-        renderExpenses(filteredExpenses.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)));
+        renderExpenses(filteredExpenses.sort((a, b) => new Date(b.fecha_pago || b.fecha) - new Date(a.fecha_pago || a.fecha)));
 
         const totalInc = combinedIncome.reduce((sum, i) => sum + parseFloat(i.monto), 0);
         const totalExp = filteredExpenses.reduce((sum, e) => sum + parseFloat(e.monto), 0);
@@ -421,7 +427,7 @@
         const body = document.getElementById('expense-body');
         body.innerHTML = items.map(e => `
             <tr>
-                <td style="padding: var(--space-3) var(--space-6); font-size: var(--font-size-sm); color: var(--text-muted);">${new Date(e.fecha).toLocaleDateString()}</td>
+                <td style="padding: var(--space-3) var(--space-6); font-size: var(--font-size-sm); color: var(--text-muted);">${new Date(e.fecha_pago || e.fecha).toLocaleDateString()}</td>
                 <td style="padding: var(--space-3) var(--space-4); font-weight: var(--font-weight-medium);">${e.descripcion}</td>
                 <td style="padding: var(--space-3) var(--space-6); text-align: right; color: var(--danger); font-weight: var(--font-weight-bold);">$${parseFloat(e.monto).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
             </tr>
@@ -511,47 +517,65 @@
     // ── Form Handlers ─────────────────────────────────────────────────────────
     document.getElementById('income-form').addEventListener('submit', async function (e) {
         e.preventDefault();
-        const fechaPago = document.getElementById('inc-fecha-pago').value;
-        const res = await fetch('/api/v1/incomes/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                descripcion:      document.getElementById('inc-descripcion').value,
-                monto:            parseFloat(document.getElementById('inc-monto').value),
-                categoria:        document.getElementById('inc-categoria').value || 'Otros',
-                fecha_pago:       fechaPago ? new Date(fechaPago).toISOString() : null,
-                forma_pago:       document.getElementById('inc-forma-pago').value,
-                referencia_pago:  buildReferencia('inc'),
-                responsable:      document.getElementById('inc-responsable').value,
-            })
-        });
-        if (res.ok) {
-            this.reset();
-            document.getElementById('inc-payment-details').style.display = 'none';
-            fetchData();
+        try {
+            const fechaPago = document.getElementById('inc-fecha-pago').value;
+            const res = await fetch('/api/v1/incomes/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    descripcion:      document.getElementById('inc-descripcion').value,
+                    monto:            parseFloat(document.getElementById('inc-monto').value),
+                    categoria:        document.getElementById('inc-categoria').value || 'Otros',
+                    fecha_pago:       fechaPago ? `${fechaPago}T00:00:00` : null,
+                    forma_pago:       document.getElementById('inc-forma-pago').value,
+                    referencia_pago:  buildReferencia('inc'),
+                    responsable:      document.getElementById('inc-responsable').value,
+                })
+            });
+            if (res.ok) {
+                this.reset();
+                document.getElementById('inc-payment-details').style.display = 'none';
+                document.getElementById('inc-fecha-pago').value = new Date().toISOString().split('T')[0];
+                fetchData();
+            } else {
+                const err = await res.json().catch(() => ({ detail: 'Error en el servidor' }));
+                alert('❌ Error al guardar ingreso: ' + (err.detail || 'Verifica los datos'));
+            }
+        } catch (error) {
+            console.error('Error submitting income:', error);
+            alert('❌ Error de conexión al guardar ingreso');
         }
     });
 
     document.getElementById('expense-form').addEventListener('submit', async function (e) {
         e.preventDefault();
-        const fechaPago = document.getElementById('exp-fecha-pago').value;
-        const res = await fetch('/api/v1/expenses/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                descripcion:      document.getElementById('exp-descripcion').value,
-                monto:            parseFloat(document.getElementById('exp-monto').value),
-                categoria:        document.getElementById('exp-categoria').value || 'Servicios',
-                fecha_pago:       fechaPago ? new Date(fechaPago).toISOString() : null,
-                forma_pago:       document.getElementById('exp-forma-pago').value,
-                referencia_pago:  buildReferencia('exp'),
-                responsable:      document.getElementById('exp-responsable').value,
-            })
-        });
-        if (res.ok) {
-            this.reset();
-            document.getElementById('exp-payment-details').style.display = 'none';
-            fetchData();
+        try {
+            const fechaPago = document.getElementById('exp-fecha-pago').value;
+            const res = await fetch('/api/v1/expenses/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    descripcion:      document.getElementById('exp-descripcion').value,
+                    monto:            parseFloat(document.getElementById('exp-monto').value),
+                    categoria:        document.getElementById('exp-categoria').value || 'Servicios',
+                    fecha_pago:       fechaPago ? `${fechaPago}T00:00:00` : null,
+                    forma_pago:       document.getElementById('exp-forma-pago').value,
+                    referencia_pago:  buildReferencia('exp'),
+                    responsable:      document.getElementById('exp-responsable').value,
+                })
+            });
+            if (res.ok) {
+                this.reset();
+                document.getElementById('exp-payment-details').style.display = 'none';
+                document.getElementById('exp-fecha-pago').value = new Date().toISOString().split('T')[0];
+                fetchData();
+            } else {
+                const err = await res.json().catch(() => ({ detail: 'Error en el servidor' }));
+                alert('❌ Error al guardar gasto: ' + (err.detail || 'Verifica los datos'));
+            }
+        } catch (error) {
+            console.error('Error submitting expense:', error);
+            alert('❌ Error de conexión al guardar gasto');
         }
     });
 
