@@ -538,6 +538,7 @@
 
             {% set total_cargos = namespace(value=0) %}
             {% set total_pagos  = namespace(value=0) %}
+            {% set total_cotizaciones = namespace(value=0) %}
             {% if cliente %}
                 {% for cargo in cliente.cargos %}
                     {% set total_cargos.value = total_cargos.value + cargo.monto %}
@@ -545,8 +546,14 @@
                 {% for pago in cliente.pagos %}
                     {% set total_pagos.value = total_pagos.value + pago.monto %}
                 {% endfor %}
+                {% for cot in cliente.cotizaciones %}
+                    {% if cot.estado != 'Borrador' and cot.estado != 'Rechazada' and cot.estado != 'Cancelada' %}
+                        {% set total_cotizaciones.value = total_cotizaciones.value + cot.total %}
+                    {% endif %}
+                {% endfor %}
             {% endif %}
-            {% set saldo_actual = (cliente.saldo_inicial if cliente else 0) + total_cargos.value - total_pagos.value %}
+            {% set deuda_total = (cliente.saldo_inicial if cliente else 0) + total_cargos.value + total_cotizaciones.value %}
+            {% set saldo_actual = deuda_total - total_pagos.value %}
             {% set saldo_display = saldo_actual if saldo_actual > 0 else 0 %}
 
             <div class="balance-amount {% if saldo_display <= 0 %}positive{% else %}negative{% endif %}">
@@ -564,7 +571,6 @@
             {% endif %}
 
             {# ── Barra de progreso de pago ── #}
-            {% set deuda_total = (cliente.saldo_inicial if cliente else 0) + total_cargos.value %}
             {% if deuda_total > 0 %}
                 {% set pct_raw = (total_pagos.value / deuda_total * 100) %}
                 {% set pct = [pct_raw, 100] | min %}
