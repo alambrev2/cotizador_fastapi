@@ -344,6 +344,10 @@
             width: 100vw !important;
         }
     }
+    /* Evita el desplazamiento lateral en toda la página (sobre todo en móvil) */
+    html, body {
+        overflow-x: hidden;
+    }
     /* Modal de egreso: responsive en móvil */
     @media (max-width: 768px) {
         #modal-egreso .form-row,
@@ -375,21 +379,30 @@
             width: 100% !important;
             justify-content: center !important;
         }
-        /* Evitar recorte vertical: centrar con margin auto (no align-items) para que
-           el scroll pueda llegar hasta la parte superior del modal. */
+        /* Overlay: ocupa todo el ancho (100vw), centra el card y deja margen de 1rem */
         #modal-egreso,
         #modal-editar-egreso {
-            align-items: flex-start !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            padding: 1rem !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
             overflow-x: hidden !important;
         }
         #modal-egreso > div,
         #modal-editar-egreso > div {
             margin: auto !important;
+            padding: 0 !important;
+            width: 100% !important;
             overflow-x: hidden !important;
         }
-        /* Scroll interno del formulario si excede la altura de la pantalla */
+        /* Card: ancho completo, sin min-width rígido en px y margen a los lados */
         #modal-egreso .card,
         #modal-editar-egreso .card {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: calc(100vw - 2rem) !important;
             max-height: 90vh !important;
             max-height: calc(100dvh - 2rem) !important;
             overflow-y: auto !important;
