@@ -389,13 +389,15 @@ def get_customer_statement_pdf(
             full_history=full_history,
             tipo_documento=tipo_documento,
         )
+        pdf_title = f"Estado de cuenta CLI{customer.id:04d}_{customer.nombre}"
+        filename_utf8 = f"{pdf_title}.pdf"
+        filename_ascii = f"Estado_de_cuenta_CLI{customer.id:04d}_{_safe_name(customer.nombre)}.pdf"
         bg_file_path = BASE_DIR / "FORMATO BASE PARA ESTADOS DE CUENTA (2) (2).pdf"
         pdf_bytes = generate_pdf_bytes(
             html_content,
-            bg_pdf_path=str(bg_file_path) if bg_file_path.exists() else None
+            bg_pdf_path=str(bg_file_path) if bg_file_path.exists() else None,
+            title=pdf_title
         )
-        filename_utf8 = f"Estado de cuenta CLI{customer.id:04d}_{customer.nombre}.pdf"
-        filename_ascii = f"Estado_de_cuenta_CLI{customer.id:04d}_{_safe_name(customer.nombre)}.pdf"
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",

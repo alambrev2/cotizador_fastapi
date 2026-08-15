@@ -4,11 +4,16 @@ from pypdf import PdfReader, PdfWriter
 from xhtml2pdf import pisa
 
 
-def generate_pdf_bytes(html_content: str, bg_pdf_path: str | Path | None = None) -> bytes:
+def generate_pdf_bytes(
+    html_content: str,
+    bg_pdf_path: str | Path | None = None,
+    title: str | None = None
+) -> bytes:
     """Convierte un string HTML a bytes PDF usando xhtml2pdf.
     
     Si se especifica bg_pdf_path, superpone cada página del PDF generado sobre
     la página de fondo correspondiente.
+    Si se especifica title, agrega el título en los metadatos del PDF.
     """
     buffer = BytesIO()
     pisa_status = pisa.CreatePDF(
@@ -19,21 +24,26 @@ def generate_pdf_bytes(html_content: str, bg_pdf_path: str | Path | None = None)
     if pisa_status.err:
         raise Exception(f"Error generando PDF: {pisa_status.err}")
 
-    if not bg_pdf_path:
-        return buffer.getvalue()
-
     buffer.seek(0)
     content_reader = PdfReader(buffer)
 
-    with open(bg_pdf_path, "rb") as bg_file:
-        bg_bytes = bg_file.read()
-
     writer = PdfWriter()
-    for page in content_reader.pages:
-        bg_reader = PdfReader(BytesIO(bg_bytes))
-        bg_page = bg_reader.pages[0]
-        bg_page.merge_page(page)
-        writer.add_page(bg_page)
+
+    if bg_pdf_path:
+        with open(bg_pdf_path, "rb") as bg_file:
+            bg_bytes = bg_file.read()
+
+        for page in content_reader.pages:
+            bg_reader = PdfReader(BytesIO(bg_bytes))
+            bg_page = bg_reader.pages[0]
+            bg_page.merge_page(page)
+            writer.add_page(bg_page)
+    else:
+        for page in content_reader.pages:
+            writer.add_page(page)
+
+    if title:
+        writer.add_metadata({"/Title": title})
 
     output_buffer = BytesIO()
     writer.write(output_buffer)
