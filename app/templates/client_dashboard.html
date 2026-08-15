@@ -539,6 +539,7 @@
             {% set total_cargos = namespace(value=0) %}
             {% set total_pagos  = namespace(value=0) %}
             {% set total_cotizaciones = namespace(value=0) %}
+            {% set proxima_cuota = namespace(value=0) %}
             {% if cliente %}
                 {% for cargo in cliente.cargos %}
                     {% set total_cargos.value = total_cargos.value + cargo.monto %}
@@ -551,22 +552,46 @@
                         {% set total_cotizaciones.value = total_cotizaciones.value + cot.total %}
                     {% endif %}
                 {% endfor %}
+                {# Calcular próxima cuota del primer financiamiento activo pendiente #}
+                {% for cot in cliente.cotizaciones | sort(attribute='fecha_creacion', reverse=True) %}
+                    {% if cot.tipo_pago in ['Semanal', '2 Pagos'] and cot.estado != 'Borrador' and cot.estado != 'Rechazada' and cot.estado != 'Cancelada' %}
+                        {% set pagos_cot = namespace(value=0) %}
+                        {% for p in cliente.pagos %}
+                            {% if p.quote_id == cot.id %}
+                                {% set pagos_cot.value = pagos_cot.value + p.monto %}
+                            {% endif %}
+                        {% endfor %}
+                        {% set saldo_cot = cot.total - pagos_cot.value %}
+                        {% if saldo_cot > 0.1 %}
+                            {% if cot.tipo_pago == 'Semanal' %}
+                                {% set cuota = cot.monto_semanal if cot.monto_semanal else 800 %}
+                            {% else %}
+                                {% set cuota = cot.total / 2 %}
+                            {% endif %}
+                            {% if saldo_cot < cuota %}
+                                {% set proxima_cuota.value = saldo_cot %}
+                            {% else %}
+                                {% set proxima_cuota.value = cuota %}
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
             {% endif %}
             {% set deuda_total = (cliente.saldo_inicial if cliente else 0) + total_cargos.value + total_cotizaciones.value %}
-            {% set saldo_actual = deuda_total - total_pagos.value %}
-            {% set saldo_display = saldo_actual if saldo_actual > 0 else 0 %}
+            {% set saldo_restante = deuda_total - total_pagos.value %}
+            {% if saldo_restante < 0 %}{% set saldo_restante = 0 %}{% endif %}
 
-            <div class="balance-amount {% if saldo_display <= 0 %}positive{% else %}negative{% endif %}">
-                ${{ "%.2f"|format(saldo_display) }}
+            <div class="balance-amount {% if proxima_cuota.value <= 0 %}positive{% else %}negative{% endif %}">
+                ${{ "%.2f"|format(proxima_cuota.value if proxima_cuota.value > 0 else 0) }}
             </div>
 
-            {% if saldo_actual <= 0 %}
+            {% if proxima_cuota.value <= 0 and saldo_restante <= 0 %}
             <div class="balance-pill">
-                <i class="bi bi-check-circle-fill"></i> {% if saldo_actual < 0 %}Cuenta liquidada — Tu saldo a favor es ${{ "%.2f"|format(saldo_actual | abs) }}{% else %}Cuenta liquidada{% endif %}
+                <i class="bi bi-check-circle-fill"></i> {% if saldo_restante <= 0 %}Cuenta liquidada{% else %}Sin cuota pendiente{% endif %}
             </div>
             {% else %}
             <div class="balance-pill debt">
-                <i class="bi bi-exclamation-triangle-fill"></i> Te falta por pagar: ${{ "%.2f"|format(saldo_actual) }}
+                <i class="bi bi-exclamation-triangle-fill"></i> {% if proxima_cuota.value > 0 %}Próxima cuota a pagar{% else %}Saldo pendiente{% endif %}
             </div>
             {% endif %}
 
@@ -600,7 +625,7 @@
                 </div>
                 <div class="progress-amounts">
                     <span><i class="bi bi-check2-circle" style="color:#6ee7b7; margin-right:3px;"></i>Abonado: ${{ "%.2f"|format(total_pagos.value) }}</span>
-                    <span style="font-weight:700; color:{% if saldo_actual > 0 %}#fca5a5{% else %}#6ee7b7{% endif %};">Resta: ${{ "%.2f"|format(saldo_actual if saldo_actual > 0 else 0) }}</span>
+                    <span style="font-weight:700; color:{% if saldo_restante > 0 %}#fca5a5{% else %}#6ee7b7{% endif %};">Resta: ${{ "%.2f"|format(saldo_restante) }}</span>
                 </div>
             </div>
         </div>
