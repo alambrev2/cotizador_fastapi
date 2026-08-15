@@ -51,6 +51,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# No cachear páginas HTML: los navegadores (sobre todo en móvil) deben
+# descargar siempre la última versión de los templates.
+@app.middleware("http")
+async def no_cache_html_pages(request: Request, call_next):
+    response = await call_next(request)
+    content_type = response.headers.get("content-type", "")
+    if content_type.startswith("text/html"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
 logger.info("Iniciando aplicación Cotizador API")
 
 # Obtener el directorio base del proyecto
