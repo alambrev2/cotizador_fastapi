@@ -64,7 +64,7 @@
         <div style="display: flex; gap: var(--space-2); align-items: center;">
             <label for="status-filter" style="font-size: 0.85rem; font-weight: 700; color: var(--gray-500); text-transform: uppercase;">Estado:</label>
             <select id="status-filter" style="border-radius: var(--radius-lg); border: 1px solid var(--gray-300); padding: 0.65rem 2rem 0.65rem 1rem; font-size: 0.95rem; background: white; outline: none; cursor: pointer; font-weight: 600; color: var(--gray-700); transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--indigo)';" onblur="this.style.borderColor='var(--gray-300)';" onchange="applyFilters()">
-                <option value="Todos">✦ Todos</option>
+                <option value="Todos">❆ Todos</option>
                 <option value="Borrador">📝 Borrador</option>
                 <option value="Enviada">📤 Enviada</option>
                 <option value="Aprobación Solicitada">⏳ Aprobación Solicitada</option>
@@ -75,6 +75,17 @@
                 <option value="Sustituida">🔄 Sustituida</option>
                 <option value="Finalizada">🏁 Finalizada</option>
             </select>
+        </div>
+
+        <!-- Toggle: Mostrar precios unitarios en PDF -->
+        <div id="toggle-precios-list-wrapper" style="display: flex; align-items: center; gap: 0.6rem; background: var(--gray-50); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 0.5rem 0.9rem; user-select: none; cursor: pointer; flex-shrink: 0;" onclick="togglePreciosList()" title="Activa/desactiva los precios unitarios en el PDF">
+            <div id="toggle-precios-list-switch" style="width: 38px; height: 20px; background: #10b981; border-radius: 10px; position: relative; transition: background 0.2s; flex-shrink: 0;">
+                <div id="toggle-precios-list-knob" style="width: 14px; height: 14px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 21px; transition: left 0.2s;"></div>
+            </div>
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--gray-700); white-space: nowrap;">
+                <i class="bi bi-tag-fill" style="color: #10b981;" id="toggle-precios-list-icon"></i>
+                <span id="toggle-precios-list-label">Con precios</span>
+            </span>
         </div>
     </div>
 </div>
@@ -112,6 +123,28 @@
     const loading = document.getElementById('loading');
 
     let allQuotes = [];
+    let mostrarPreciosGlobal = true;
+
+    function togglePreciosList() {
+        mostrarPreciosGlobal = !mostrarPreciosGlobal;
+        const sw = document.getElementById('toggle-precios-list-switch');
+        const knob = document.getElementById('toggle-precios-list-knob');
+        const icon = document.getElementById('toggle-precios-list-icon');
+        const label = document.getElementById('toggle-precios-list-label');
+        if (mostrarPreciosGlobal) {
+            sw.style.background = '#10b981';
+            knob.style.left = '21px';
+            icon.style.color = '#10b981';
+            label.textContent = 'Con precios';
+        } else {
+            sw.style.background = '#94a3b8';
+            knob.style.left = '3px';
+            icon.style.color = '#94a3b8';
+            label.textContent = 'Sin precios';
+        }
+        // Re-renderizar tabla con el nuevo parámetro
+        applyFilters();
+    }
 
     function debounce(func, timeout = 300) {
         let timer;
@@ -265,7 +298,7 @@
                     </td>
                     <td style="padding: 0.55rem 0.75rem; text-align: right; white-space: nowrap;">
                         <div style="display: inline-flex; gap: var(--space-1);">
-                            <a href="/api/v1/quotes/${q.id}/pdf" target="_blank" class="btn btn-outline" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white;" title="Ver PDF">
+                            <a href="/api/v1/quotes/${q.id}/pdf?mostrar_precios=${mostrarPreciosGlobal}" target="_blank" class="btn btn-outline" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; text-decoration: none; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white;" title="Ver PDF">
                                 <i class="bi bi-file-pdf text-danger"></i> PDF
                             </a>
                             <button onclick="sendEmail(${q.id}, this)" class="btn btn-outline" style="width: auto; padding: 0.35rem 0.65rem; font-size: 0.75rem; border-radius: var(--radius-md); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--border-color); background: white; color: var(--indigo);" title="Enviar al cliente por Correo">

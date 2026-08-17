@@ -3,8 +3,34 @@ from datetime import datetime, date
 from sqlmodel import Field, SQLModel, Relationship
 from decimal import Decimal
 from enum import Enum
+from pydantic import field_validator
 
 from app.core.timeutils import utcnow as _utcnow
+
+def _sanitize_datetime_field(v):
+    if v is None or v == "":
+        return None
+    if isinstance(v, datetime):
+        return v.replace(tzinfo=None)
+    if isinstance(v, date):
+        return datetime(v.year, v.month, v.day)
+    if isinstance(v, str):
+        v = v.strip()
+        if not v:
+            return None
+        if v.endswith("Z"):
+            v = v[:-1]
+        try:
+            dt_obj = datetime.fromisoformat(v)
+            return dt_obj.replace(tzinfo=None)
+        except ValueError:
+            try:
+                d = date.fromisoformat(v)
+                return datetime(d.year, d.month, d.day)
+            except ValueError:
+                return None
+    return v
+
 
 class RoleEnum(str, Enum):
     Administrador = "Administrador"
@@ -76,6 +102,11 @@ class ExpenseBase(SQLModel):
     referencia_pago: Optional[str] = Field(default=None, description="Referencia/últimos dígitos/banco según forma de pago")
     responsable: Optional[str] = Field(default=None, description="Responsable del pago")
 
+    @field_validator("fecha", "fecha_pago", mode="before")
+    @classmethod
+    def validate_dates(cls, v):
+        return _sanitize_datetime_field(v)
+
 
 class QuoteBase(SQLModel):
     estado: str = "Borrador"  # Usar QuoteEstado (app.models) como fuente única de valores
@@ -128,6 +159,11 @@ class PaymentBase(SQLModel):
     quote_id: Optional[int] = Field(default=None, foreign_key="quote.id")
     cargo_id: Optional[int] = Field(default=None, foreign_key="accountcharge.id")
     cliente_id: Optional[int] = Field(default=None, foreign_key="customer.id")
+
+    @field_validator("fecha_pago", mode="before")
+    @classmethod
+    def validate_dates(cls, v):
+        return _sanitize_datetime_field(v)
 
 
 class AccountChargeBase(SQLModel):
@@ -210,6 +246,11 @@ class OtherIncomeBase(SQLModel):
     forma_pago: Optional[str] = Field(default="Efectivo", description="Efectivo, Tarjeta, Transferencia")
     referencia_pago: Optional[str] = Field(default=None, description="Referencia/últimos dígitos/banco según forma de pago")
     responsable: Optional[str] = Field(default=None, description="Responsable del pago")
+
+    @field_validator("fecha", "fecha_pago", mode="before")
+    @classmethod
+    def validate_dates(cls, v):
+        return _sanitize_datetime_field(v)
 
 
 class OtherIncome(OtherIncomeBase, table=True):

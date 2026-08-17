@@ -177,9 +177,15 @@
         <thead>
             <tr>
                 <th width="8%" class="text-center">#</th>
-                <th width="62%">Descripción / Producto</th>
-                <th width="15%" class="text-center">Cantidad</th>
-                <th width="15%" class="text-right">Precio Unit.</th>
+                {% if mostrar_precios %}
+                <th width="52%">Descripción / Producto</th>
+                <th width="12%" class="text-center">Cantidad</th>
+                <th width="14%" class="text-right">Precio Unit.</th>
+                <th width="14%" class="text-right">Subtotal</th>
+                {% else %}
+                <th width="72%">Descripción / Producto</th>
+                <th width="20%" class="text-center">Cantidad</th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
@@ -193,7 +199,10 @@
                     {% endif %}
                 </td>
                 <td class="text-center">{{ item.cantidad }}</td>
+                {% if mostrar_precios %}
                 <td class="text-right">${{ "%.2f"|format(item.precio_unitario or 0) }}</td>
+                <td class="text-right">${{ "%.2f"|format((item.precio_unitario or 0) * item.cantidad) }}</td>
+                {% endif %}
             </tr>
             {% endfor %}
         </tbody>

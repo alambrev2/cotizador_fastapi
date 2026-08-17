@@ -10,16 +10,18 @@ router = APIRouter()
 
 
 def _sanitize_dt(val):
-    if val is None:
+    if val is None or val == "":
         return None
+    if isinstance(val, datetime):
+        return val.replace(tzinfo=None)
     if isinstance(val, str):
         val = val.strip()
         if not val:
             return None
         if val.endswith("Z"):
-            val = val[:-1] + "+00:00"
+            val = val[:-1]
         try:
-            return datetime.fromisoformat(val)
+            return datetime.fromisoformat(val).replace(tzinfo=None)
         except ValueError:
             try:
                 d = date.fromisoformat(val)
@@ -38,10 +40,8 @@ def create_other_income(
     income: OtherIncome,
     current_user: User = Depends(get_current_active_operativo_or_admin)
 ):
-    if isinstance(income.fecha_pago, (str, date)):
-        income.fecha_pago = _sanitize_dt(income.fecha_pago)
-    if isinstance(income.fecha, (str, date)):
-        income.fecha = _sanitize_dt(income.fecha)
+    income.fecha_pago = _sanitize_dt(income.fecha_pago)
+    income.fecha = _sanitize_dt(income.fecha) or datetime.now()
 
     session.add(income)
     session.commit()

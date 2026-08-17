@@ -320,6 +320,7 @@ def generate_quote_pdf(
     *,
     session: Session = Depends(get_session),
     quote_id: int,
+    mostrar_precios: bool = Query(default=True, description="Si es False, oculta la columna de Precio Unitario en el PDF"),
     current_user: User = Depends(get_current_user)
 ):
     quote = session.get(Quote, quote_id)
@@ -332,7 +333,7 @@ def generate_quote_pdf(
 
     try:
         # Renderizar HTML con datos reales
-        html_content = templates.get_template("pdf/quote.html").render(quote=quote)
+        html_content = templates.get_template("pdf/quote.html").render(quote=quote, mostrar_precios=mostrar_precios)
 
         import unicodedata, re
         def _safe(t, n=20):
@@ -370,7 +371,8 @@ def generate_quote_pdf(
 def generate_quote_pdf_public(
     *,
     session: Session = Depends(get_session),
-    quote_id: int
+    quote_id: int,
+    mostrar_precios: bool = Query(default=True, description="Si es False, oculta la columna de Precio Unitario en el PDF")
 ):
     quote = session.get(Quote, quote_id)
     if not quote:
@@ -378,7 +380,7 @@ def generate_quote_pdf_public(
 
     try:
         # Renderizar HTML con datos reales
-        html_content = templates.get_template("pdf/quote.html").render(quote=quote)
+        html_content = templates.get_template("pdf/quote.html").render(quote=quote, mostrar_precios=mostrar_precios)
 
         import unicodedata, re
         def _safe(t, n=20):
