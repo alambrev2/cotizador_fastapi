@@ -28,9 +28,8 @@
         <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle menu">
             <i class="bi bi-list"></i>
         </button>
-        <div class="mobile-header-logo" style="display: flex; align-items: center; gap: 8px;">
-            <img src="{{ url_for('static', path='/img/logo.png') }}" alt="Logo" style="height: 28px; object-fit: contain;">
-            <span>SMART SITE COMPANY</span>
+        <div class="mobile-header-logo">
+            <img src="{{ url_for('static', path='/img/logo.png') }}" alt="Smart Site Company" style="height: 30px; object-fit: contain;">
         </div>
         <div class="mobile-header-spacer"></div>
     </div>
@@ -40,9 +39,8 @@
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header" style="display: flex; align-items: center; gap: 10px; padding: 16px 14px;">
-            <img src="{{ url_for('static', path='/img/logo.png') }}" alt="Logo" style="height: 40px; flex-shrink: 0; object-fit: contain;">
-            <div class="logo-text" style="line-height: 1.2;">SMART SITE COMPANY</div>
+        <div class="sidebar-header" style="display: flex; align-items: center; justify-content: center; padding: 18px 12px;">
+            <img src="{{ url_for('static', path='/img/logo.png') }}" alt="Smart Site Company" style="max-width: 85%; max-height: 52px; object-fit: contain;">
         </div>
 
         <!-- Información del usuario -->

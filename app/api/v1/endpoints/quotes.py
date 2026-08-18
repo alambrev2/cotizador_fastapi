@@ -566,3 +566,45 @@ async def upload_operative_report(
     session.commit()
     session.refresh(db_quote)
     return db_quote
+
+
+@router.post("/{quote_id}/report2", response_model=QuoteRead)
+async def upload_operative_report_2(
+    *,
+    session: Session = Depends(get_session),
+    quote_id: int,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_active_operativo_or_admin)
+):
+    """Sube el segundo PDF de reporte operativo (documento complementario)."""
+    db_quote = session.get(Quote, quote_id)
+    if not db_quote:
+        raise HTTPException(status_code=404, detail="Cotización no encontrada")
+
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    import unicodedata, re
+
+    allowed_extensions = {".pdf"}
+
+    raw_name = os.path.basename(file.filename or "")
+    base, ext = os.path.splitext(raw_name)
+    if ext.lower() not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF para este campo.")
+
+    nfkd = unicodedata.normalize("NFKD", base)
+    ascii_name = nfkd.encode("ascii", "ignore").decode("ascii")
+    safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", ascii_name).strip("_")
+    safe_name = re.sub(r"_+", "_", safe_name) or "reporte2"
+    safe_filename = f"{safe_name}{ext.lower()}"
+
+    file_path = os.path.join(str(REPORTS_DIR), f"quote_{quote_id}_doc2_{safe_filename}")
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    db_quote.reporte_operativo_path_2 = f"/static/reports/quote_{quote_id}_doc2_{safe_filename}"
+    session.add(db_quote)
+    session.commit()
+    session.refresh(db_quote)
+    return db_quote

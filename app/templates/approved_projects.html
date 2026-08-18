@@ -225,47 +225,66 @@
 
             const dateInput = `<input type="date" value="${p.fecha_entrega || ''}" onchange="updateDate(${p.id}, this.value)" style="padding: 0.5rem 0.75rem; border: 2px solid var(--gray-200); border-radius: 10px; font-family: inherit; font-size: 0.85rem; outline: none; background: white; color: var(--gray-700); transition: all 0.2s; cursor: pointer;" onfocus="this.style.borderColor='var(--indigo)'; this.style.boxShadow='0 0 0 3px rgba(79, 70, 229, 0.1)';" onblur="this.style.borderColor='var(--gray-200)'; this.style.boxShadow='none';">`;
             
-            let docsHtml = '';
-            if(p.reporte_operativo_path) {
-                docsHtml = `
-                    <a href="${p.reporte_operativo_path}" target="_blank"
-                       style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem; text-decoration: none;
-                              border-radius: var(--radius-md); font-weight: 600; display: inline-flex;
-                              align-items: center; gap: 5px; border: 1px solid #bbf7d0;
-                              background: #f0fdf4; color: #15803d;
-                              transition: all 0.18s ease;"
-                       onmouseover="this.style.background='#dcfce7'; this.style.borderColor='#86efac'; this.style.boxShadow='0 2px 8px rgba(21,128,61,0.15)'; this.style.transform='translateY(-1px)';"
-                       onmouseout="this.style.background='#f0fdf4'; this.style.borderColor='#bbf7d0'; this.style.boxShadow='none'; this.style.transform='translateY(0)';"
-                       title="Ver Reporte">
-                        <i class="bi bi-file-earmark-pdf"></i> Ver PDF
-                    </a>
-                    <button onclick="triggerUpload(${p.id})" id="btn-upload-${p.id}"
-                            style="width: auto; padding: 0.45rem 0.75rem; font-size: 0.8rem;
-                                   border-radius: var(--radius-md); font-weight: 600; display: inline-flex;
-                                   align-items: center; gap: 5px; border: 1px solid var(--border-color);
-                                   background: white; color: var(--gray-500); cursor: pointer;
-                                   transition: all 0.18s ease;"
-                            onmouseover="this.style.background='var(--gray-100)'; this.style.borderColor='var(--gray-300)'; this.style.color='var(--gray-700)';"
-                            onmouseout="this.style.background='white'; this.style.borderColor='var(--border-color)'; this.style.color='var(--gray-500)';"
-                            title="Reemplazar Archivo">
-                        <i class="bi bi-arrow-repeat"></i>
-                    </button>
-                    <input type="file" id="upload-input-${p.id}" style="display:none" onchange="uploadReport(${p.id}, this)" accept="application/pdf">`;
-            } else {
-                docsHtml = `
-                    <button onclick="triggerUpload(${p.id})" id="btn-upload-${p.id}"
-                            style="width: auto; padding: 0.45rem 0.85rem; font-size: 0.8rem;
-                                   border-radius: var(--radius-md); font-weight: 600; display: inline-flex;
-                                   align-items: center; gap: 5px; border: 1px solid var(--primary-light);
-                                   background: var(--primary-light); color: var(--primary); cursor: pointer;
-                                   transition: all 0.18s ease;"
-                            onmouseover="this.style.background='var(--indigo-light)'; this.style.borderColor='var(--primary)'; this.style.color='var(--primary-dark)'; this.style.transform='translateY(-1px)';"
-                            onmouseout="this.style.background='var(--primary-light)'; this.style.borderColor='var(--primary-light)'; this.style.color='var(--primary)'; this.style.transform='translateY(0)';"
-                            title="Subir Reporte PDF">
-                        <i class="bi bi-cloud-arrow-up"></i> Subir PDF
-                    </button>
-                    <input type="file" id="upload-input-${p.id}" style="display:none" onchange="uploadReport(${p.id}, this)" accept="application/pdf">`;
-            }
+            // ── PDF 1 ──────────────────────────────────────────────────────
+            const pdf1ViewBtn = p.reporte_operativo_path ? `
+                <a href="${p.reporte_operativo_path}" target="_blank"
+                   style="width:auto; padding:0.4rem 0.75rem; font-size:0.78rem; text-decoration:none;
+                          border-radius:var(--radius-md); font-weight:600; display:inline-flex;
+                          align-items:center; gap:4px; border:1px solid #bbf7d0;
+                          background:#f0fdf4; color:#15803d; transition:all 0.18s;"
+                   onmouseover="this.style.background='#dcfce7';"
+                   onmouseout="this.style.background='#f0fdf4';">
+                    <i class="bi bi-file-earmark-pdf"></i> PDF 1
+                </a>` : '';
+
+            const pdf1UploadBtn = `
+                <button onclick="triggerUpload(${p.id})" id="btn-upload-${p.id}"
+                        style="width:auto; padding:0.4rem 0.7rem; font-size:0.78rem;
+                               border-radius:var(--radius-md); font-weight:600; display:inline-flex;
+                               align-items:center; gap:4px; cursor:pointer; transition:all 0.18s;
+                               ${p.reporte_operativo_path
+                                   ? 'border:1px solid var(--border-color); background:white; color:var(--gray-500);'
+                                   : 'border:1px solid var(--primary-light); background:var(--primary-light); color:var(--primary);'}"
+                        title="${p.reporte_operativo_path ? 'Reemplazar PDF 1' : 'Subir PDF 1'}">
+                    <i class="bi ${p.reporte_operativo_path ? 'bi-arrow-repeat' : 'bi-cloud-arrow-up'}"></i>
+                    ${p.reporte_operativo_path ? '' : 'PDF 1'}
+                </button>
+                <input type="file" id="upload-input-${p.id}" style="display:none"
+                       onchange="uploadReport(${p.id}, this)" accept="application/pdf">`;
+
+            // ── PDF 2 ──────────────────────────────────────────────────────
+            const pdf2ViewBtn = p.reporte_operativo_path_2 ? `
+                <a href="${p.reporte_operativo_path_2}" target="_blank"
+                   style="width:auto; padding:0.4rem 0.75rem; font-size:0.78rem; text-decoration:none;
+                          border-radius:var(--radius-md); font-weight:600; display:inline-flex;
+                          align-items:center; gap:4px; border:1px solid #bfdbfe;
+                          background:#eff6ff; color:#1d4ed8; transition:all 0.18s;"
+                   onmouseover="this.style.background='#dbeafe';"
+                   onmouseout="this.style.background='#eff6ff';">
+                    <i class="bi bi-file-earmark-pdf"></i> PDF 2
+                </a>` : '';
+
+            const pdf2UploadBtn = `
+                <button onclick="triggerUpload2(${p.id})" id="btn-upload2-${p.id}"
+                        style="width:auto; padding:0.4rem 0.7rem; font-size:0.78rem;
+                               border-radius:var(--radius-md); font-weight:600; display:inline-flex;
+                               align-items:center; gap:4px; cursor:pointer; transition:all 0.18s;
+                               ${p.reporte_operativo_path_2
+                                   ? 'border:1px solid var(--border-color); background:white; color:var(--gray-500);'
+                                   : 'border:1px solid #bfdbfe; background:#eff6ff; color:#1d4ed8;'}"
+                        title="${p.reporte_operativo_path_2 ? 'Reemplazar PDF 2' : 'Subir PDF 2'}">
+                    <i class="bi ${p.reporte_operativo_path_2 ? 'bi-arrow-repeat' : 'bi-cloud-arrow-up'}"></i>
+                    ${p.reporte_operativo_path_2 ? '' : 'PDF 2'}
+                </button>
+                <input type="file" id="upload-input2-${p.id}" style="display:none"
+                       onchange="uploadReport2(${p.id}, this)" accept="application/pdf">`;
+
+            const docsHtml = `
+                <div style="display:inline-flex; flex-wrap:wrap; gap:4px; align-items:center; justify-content:center;">
+                    ${pdf1ViewBtn}${pdf1UploadBtn}
+                    <span style="color:var(--gray-300); font-size:0.75rem;">|</span>
+                    ${pdf2ViewBtn}${pdf2UploadBtn}
+                </div>`;
 
             // Botones de acciones principales
             let finishButtonHtml = '';
@@ -398,33 +417,64 @@
         document.getElementById('upload-input-' + quoteId).click();
     }
 
+    function triggerUpload2(quoteId) {
+        document.getElementById('upload-input2-' + quoteId).click();
+    }
+
     async function uploadReport(quoteId, inputElement) {
         const file = inputElement.files[0];
         if(!file) return;
-        
         const formData = new FormData();
         formData.append('file', file);
-        
         const btn = document.getElementById('btn-upload-' + quoteId);
-        const originalText = btn.textContent;
-        btn.textContent = "⌛ Subiendo...";
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '⌛';
         btn.disabled = true;
-        
         try {
             const response = await fetch(`/api/v1/quotes/${quoteId}/report`, {
                 method: 'POST',
                 body: formData
             });
             if(response.ok) {
-                fetchProjects(); 
+                showNotification('PDF 1 subido correctamente', 'success');
+                fetchProjects();
             } else {
-                showNotification('Error al subir documento', "error");
-                btn.textContent = originalText;
+                showNotification('Error al subir PDF 1', 'error');
+                btn.innerHTML = originalHtml;
                 btn.disabled = false;
             }
         } catch (e) {
-            showNotification('Error de conexión', "error");
-            btn.textContent = originalText;
+            showNotification('Error de conexión', 'error');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    }
+
+    async function uploadReport2(quoteId, inputElement) {
+        const file = inputElement.files[0];
+        if(!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        const btn = document.getElementById('btn-upload2-' + quoteId);
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '⌛';
+        btn.disabled = true;
+        try {
+            const response = await fetch(`/api/v1/quotes/${quoteId}/report2`, {
+                method: 'POST',
+                body: formData
+            });
+            if(response.ok) {
+                showNotification('PDF 2 subido correctamente', 'success');
+                fetchProjects();
+            } else {
+                showNotification('Error al subir PDF 2', 'error');
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        } catch (e) {
+            showNotification('Error de conexión', 'error');
+            btn.innerHTML = originalHtml;
             btn.disabled = false;
         }
     }

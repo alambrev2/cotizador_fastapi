@@ -140,6 +140,7 @@ class QuoteBase(SQLModel):
     # Proyectos Aprobados (Operación)
     fecha_entrega: Optional[date] = None
     reporte_operativo_path: Optional[str] = None
+    reporte_operativo_path_2: Optional[str] = None
     costo_compra_real: Optional[Decimal] = Field(default=None, max_digits=10, decimal_places=2)
     costos_operativos: Optional[Decimal] = Field(default=0, max_digits=10, decimal_places=2)
 

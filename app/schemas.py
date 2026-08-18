@@ -115,6 +115,7 @@ class QuoteRead(QuoteBase):
     utilidad_total: Decimal = 0
     fecha_entrega: Optional[date] = None
     reporte_operativo_path: Optional[str] = None
+    reporte_operativo_path_2: Optional[str] = None
     costo_compra_real: Optional[Decimal] = None
     costos_operativos: Decimal = 0
     cliente: Optional[CustomerBase] = None
