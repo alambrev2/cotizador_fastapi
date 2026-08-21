@@ -1,0 +1,26 @@
+{
+  "name": "Cotizador SSC",
+  "short_name": "Cotizador",
+  "description": "Sistema de cotización Smart Site Company",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "icons": [
+    {
+      "src": "/static/img/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/img/favicon_rayas.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ]
+}
